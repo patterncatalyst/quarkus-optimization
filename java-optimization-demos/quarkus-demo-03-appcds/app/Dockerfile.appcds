@@ -1,0 +1,59 @@
+# ============================================================
+# Demo 03 — OPTIMIZED: Quarkus 3.33.1 LTS JVM + AppCDS
+#
+# Quarkus AppCDS advantage:
+#   ONE property:  quarkus.package.jar.aot.enabled=true
+#   The quarkus-maven-plugin automatically:
+#     1. Runs the application training pass
+#     2. Dumps the class list
+#     3. Generates the CDS archive (app.cds or similar)
+#     4. Bundles it with the application output
+#
+#   No manual -Xshare:off / -Xshare:dump steps needed!
+#   Compare to Spring Boot's 3-step manual process.
+# ============================================================
+
+# ── Stage 1: Build with AppCDS archive ────────────────────
+FROM eclipse-temurin:21-jdk AS builder
+WORKDIR /build
+COPY pom.xml .
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn dependency:go-offline -q 2>/dev/null || true
+COPY src ./src
+
+# The AppCDS flag tells the Quarkus Maven plugin to:
+#   a) Run a training JVM pass after packaging
+#   b) Generate and bundle the CDS archive automatically
+RUN mvn package -DskipTests -q \
+    -Dquarkus.package.jar.aot.enabled=true
+
+# Verify archive was created
+RUN ls -lh target/quarkus-app/ && \
+    find target/quarkus-app -name "*.cds" -o -name "*.jsa" 2>/dev/null | head -5 && \
+    echo "✅ Quarkus AppCDS archive generated"
+
+# ── Stage 2: Runtime image with archive ────────────────────
+FROM eclipse-temurin:21-jre
+WORKDIR /deployments
+
+# Copy layered Quarkus output including the CDS archive
+COPY --from=builder /build/target/quarkus-app/lib/     ./lib/
+COPY --from=builder /build/target/quarkus-app/*.jar    ./
+COPY --from=builder /build/target/quarkus-app/*.cds    ./ 2>/dev/null || true
+COPY --from=builder /build/target/quarkus-app/*.jsa    ./ 2>/dev/null || true
+COPY --from=builder /build/target/quarkus-app/app/     ./app/
+COPY --from=builder /build/target/quarkus-app/quarkus/ ./quarkus/
+
+# ✅ Container-aware JVM settings
+# ✅ AppCDS archive path — Quarkus sets this via JVM args in the run script
+# ✅ UseContainerSupport is ON by default in Java 21
+
+ENV JAVA_OPTS="-XX:+UseContainerSupport \
+               -XX:MaxRAMPercentage=75.0 \
+               -XX:+UseZGC -XX:+ZGenerational \
+               -Djava.security.egd=file:/dev/./urandom"
+
+EXPOSE 8080
+# Quarkus generates a quarkus-run.jar that automatically activates
+# the CDS archive if it's present alongside the JAR
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar quarkus-run.jar"]

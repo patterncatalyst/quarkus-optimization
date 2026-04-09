@@ -1,0 +1,73 @@
+# ============================================================
+# Demo 04 LEYDEN: Quarkus 3.33.1 LTS + Project Leyden AOT Cache
+# JDK 25 LTS — JEP 483 + JEP 514 + JEP 515
+#
+# Build-time: Maven compiles and packages Quarkus app
+# Training:   JVM starts the app with -XX:AOTCacheOutput=quarkus.aot
+#             Records all class loading + JIT method profiles
+#             App is stopped after full initialisation
+# Runtime:    java -XX:AOTCache=quarkus.aot
+#             Skip re-linking ~20k+ classes — just read from cache
+#
+# The AOT cache works with ZGC on JDK 26 (JEP 516).
+# On JDK 25, use G1GC or Shenandoah with the AOT cache.
+# ============================================================
+
+# ── Stage 1: Build ─────────────────────────────────────────
+FROM eclipse-temurin:25-jdk AS builder
+WORKDIR /build
+COPY pom.xml .
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn dependency:go-offline -q 2>/dev/null || true
+COPY src ./src
+RUN mvn package -DskipTests -q
+
+# ── Stage 2: Training run — generate the AOT cache ─────────
+FROM eclipse-temurin:25-jdk AS trainer
+WORKDIR /deployments
+
+COPY --from=builder /build/target/quarkus-app/lib/     ./lib/
+COPY --from=builder /build/target/quarkus-app/*.jar    ./
+COPY --from=builder /build/target/quarkus-app/app/     ./app/
+COPY --from=builder /build/target/quarkus-app/quarkus/ ./quarkus/
+
+# Project Leyden training run (JEP 514 — 2-step workflow):
+#   -XX:AOTCacheOutput=quarkus.aot  → JVM writes AOT cache on shutdown
+#   -Dquarkus.launch.exit-after-start=true → Quarkus shuts down after init
+#
+# The JVM records what happens during startup:
+#   • Which classes are loaded and linked
+#   • Which methods are called most often (JEP 515 profiling)
+#   • Dynamic proxy generation patterns
+#
+RUN java \
+    -XX:AOTCacheOutput=quarkus.aot \
+    -XX:+UseContainerSupport \
+    -XX:MaxRAMPercentage=75.0 \
+    -Dquarkus.launch.exit-after-start=true \
+    -jar quarkus-run.jar && \
+    echo "✅ Project Leyden AOT cache written:" && \
+    ls -lh quarkus.aot
+
+# ── Stage 3: Production image — tiny runtime with cache ────
+FROM eclipse-temurin:25-jre
+WORKDIR /deployments
+
+# Quarkus layered structure — Docker cache-friendly
+COPY --from=builder  /build/target/quarkus-app/lib/     ./lib/
+COPY --from=builder  /build/target/quarkus-app/*.jar    ./
+COPY --from=builder  /build/target/quarkus-app/app/     ./app/
+COPY --from=builder  /build/target/quarkus-app/quarkus/ ./quarkus/
+# ✅ The AOT cache — this is the Leyden magic
+COPY --from=trainer  /deployments/quarkus.aot           ./quarkus.aot
+
+ENV JAVA_OPTS="-XX:+UseContainerSupport \
+               -XX:MaxRAMPercentage=75.0 \
+               -XX:+UseG1GC \
+               -XX:MaxGCPauseMillis=200"
+
+EXPOSE 8080
+# ✅ -XX:AOTCache=quarkus.aot — JVM loads pre-linked classes from cache
+# On JDK 26: add -XX:+UseZGC -XX:+ZGenerational (JEP 516 enables ZGC + AOT)
+ENTRYPOINT ["sh", "-c", \
+    "exec java $JAVA_OPTS -XX:AOTCache=quarkus.aot -jar quarkus-run.jar"]

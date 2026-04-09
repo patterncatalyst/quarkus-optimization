@@ -1,0 +1,260 @@
+{
+  "title": "JVM GC Monitoring — Demo 02",
+  "uid": "jvm-gc-demo",
+  "version": 1,
+  "schemaVersion": 39,
+  "refresh": "5s",
+  "time": { "from": "now-15m", "to": "now" },
+  "timepicker": {},
+  "tags": ["jvm", "gc", "demo"],
+  "panels": [
+    {
+      "id": 1,
+      "title": "🔴 GC Pause P99 (ms) — G1GC vs ZGC",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "color": { "mode": "palette-classic" },
+          "custom": { "lineWidth": 2, "fillOpacity": 10 },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 100 },
+              { "color": "red", "value": 500 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.99, rate(jvm_gc_pause_seconds_bucket{job='java-g1gc'}[1m])) * 1000",
+          "legendFormat": "G1GC P99",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.50, rate(jvm_gc_pause_seconds_bucket{job='java-g1gc'}[1m])) * 1000",
+          "legendFormat": "G1GC P50",
+          "refId": "B"
+        },
+        {
+          "expr": "histogram_quantile(0.99, rate(jvm_gc_pause_seconds_bucket{job='java-zgc'}[1m])) * 1000",
+          "legendFormat": "ZGC P99",
+          "refId": "C"
+        },
+        {
+          "expr": "histogram_quantile(0.50, rate(jvm_gc_pause_seconds_bucket{job='java-zgc'}[1m])) * 1000",
+          "legendFormat": "ZGC P50",
+          "refId": "D"
+        }
+      ],
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max", "lastNotNull"] }
+      }
+    },
+    {
+      "id": 2,
+      "title": "💾 Heap Memory Used (MB)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decmbytes",
+          "color": { "mode": "palette-classic" },
+          "custom": { "lineWidth": 2, "fillOpacity": 15 }
+        }
+      },
+      "targets": [
+        {
+          "expr": "jvm_memory_used_bytes{area='heap', job='java-g1gc'} / 1024 / 1024",
+          "legendFormat": "G1GC Heap Used",
+          "refId": "A"
+        },
+        {
+          "expr": "jvm_memory_max_bytes{area='heap', job='java-g1gc'} / 1024 / 1024",
+          "legendFormat": "G1GC Heap Max",
+          "refId": "B"
+        },
+        {
+          "expr": "jvm_memory_used_bytes{area='heap', job='java-zgc'} / 1024 / 1024",
+          "legendFormat": "ZGC Heap Used",
+          "refId": "C"
+        },
+        {
+          "expr": "jvm_memory_max_bytes{area='heap', job='java-zgc'} / 1024 / 1024",
+          "legendFormat": "ZGC Heap Max",
+          "refId": "D"
+        }
+      ],
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max", "lastNotNull"] }
+      }
+    },
+    {
+      "id": 3,
+      "title": "📊 GC Collections per Minute",
+      "type": "timeseries",
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 8 },
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "palette-classic" },
+          "custom": { "lineWidth": 2 }
+        }
+      },
+      "targets": [
+        {
+          "expr": "rate(jvm_gc_pause_seconds_count{job='java-g1gc'}[1m]) * 60",
+          "legendFormat": "G1GC collections/min",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(jvm_gc_pause_seconds_count{job='java-zgc'}[1m]) * 60",
+          "legendFormat": "ZGC collections/min",
+          "refId": "B"
+        }
+      ],
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      }
+    },
+    {
+      "id": 4,
+      "title": "🧵 Live Threads",
+      "type": "timeseries",
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 8 },
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "palette-classic" },
+          "custom": { "lineWidth": 2 }
+        }
+      },
+      "targets": [
+        {
+          "expr": "jvm_threads_live_threads{job='java-g1gc'}",
+          "legendFormat": "G1GC Live Threads",
+          "refId": "A"
+        },
+        {
+          "expr": "jvm_threads_live_threads{job='java-zgc'}",
+          "legendFormat": "ZGC Live Threads",
+          "refId": "B"
+        }
+      ],
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      }
+    },
+    {
+      "id": 5,
+      "title": "📈 Heap Utilization % (alert threshold: 85%)",
+      "type": "gauge",
+      "gridPos": { "h": 7, "w": 6, "x": 0, "y": 15 },
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0, "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.70 },
+              { "color": "red", "value": 0.85 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "jvm_memory_used_bytes{area='heap',job='java-g1gc'} / jvm_memory_max_bytes{area='heap',job='java-g1gc'}",
+          "legendFormat": "G1GC Heap %",
+          "refId": "A"
+        }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 6,
+      "title": "📈 ZGC Heap Utilization %",
+      "type": "gauge",
+      "gridPos": { "h": 7, "w": 6, "x": 6, "y": 15 },
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0, "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.70 },
+              { "color": "red", "value": 0.85 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "jvm_memory_used_bytes{area='heap',job='java-zgc'} / jvm_memory_max_bytes{area='heap',job='java-zgc'}",
+          "legendFormat": "ZGC Heap %",
+          "refId": "A"
+        }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 7,
+      "title": "⏱ GC Total Time % of Wall Clock",
+      "type": "timeseries",
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 15 },
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "color": { "mode": "palette-classic" },
+          "custom": { "lineWidth": 2, "fillOpacity": 20 }
+        }
+      },
+      "targets": [
+        {
+          "expr": "rate(jvm_gc_pause_seconds_sum{job='java-g1gc'}[1m])",
+          "legendFormat": "G1GC time in GC (s/s)",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(jvm_gc_pause_seconds_sum{job='java-zgc'}[1m])",
+          "legendFormat": "ZGC time in GC (s/s)",
+          "refId": "B"
+        }
+      ],
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"] }
+      }
+    },
+    {
+      "id": 8,
+      "title": "🔔 Active Alerts",
+      "type": "alertlist",
+      "gridPos": { "h": 5, "w": 24, "x": 0, "y": 22 },
+      "options": {
+        "alertName": "",
+        "dashboardAlerts": false,
+        "groupMode": "default",
+        "maxItems": 20,
+        "sortOrder": 1,
+        "stateFilter": { "firing": true, "pending": true }
+      }
+    }
+  ]
+}

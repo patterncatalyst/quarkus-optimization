@@ -1,0 +1,27 @@
+# ============================================================
+# Demo 1 — GOOD: Container-aware JVM configuration
+# ============================================================
+FROM eclipse-temurin:21-jdk AS builder
+WORKDIR /build
+COPY src/HeapInfo.java .
+RUN javac HeapInfo.java
+
+FROM eclipse-temurin:21-jre
+WORKDIR /app
+COPY --from=builder /build/HeapInfo.class .
+
+# ✅ UseContainerSupport: JVM reads cgroup memory limits, not host RAM
+# ✅ MaxRAMPercentage=75: heap = 75% of container limit (leaves room for off-heap)
+# ✅ InitialRAMPercentage=50: start with 50% to reduce startup memory footprint
+# ✅ NativeMemoryTracking: enables "jcmd <pid> VM.native_memory summary"
+# ✅ ParallelGCThreads=2: match the container CPU limit (set --cpus=2 on docker run)
+
+ENV JAVA_OPTS="-XX:+UseContainerSupport \
+               -XX:MaxRAMPercentage=75.0 \
+               -XX:InitialRAMPercentage=50.0 \
+               -XX:MinRAMPercentage=25.0 \
+               -XX:NativeMemoryTracking=summary \
+               -XX:ParallelGCThreads=2 \
+               -XX:+PrintFlagsFinal"
+
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS HeapInfo"]

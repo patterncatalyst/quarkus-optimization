@@ -1,0 +1,133 @@
+version: "3.9"
+
+# ============================================================
+# Demo 02: GC Monitoring + Distributed Tracing Stack
+#   • Java G1GC app (port 8080) — Spring Boot 4.0.5 + Micrometer
+#   • Java ZGC app  (port 8081) — same app, different GC
+#   • Prometheus    (port 9090) — scrapes /actuator/prometheus
+#   • Grafana       (port 3000) — JVM GC dashboard (admin/admin)
+#   • Jaeger        (port 16686)— distributed trace UI (new: Spring Boot 4.0 OTel)
+# ============================================================
+
+services:
+
+  # ── Java Application — G1GC ───────────────────────────────
+  java-app-g1gc:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: java-app-g1gc
+    ports:
+      - "8080:8080"
+    environment:
+      GC_TYPE: g1gc
+      JAVA_OPTS: >-
+        -XX:ParallelGCThreads=2
+        -XX:ConcGCThreads=1
+        -XX:InitiatingHeapOccupancyPercent=45
+        -XX:+G1UseAdaptiveIHOP
+    mem_limit: 512m
+    cpus: "1.0"
+    networks:
+      - monitoring
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 45s
+    labels:
+      demo: "gc-monitoring"
+      gc: "G1GC"
+    depends_on:
+      - jaeger
+
+  # ── Java Application — ZGC (Generational, Java 21) ────────
+  java-app-zgc:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: java-app-zgc
+    ports:
+      - "8081:8080"
+    environment:
+      GC_TYPE: zgc
+      JAVA_OPTS: "-XX:ZCollectionInterval=5 -XX:ZUncommitDelay=60"
+    mem_limit: 512m
+    cpus: "1.0"
+    networks:
+      - monitoring
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 45s
+    labels:
+      demo: "gc-monitoring"
+      gc: "ZGC"
+    depends_on:
+      - jaeger
+
+  # ── Prometheus ────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:v3.2.1
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/rules.yml:/etc/prometheus/rules.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.enable-lifecycle"
+      - "--storage.tsdb.retention.time=1h"
+    networks:
+      - monitoring
+    depends_on:
+      java-app-g1gc:
+        condition: service_healthy
+
+  # ── Grafana ───────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:11.6.0
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/jvm-gc-dashboard.json
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+
+  # ── Jaeger — Distributed Tracing (Spring Boot 4.0 OTel) ──
+  # Receives OTLP traces from the Java apps via port 4318 (HTTP)
+  # UI available at http://localhost:16686
+  jaeger:
+    image: jaegertracing/all-in-one:1.65
+    container_name: jaeger
+    ports:
+      - "16686:16686"  # Jaeger UI
+      - "4318:4318"    # OTLP HTTP receiver (apps send traces here)
+      - "4317:4317"    # OTLP gRPC receiver (optional)
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    networks:
+      - monitoring
+
+networks:
+  monitoring:
+    driver: bridge
+
+volumes:
+  prometheus_data:
+  grafana_data:

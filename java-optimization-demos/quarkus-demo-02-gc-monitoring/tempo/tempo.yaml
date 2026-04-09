@@ -1,0 +1,30 @@
+# Grafana Tempo configuration for Demo 02
+# Receives OTLP traces from Quarkus via quarkus-micrometer-opentelemetry
+# Visible in Grafana → Explore → Tempo
+
+server:
+  http_listen_port: 3200
+
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        grpc:          # port 4317 — Quarkus default
+          endpoint: "0.0.0.0:4317"
+        http:          # port 4318 — alternative
+          endpoint: "0.0.0.0:4318"
+
+ingester:
+  max_block_duration: 5m
+
+compactor:
+  compaction:
+    block_retention: 1h
+
+storage:
+  trace:
+    backend: local
+    local:
+      path: /tmp/tempo/blocks
+    wal:
+      path: /tmp/tempo/wal

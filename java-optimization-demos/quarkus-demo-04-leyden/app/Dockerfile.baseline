@@ -1,0 +1,32 @@
+# ============================================================
+# Demo 04 BASELINE: Quarkus 3.33.1 LTS on JDK 25 — no Leyden cache
+#
+# JDK 25 LTS includes:
+#   JEP 514 — AOT Command-Line Ergonomics (2-step workflow)
+#   JEP 515 — AOT Method Profiling
+# But NO -XX:AOTCache flag → cold class loading every start
+# ============================================================
+
+FROM eclipse-temurin:25-jdk AS builder
+WORKDIR /build
+COPY pom.xml .
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn dependency:go-offline -q 2>/dev/null || true
+COPY src ./src
+RUN mvn package -DskipTests -q
+
+FROM eclipse-temurin:25-jre
+WORKDIR /deployments
+
+COPY --from=builder /build/target/quarkus-app/lib/     ./lib/
+COPY --from=builder /build/target/quarkus-app/*.jar    ./
+COPY --from=builder /build/target/quarkus-app/app/     ./app/
+COPY --from=builder /build/target/quarkus-app/quarkus/ ./quarkus/
+
+ENV JAVA_OPTS="-XX:+UseContainerSupport \
+               -XX:MaxRAMPercentage=75.0 \
+               -XX:+UseZGC -XX:+ZGenerational"
+
+# ❌ NO -XX:AOTCache flag — baseline measurement
+EXPOSE 8080
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar quarkus-run.jar"]

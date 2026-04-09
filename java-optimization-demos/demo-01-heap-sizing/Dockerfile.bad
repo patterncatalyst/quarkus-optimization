@@ -1,0 +1,19 @@
+# ============================================================
+# Demo 1 — BAD: JVM without container awareness
+# This JVM will read HOST memory, not container limits!
+# ============================================================
+FROM eclipse-temurin:21-jdk AS builder
+WORKDIR /build
+COPY src/HeapInfo.java .
+RUN javac HeapInfo.java
+
+FROM eclipse-temurin:21-jre
+WORKDIR /app
+COPY --from=builder /build/HeapInfo.class .
+
+# ❌ NO UseContainerSupport flags
+# ❌ NO MaxRAMPercentage
+# JVM will read /proc/meminfo and see the HOST's full RAM
+# On a 16GB machine, it will claim ~4GB heap even inside a 512m container!
+
+ENTRYPOINT ["java", "HeapInfo"]

@@ -1,0 +1,30 @@
+# ============================================================
+# Demo 03 — BASELINE: Quarkus 3.33.1 LTS JVM, no AppCDS
+#
+# Quarkus is already dramatically faster than Spring Boot
+# (typically 0.3-0.8s vs 4-8s). This is the "cold" baseline.
+# ============================================================
+
+FROM eclipse-temurin:21-jdk AS builder
+WORKDIR /build
+COPY pom.xml .
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn dependency:go-offline -q 2>/dev/null || true
+COPY src ./src
+RUN mvn package -DskipTests -q
+
+FROM eclipse-temurin:21-jre
+WORKDIR /deployments
+
+COPY --from=builder /build/target/quarkus-app/lib/     ./lib/
+COPY --from=builder /build/target/quarkus-app/*.jar    ./
+COPY --from=builder /build/target/quarkus-app/app/     ./app/
+COPY --from=builder /build/target/quarkus-app/quarkus/ ./quarkus/
+
+# ❌ No AppCDS — quarkus.package.jar.appcds.enabled not set
+# Quarkus already fast due to build-time metadata pre-processing
+
+ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
+
+EXPOSE 8080
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar quarkus-run.jar"]

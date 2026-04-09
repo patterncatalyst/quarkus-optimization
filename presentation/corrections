@@ -1,0 +1,60 @@
+Slide 12
+quarkus.package.jar.appcds.enabled=true
+The flag isn't correct - see https://quarkus.io/guides/aot#quick-start
+
+Slide 28
+Training run: java -XX:AOTCacheOutput=quarkus.aot — JVM records class loading + JIT profiles
+You don't need to do this - see https://quarkus.io/guides/aot
+
+Slide 24
+Bonus: Quarkus Native (GraalVM) → ~0.01-0.05s startup
+Do no talk about native (the majority of the GC stuff you've discussed doesn't apply to native).
+
+Slide 24
+AppCDS
+Completely renamed in Java 25 (AOT cache)
+
+Slide 17
+use custom metrics instead
+Just ensure whatever metric you use can be correlated to cpu metrics.
+
+Slide 16
+quarkus-micrometer-registry-prometheus
+See https://quarkus.io/guides/telemetry-micrometer-to-opentelemetry
+
+Slide 14 Speaker notes
+You cannot tune what you cannot see
+"....and you cannot see what you do not measure...."
+
+Slide 14
+quarkus-micrometer-opentelemetry bridges Micrometer metrics + OTel traces
+Old & outdated - https://quarkus.io/guides/telemetry-micrometer-to-opentelemetry
+
+Slide 14
+quarkus-opentelemetry
+https://quarkus.io/guides/telemetry-micrometer-to-opentelemetry is what you should be using
+
+Slide 14
+Jaeger
+Jaeger is still a "thing"? I thought id died off a long time ago. Please use the Grafana Stack
+Also if using Jaeger in the demo's please change to docker compose with the grafana stack from Jaeger
+
+Slide 12
+one property.
+One property is true, but you have to have @QuarkusIntegrationTests in your app - thats what it trains on.
+
+Slide 12
+Class Data Sharing (CDS) & AppCDS
+I'd be careful here because with JDK 25 (currently LTS) AppCDS has been completely renamed. Its not AOTCache.
+
+Slide 11
+Quarkus Native: 0.01-0.05s
+In a JVM sizing talk I wouldn't even bring up native. If you do, you should also be prepared to talk about Spring native.
+
+Slide 6
+CPU Sizing for JVM
+There were lots of different schools of thought re: should you set a request/limit for cpu sizing due to cpu being "reclaimable" (vs memory not)
+
+Slide 4
+Untuned JVMs
+What is an "Untuned JVM)? Was that the Java 8 JVM?
