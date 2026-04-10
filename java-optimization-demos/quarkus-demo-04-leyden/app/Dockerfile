@@ -22,13 +22,14 @@
 # ============================================================
 
 # ── Stage 1: Build and train ──────────────────────────────────
-FROM eclipse-temurin:25-jdk AS builder
+FROM docker.io/library/maven:3.9-eclipse-temurin-25 AS builder
+RUN apt-get update && apt-get install -y --no-install-recommends maven \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /build
 
 # Cache Maven dependencies first
 COPY pom.xml .
-RUN --mount=type=cache,target=/root/.m2 \
-    mvn dependency:go-offline -q 2>/dev/null || true
+RUN     mvn dependency:go-offline --no-transfer-progress
 
 # Copy source (including the @QuarkusIntegrationTest training suite)
 COPY src ./src
@@ -38,13 +39,13 @@ COPY src ./src
 #   2. Starts the packaged app and runs @QuarkusIntegrationTest tests
 #      (these tests ARE the AOT training workload)
 #   3. Writes target/quarkus-app/app.aot and shuts down
-RUN mvn verify -q && \
+RUN     mvn verify --no-transfer-progress -q && \
     echo "✅ Build + AOT training complete" && \
     ls -lh target/quarkus-app/app.aot 2>/dev/null || \
     echo "ℹ️  app.aot not found — JDK 25 required for AOT cache generation"
 
 # ── Stage 2: Runtime image ────────────────────────────────────
-FROM eclipse-temurin:25-jre
+FROM registry.access.redhat.com/ubi9/openjdk-25-runtime
 WORKDIR /deployments
 
 # Quarkus layered output — Docker layer-cache-friendly

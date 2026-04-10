@@ -1,39 +1,42 @@
 # ============================================================
-# Demo 02 — GC Monitoring with Prometheus (Spring Boot 4.0.5)
-# Multi-stage build: Maven build → slim JRE runtime image
+# Demo 02 — Quarkus 3.33.1 LTS / Java 21 — JVM mode
+#
+# Quarkus produces a layered JAR structure in target/quarkus-app/
+#   quarkus-app/quarkus-run.jar   ← entrypoint
+#   quarkus-app/lib/              ← dependency JARs
+#   quarkus-app/app/              ← application classes
+#   quarkus-app/quarkus/          ← generated Quarkus bootstrap
 # ============================================================
 
-# Stage 1: Build with Maven
-FROM eclipse-temurin:21-jdk AS builder
+# ── Stage 1: Build ─────────────────────────────────────────
+FROM docker.io/library/maven:3.9-eclipse-temurin-21 AS builder
 WORKDIR /build
 
-# Copy pom first to cache Maven dependencies layer
 COPY pom.xml .
-RUN --mount=type=cache,target=/root/.m2 \
-    mvn dependency:go-offline -q 2>/dev/null || \
-    mvn dependency:resolve -q 2>/dev/null || true
 
 COPY src ./src
-RUN mvn package -DskipTests -q
+RUN     mvn package -Dmaven.test.skip=true --no-transfer-progress
 
-# Stage 2: Minimal runtime image
-FROM eclipse-temurin:21-jre
-WORKDIR /app
+# ── Stage 2: Runtime ───────────────────────────────────────
+FROM registry.access.redhat.com/ubi9/openjdk-21-runtime
+WORKDIR /deployments
 
-COPY --from=builder /build/target/gc-monitoring-*.jar app.jar
+# Quarkus layered structure — copy each layer separately for optimal
+# Docker layer caching (lib changes less often than app/)
+COPY --from=builder /build/target/quarkus-app/lib/     ./lib/
+COPY --from=builder /build/target/quarkus-app/*.jar    ./
+COPY --from=builder /build/target/quarkus-app/app/     ./app/
+COPY --from=builder /build/target/quarkus-app/quarkus/ ./quarkus/
 
-# ── GC Configuration (switchable via environment variable) ──
-# Default: G1GC (change GC_TYPE=zgc or GC_TYPE=shenandoah to switch)
+# GC type selection (g1gc | zgc | shenandoah)
 ENV GC_TYPE=g1gc
-ENV JAVA_OPTS=""
 
-# Container-aware heap settings
+# Container-aware heap settings — UseContainerSupport is ON by default in Java 21
 ENV HEAP_OPTS="-XX:+UseContainerSupport \
                -XX:MaxRAMPercentage=75.0 \
                -XX:InitialRAMPercentage=50.0"
 
-# GC logging for visibility
-ENV GC_LOG_OPTS="-Xlog:gc*:file=/tmp/gc.log:time,uptime,level,tags:filecount=3,filesize=10m"
+ENV JAVA_OPTS=""
 
 EXPOSE 8080
 
@@ -43,6 +46,7 @@ ENTRYPOINT ["sh", "-c", "\
   elif [ \"$GC_TYPE\" = 'shenandoah' ]; then \
     GC_FLAG='-XX:+UseShenandoahGC -XX:ShenandoahGCMode=adaptive'; \
   else \
-    GC_FLAG='-XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:G1HeapRegionSize=4m'; \
+    GC_FLAG='-XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:G1HeapRegionSize=4m \
+             -XX:ParallelGCThreads=2 -XX:InitiatingHeapOccupancyPercent=45'; \
   fi; \
-  exec java $HEAP_OPTS $GC_FLAG $GC_LOG_OPTS $JAVA_OPTS -jar app.jar"]
+  exec java $HEAP_OPTS $GC_FLAG $JAVA_OPTS -jar quarkus-run.jar"]

@@ -1,25 +1,13 @@
-# ============================================================
-# Demo 03 — BASELINE (Spring Boot 4.0.5): No AppCDS, no startup tuning
-# This is the "before" image — cold class loading every time
-# ============================================================
-
-FROM eclipse-temurin:21-jdk AS builder
+FROM docker.io/library/maven:3.9-eclipse-temurin-21 AS builder
 WORKDIR /build
 COPY pom.xml .
-RUN --mount=type=cache,target=/root/.m2 \
-    mvn dependency:resolve -q 2>/dev/null || true
 COPY src ./src
-RUN mvn package -DskipTests -q
+RUN mvn package -Dmaven.test.skip=true --no-transfer-progress
 
-FROM eclipse-temurin:21-jre
+FROM registry.access.redhat.com/ubi9/openjdk-21-runtime
 WORKDIR /app
-COPY --from=builder /build/target/startup-demo-*.jar app.jar
-
-# ❌ No AppCDS
-# ❌ No class data sharing
-# ❌ JVM loads and verifies all classes from scratch on every start
-
+COPY --from=builder /build/target/spring-startup-demo-*.jar app.jar
 ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
-
 EXPOSE 8080
+USER 185
 ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar app.jar"]

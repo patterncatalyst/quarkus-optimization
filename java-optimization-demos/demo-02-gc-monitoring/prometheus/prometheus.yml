@@ -1,35 +1,33 @@
 global:
-  scrape_interval:     5s   # Scrape every 5s for snappy demo visibility
+  scrape_interval:     5s
   evaluation_interval: 5s
   external_labels:
-    monitor: 'jvm-gc-demo'
+    monitor: 'quarkus-jvm-gc-demo'
 
-# ── Alerting Rules ─────────────────────────────────────────
 rule_files:
   - "rules.yml"
 
-# ── Scrape Targets ─────────────────────────────────────────
 scrape_configs:
-
-  # Java app with G1GC
-  - job_name: 'java-g1gc'
-    metrics_path: '/actuator/prometheus'
+  # Quarkus app G1GC — metrics at /q/metrics (not /actuator/prometheus)
+  - job_name: 'quarkus-g1gc'
+    metrics_path: '/q/metrics'
     static_configs:
-      - targets: ['java-app-g1gc:8080']
+      - targets: ['quarkus-app-g1gc:8080']
         labels:
           gc_type: 'G1GC'
-          app: 'gc-demo'
+          app: 'quarkus-gc-demo'
+          framework: 'quarkus-3.33.1'
 
-  # Java app with ZGC (running on port 8081)
-  - job_name: 'java-zgc'
-    metrics_path: '/actuator/prometheus'
+  # Quarkus app ZGC variant
+  - job_name: 'quarkus-zgc'
+    metrics_path: '/q/metrics'
     static_configs:
-      - targets: ['java-app-zgc:8080']
+      - targets: ['quarkus-app-zgc:8080']
         labels:
           gc_type: 'ZGC'
-          app: 'gc-demo'
+          app: 'quarkus-gc-demo'
+          framework: 'quarkus-3.33.1'
 
-  # Prometheus self-monitoring
   - job_name: 'prometheus'
     static_configs:
       - targets: ['localhost:9090']

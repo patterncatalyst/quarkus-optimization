@@ -1,260 +1,521 @@
 {
-  "title": "JVM GC Monitoring — Demo 02",
-  "uid": "jvm-gc-demo",
+  "title": "JVM GC Monitoring \u2014 Demo 02",
+  "uid": "gc-demo-02",
+  "schemaVersion": 38,
   "version": 1,
-  "schemaVersion": 39,
   "refresh": "5s",
-  "time": { "from": "now-15m", "to": "now" },
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
   "timepicker": {},
-  "tags": ["jvm", "gc", "demo"],
+  "timezone": "browser",
+  "tags": [
+    "jvm",
+    "quarkus",
+    "gc"
+  ],
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "links": [],
+  "liveNow": false,
+  "weekStart": "",
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "templating": {
+    "list": []
+  },
   "panels": [
     {
       "id": 1,
-      "title": "🔴 GC Pause P99 (ms) — G1GC vs ZGC",
+      "title": "GC Pause Max (ms) \u2014 G1GC vs ZGC",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
-      "datasource": "Prometheus",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "description": "Max GC pause duration. G1GC has visible stop-the-world spikes; ZGC stays near-zero.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ext-prometheus"
+      },
       "fieldConfig": {
         "defaults": {
           "unit": "ms",
-          "color": { "mode": "palette-classic" },
-          "custom": { "lineWidth": 2, "fillOpacity": 10 },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 100 },
-              { "color": "red", "value": 500 }
-            ]
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10
           }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "list"
         }
       },
       "targets": [
         {
-          "expr": "histogram_quantile(0.99, rate(jvm_gc_pause_seconds_bucket{job='java-g1gc'}[1m])) * 1000",
-          "legendFormat": "G1GC P99",
-          "refId": "A"
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ext-prometheus"
+          },
+          "expr": "jvm_gc_pause_seconds_max{job=\"quarkus-g1gc\"} * 1000",
+          "legendFormat": "G1GC max",
+          "refId": "A",
+          "instant": false
         },
         {
-          "expr": "histogram_quantile(0.50, rate(jvm_gc_pause_seconds_bucket{job='java-g1gc'}[1m])) * 1000",
-          "legendFormat": "G1GC P50",
-          "refId": "B"
-        },
-        {
-          "expr": "histogram_quantile(0.99, rate(jvm_gc_pause_seconds_bucket{job='java-zgc'}[1m])) * 1000",
-          "legendFormat": "ZGC P99",
-          "refId": "C"
-        },
-        {
-          "expr": "histogram_quantile(0.50, rate(jvm_gc_pause_seconds_bucket{job='java-zgc'}[1m])) * 1000",
-          "legendFormat": "ZGC P50",
-          "refId": "D"
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ext-prometheus"
+          },
+          "expr": "jvm_gc_pause_seconds_max{job=\"quarkus-zgc\"} * 1000",
+          "legendFormat": "ZGC max",
+          "refId": "B",
+          "instant": false
         }
       ],
-      "options": {
-        "tooltip": { "mode": "multi" },
-        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max", "lastNotNull"] }
-      }
+      "pluginVersion": "11.0.0"
     },
     {
       "id": 2,
-      "title": "💾 Heap Memory Used (MB)",
+      "title": "GC Pause Avg (ms) \u2014 G1GC vs ZGC",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
-      "datasource": "Prometheus",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "description": "Average GC pause = rate(sum) / rate(count) over 1 min.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ext-prometheus"
+      },
       "fieldConfig": {
         "defaults": {
-          "unit": "decmbytes",
-          "color": { "mode": "palette-classic" },
-          "custom": { "lineWidth": 2, "fillOpacity": 15 }
+          "unit": "ms",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "list"
         }
       },
       "targets": [
         {
-          "expr": "jvm_memory_used_bytes{area='heap', job='java-g1gc'} / 1024 / 1024",
-          "legendFormat": "G1GC Heap Used",
-          "refId": "A"
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ext-prometheus"
+          },
+          "expr": "rate(jvm_gc_pause_seconds_sum{job=\"quarkus-g1gc\"}[1m]) / rate(jvm_gc_pause_seconds_count{job=\"quarkus-g1gc\"}[1m]) * 1000",
+          "legendFormat": "G1GC avg",
+          "refId": "A",
+          "instant": false
         },
         {
-          "expr": "jvm_memory_max_bytes{area='heap', job='java-g1gc'} / 1024 / 1024",
-          "legendFormat": "G1GC Heap Max",
-          "refId": "B"
-        },
-        {
-          "expr": "jvm_memory_used_bytes{area='heap', job='java-zgc'} / 1024 / 1024",
-          "legendFormat": "ZGC Heap Used",
-          "refId": "C"
-        },
-        {
-          "expr": "jvm_memory_max_bytes{area='heap', job='java-zgc'} / 1024 / 1024",
-          "legendFormat": "ZGC Heap Max",
-          "refId": "D"
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ext-prometheus"
+          },
+          "expr": "rate(jvm_gc_pause_seconds_sum{job=\"quarkus-zgc\"}[1m]) / rate(jvm_gc_pause_seconds_count{job=\"quarkus-zgc\"}[1m]) * 1000",
+          "legendFormat": "ZGC avg",
+          "refId": "B",
+          "instant": false
         }
       ],
-      "options": {
-        "tooltip": { "mode": "multi" },
-        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max", "lastNotNull"] }
-      }
+      "pluginVersion": "11.0.0"
     },
     {
       "id": 3,
-      "title": "📊 GC Collections per Minute",
+      "title": "Heap Used (MB) \u2014 G1GC",
       "type": "timeseries",
-      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 8 },
-      "datasource": "Prometheus",
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 12,
+        "h": 7
+      },
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ext-prometheus"
+      },
       "fieldConfig": {
         "defaults": {
-          "unit": "short",
-          "color": { "mode": "palette-classic" },
-          "custom": { "lineWidth": 2 }
+          "unit": "decmbytes",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "list"
         }
       },
       "targets": [
         {
-          "expr": "rate(jvm_gc_pause_seconds_count{job='java-g1gc'}[1m]) * 60",
-          "legendFormat": "G1GC collections/min",
-          "refId": "A"
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ext-prometheus"
+          },
+          "expr": "jvm_memory_used_bytes{area=\"heap\",job=\"quarkus-g1gc\"} / 1048576",
+          "legendFormat": "Used",
+          "refId": "A",
+          "instant": false
         },
         {
-          "expr": "rate(jvm_gc_pause_seconds_count{job='java-zgc'}[1m]) * 60",
-          "legendFormat": "ZGC collections/min",
-          "refId": "B"
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ext-prometheus"
+          },
+          "expr": "jvm_memory_max_bytes{area=\"heap\",job=\"quarkus-g1gc\"} / 1048576",
+          "legendFormat": "Max",
+          "refId": "B",
+          "instant": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ext-prometheus"
+          },
+          "expr": "jvm_memory_committed_bytes{area=\"heap\",job=\"quarkus-g1gc\"} / 1048576",
+          "legendFormat": "Committed",
+          "refId": "C",
+          "instant": false
         }
       ],
-      "options": {
-        "legend": { "displayMode": "list", "placement": "bottom" }
-      }
+      "pluginVersion": "11.0.0"
     },
     {
       "id": 4,
-      "title": "🧵 Live Threads",
+      "title": "Heap Used (MB) \u2014 ZGC",
       "type": "timeseries",
-      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 8 },
-      "datasource": "Prometheus",
+      "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 12,
+        "h": 7
+      },
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ext-prometheus"
+      },
       "fieldConfig": {
         "defaults": {
-          "unit": "short",
-          "color": { "mode": "palette-classic" },
-          "custom": { "lineWidth": 2 }
+          "unit": "decmbytes",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "list"
         }
       },
       "targets": [
         {
-          "expr": "jvm_threads_live_threads{job='java-g1gc'}",
-          "legendFormat": "G1GC Live Threads",
-          "refId": "A"
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ext-prometheus"
+          },
+          "expr": "jvm_memory_used_bytes{area=\"heap\",job=\"quarkus-zgc\"} / 1048576",
+          "legendFormat": "Used",
+          "refId": "A",
+          "instant": false
         },
         {
-          "expr": "jvm_threads_live_threads{job='java-zgc'}",
-          "legendFormat": "ZGC Live Threads",
-          "refId": "B"
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ext-prometheus"
+          },
+          "expr": "jvm_memory_max_bytes{area=\"heap\",job=\"quarkus-zgc\"} / 1048576",
+          "legendFormat": "Max",
+          "refId": "B",
+          "instant": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ext-prometheus"
+          },
+          "expr": "jvm_memory_committed_bytes{area=\"heap\",job=\"quarkus-zgc\"} / 1048576",
+          "legendFormat": "Committed",
+          "refId": "C",
+          "instant": false
         }
       ],
-      "options": {
-        "legend": { "displayMode": "list", "placement": "bottom" }
-      }
+      "pluginVersion": "11.0.0"
     },
     {
       "id": 5,
-      "title": "📈 Heap Utilization % (alert threshold: 85%)",
-      "type": "gauge",
-      "gridPos": { "h": 7, "w": 6, "x": 0, "y": 15 },
-      "datasource": "Prometheus",
+      "title": "GC Collections / sec",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 15,
+        "w": 12,
+        "h": 7
+      },
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ext-prometheus"
+      },
       "fieldConfig": {
         "defaults": {
-          "unit": "percentunit",
-          "min": 0, "max": 1,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 0.70 },
-              { "color": "red", "value": 0.85 }
-            ]
+          "unit": "ops",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10
           }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "list"
         }
       },
       "targets": [
         {
-          "expr": "jvm_memory_used_bytes{area='heap',job='java-g1gc'} / jvm_memory_max_bytes{area='heap',job='java-g1gc'}",
-          "legendFormat": "G1GC Heap %",
-          "refId": "A"
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ext-prometheus"
+          },
+          "expr": "rate(jvm_gc_pause_seconds_count{job=\"quarkus-g1gc\"}[1m])",
+          "legendFormat": "G1GC",
+          "refId": "A",
+          "instant": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ext-prometheus"
+          },
+          "expr": "rate(jvm_gc_pause_seconds_count{job=\"quarkus-zgc\"}[1m])",
+          "legendFormat": "ZGC",
+          "refId": "B",
+          "instant": false
         }
       ],
-      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } }
+      "pluginVersion": "11.0.0"
     },
     {
       "id": 6,
-      "title": "📈 ZGC Heap Utilization %",
-      "type": "gauge",
-      "gridPos": { "h": 7, "w": 6, "x": 6, "y": 15 },
-      "datasource": "Prometheus",
+      "title": "Live Thread Count",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 15,
+        "w": 12,
+        "h": 7
+      },
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ext-prometheus"
+      },
       "fieldConfig": {
         "defaults": {
-          "unit": "percentunit",
-          "min": 0, "max": 1,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 0.70 },
-              { "color": "red", "value": 0.85 }
-            ]
+          "unit": "short",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10
           }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "list"
         }
       },
       "targets": [
         {
-          "expr": "jvm_memory_used_bytes{area='heap',job='java-zgc'} / jvm_memory_max_bytes{area='heap',job='java-zgc'}",
-          "legendFormat": "ZGC Heap %",
-          "refId": "A"
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ext-prometheus"
+          },
+          "expr": "jvm_threads_live_threads{job=\"quarkus-g1gc\"}",
+          "legendFormat": "G1GC threads",
+          "refId": "A",
+          "instant": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ext-prometheus"
+          },
+          "expr": "jvm_threads_live_threads{job=\"quarkus-zgc\"}",
+          "legendFormat": "ZGC threads",
+          "refId": "B",
+          "instant": false
         }
       ],
-      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } }
+      "pluginVersion": "11.0.0"
     },
     {
       "id": 7,
-      "title": "⏱ GC Total Time % of Wall Clock",
+      "title": "HTTP Request Rate (req/sec)",
       "type": "timeseries",
-      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 15 },
-      "datasource": "Prometheus",
+      "gridPos": {
+        "x": 0,
+        "y": 22,
+        "w": 12,
+        "h": 7
+      },
+      "description": "Rate of HTTP responses = request rate. Vert.x: http_server_bytes_written_count.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ext-prometheus"
+      },
       "fieldConfig": {
         "defaults": {
-          "unit": "percentunit",
-          "min": 0,
-          "color": { "mode": "palette-classic" },
-          "custom": { "lineWidth": 2, "fillOpacity": 20 }
+          "unit": "reqps",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "list"
         }
       },
       "targets": [
         {
-          "expr": "rate(jvm_gc_pause_seconds_sum{job='java-g1gc'}[1m])",
-          "legendFormat": "G1GC time in GC (s/s)",
-          "refId": "A"
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ext-prometheus"
+          },
+          "expr": "rate(http_server_bytes_written_count{job=\"quarkus-g1gc\"}[1m])",
+          "legendFormat": "G1GC",
+          "refId": "A",
+          "instant": false
         },
         {
-          "expr": "rate(jvm_gc_pause_seconds_sum{job='java-zgc'}[1m])",
-          "legendFormat": "ZGC time in GC (s/s)",
-          "refId": "B"
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ext-prometheus"
+          },
+          "expr": "rate(http_server_bytes_written_count{job=\"quarkus-zgc\"}[1m])",
+          "legendFormat": "ZGC",
+          "refId": "B",
+          "instant": false
         }
       ],
-      "options": {
-        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"] }
-      }
+      "pluginVersion": "11.0.0"
     },
     {
       "id": 8,
-      "title": "🔔 Active Alerts",
-      "type": "alertlist",
-      "gridPos": { "h": 5, "w": 24, "x": 0, "y": 22 },
+      "title": "GC Memory Allocated / sec (MB)",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 22,
+        "w": 12,
+        "h": 7
+      },
+      "description": "Rate of heap memory allocated. Shows allocation pressure directly.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ext-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decmbytes",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
       "options": {
-        "alertName": "",
-        "dashboardAlerts": false,
-        "groupMode": "default",
-        "maxItems": 20,
-        "sortOrder": 1,
-        "stateFilter": { "firing": true, "pending": true }
-      }
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "list"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ext-prometheus"
+          },
+          "expr": "rate(jvm_gc_memory_allocated_bytes_total{job=\"quarkus-g1gc\"}[1m]) / 1048576",
+          "legendFormat": "G1GC allocated/s",
+          "refId": "A",
+          "instant": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ext-prometheus"
+          },
+          "expr": "rate(jvm_gc_memory_allocated_bytes_total{job=\"quarkus-zgc\"}[1m]) / 1048576",
+          "legendFormat": "ZGC allocated/s",
+          "refId": "B",
+          "instant": false
+        }
+      ],
+      "pluginVersion": "11.0.0"
     }
   ]
 }

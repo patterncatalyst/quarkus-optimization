@@ -5,7 +5,7 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 
 import java.lang.management.ManagementFactory;
-import java.nio.file.*;
+import java.nio.file.Files;
 import java.util.Map;
 
 /**
@@ -122,12 +122,12 @@ public class StartupResource {
 
     private String readContainerLimit() {
         try {
-            var v2 = Path.of("/sys/fs/cgroup/memory.max");
+            var v2 = java.nio.file.Path.of("/sys/fs/cgroup/memory.max");
             if (Files.exists(v2)) {
                 var s = Files.readString(v2).strip();
                 if (!"max".equals(s)) return "%,d MB".formatted(Long.parseLong(s) / (1024 * 1024));
             }
-            var v1 = Path.of("/sys/fs/cgroup/memory/memory.limit_in_bytes");
+            var v1 = java.nio.file.Path.of("/sys/fs/cgroup/memory/memory.limit_in_bytes");
             if (Files.exists(v1)) {
                 long limit = Long.parseLong(Files.readString(v1).strip());
                 if (limit < Long.MAX_VALUE / 2) return "%,d MB".formatted(limit / (1024 * 1024));

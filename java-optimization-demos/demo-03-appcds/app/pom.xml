@@ -13,10 +13,9 @@
   </parent>
 
   <groupId>demo</groupId>
-  <artifactId>startup-demo</artifactId>
+  <artifactId>spring-startup-demo</artifactId>
   <version>1.0.0</version>
-  <name>startup-demo</name>
-  <description>Demo 03: AppCDS Startup Acceleration — Spring Boot 4.0.5 / Java 21</description>
+  <description>Demo 03: AppCDS Startup - Spring Boot 4.0.5 / Java 21</description>
 
   <properties>
     <java.version>21</java.version>
@@ -31,6 +30,17 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-actuator</artifactId>
     </dependency>
+    <!-- JPA + Hibernate loads thousands of extra classes
+         — makes AppCDS improvement dramatic and realistic -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.h2database</groupId>
+      <artifactId>h2</artifactId>
+      <scope>runtime</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -38,12 +48,6 @@
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
-        <configuration>
-          <!-- Layered JAR improves AppCDS archive cache hit rate -->
-          <layers>
-            <enabled>true</enabled>
-          </layers>
-        </configuration>
       </plugin>
     </plugins>
   </build>

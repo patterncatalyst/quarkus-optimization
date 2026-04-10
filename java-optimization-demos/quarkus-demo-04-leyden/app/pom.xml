@@ -39,6 +39,8 @@
     <quarkus.platform.version>3.33.1</quarkus.platform.version>
     <!-- Compile to Java 21 bytecode — runs fine on JDK 25 JVM -->
     <maven.compiler.release>21</maven.compiler.release>
+    <maven.compiler.source>21</maven.compiler.source>
+    <maven.compiler.target>21</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <surefire-plugin.version>3.1.2</surefire-plugin.version>
   </properties>
@@ -52,10 +54,26 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-    </dependencies>
+  
+  </dependencies>
   </dependencyManagement>
 
   <dependencies>
+    <!-- Extra extensions — OpenAPI, Cache, Scheduler load more classes
+         at startup, making the Leyden AOT cache improvement visible -->
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-openapi</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-cache</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-scheduler</artifactId>
+    </dependency>
+
     <!-- REST layer -->
     <dependency>
       <groupId>io.quarkus</groupId>
@@ -123,6 +141,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.13.0</version>
         <configuration>
           <release>21</release>
         </configuration>

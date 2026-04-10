@@ -43,16 +43,21 @@
     </dependency>
 
     <!--
-      quarkus-micrometer-opentelemetry (preview, since 3.19)
-      Unified extension: Micrometer API + OpenTelemetry SDK backend.
-      Sends ALL telemetry (metrics, traces, logs) via OTLP.
-      Replaces the two-extension approach of:
-        quarkus-micrometer-registry-prometheus + quarkus-opentelemetry
-      Guide: quarkus.io/guides/telemetry-micrometer-to-opentelemetry
+      quarkus-micrometer-registry-prometheus: exposes /q/metrics for Prometheus scraping.
+      Required for the Grafana JVM GC dashboard to have data.
     -->
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-micrometer-opentelemetry</artifactId>
+      <artifactId>quarkus-micrometer-registry-prometheus</artifactId>
+    </dependency>
+
+    <!--
+      quarkus-opentelemetry: distributed tracing via OTLP.
+      @WithSpan, HTTP spans, exports traces to Grafana Tempo.
+    -->
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-opentelemetry</artifactId>
     </dependency>
 
     <!-- Health endpoints at /q/health -->

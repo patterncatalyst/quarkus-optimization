@@ -1,53 +1,56 @@
 version: "3.9"
 
 # ============================================================
-# Demo 02: GC Monitoring + Distributed Tracing Stack
-#   • Java G1GC app (port 8080) — Spring Boot 4.0.5 + Micrometer
-#   • Java ZGC app  (port 8081) — same app, different GC
-#   • Prometheus    (port 9090) — scrapes /actuator/prometheus
-#   • Grafana       (port 3000) — JVM GC dashboard (admin/admin)
-#   • Jaeger        (port 16686)— distributed trace UI (new: Spring Boot 4.0 OTel)
+# Demo 02 (Quarkus): GC Monitoring — Grafana LGTM Stack
+#   Framework: Quarkus 3.33.1 LTS / Java 21
+#   Extension: quarkus-micrometer-opentelemetry (unified)
+#
+#   • Quarkus G1GC app  (port 8080) — all telemetry via OTLP
+#   • Quarkus ZGC app   (port 8081) — same app, different GC
+#   • Grafana Tempo     (port 4317)  — OTLP trace receiver
+#   • Prometheus        (port 9090)  — scrapes /q/metrics
+#   • Grafana           (port 3000)  — unified: metrics + traces + logs
+#
+# Grafana LGTM replaces Jaeger — traces, metrics, logs all in one UI.
+# See: quarkus.io/guides/telemetry-micrometer-to-opentelemetry
 # ============================================================
 
 services:
 
-  # ── Java Application — G1GC ───────────────────────────────
-  java-app-g1gc:
+  # ── Quarkus App — G1GC ────────────────────────────────────
+  quarkus-app-g1gc:
     build:
       context: ./app
       dockerfile: Dockerfile
-    container_name: java-app-g1gc
+    container_name: quarkus-app-g1gc
     ports:
       - "8080:8080"
     environment:
       GC_TYPE: g1gc
-      JAVA_OPTS: >-
-        -XX:ParallelGCThreads=2
-        -XX:ConcGCThreads=1
-        -XX:InitiatingHeapOccupancyPercent=45
-        -XX:+G1UseAdaptiveIHOP
     mem_limit: 512m
     cpus: "1.0"
     networks:
-      - monitoring
+      - observability
+    depends_on:
+      grafana-lgtm:
+        condition: service_started
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/q/health/live"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 45s
+      start_period: 60s
     labels:
-      demo: "gc-monitoring"
+      demo: "quarkus-gc-monitoring"
       gc: "G1GC"
-    depends_on:
-      - jaeger
+      framework: "quarkus-3.33.1"
 
-  # ── Java Application — ZGC (Generational, Java 21) ────────
-  java-app-zgc:
+  # ── Quarkus App — ZGC (Generational, Java 21) ─────────────
+  quarkus-app-zgc:
     build:
       context: ./app
       dockerfile: Dockerfile
-    container_name: java-app-zgc
+    container_name: quarkus-app-zgc
     ports:
       - "8081:8080"
     environment:
@@ -56,20 +59,23 @@ services:
     mem_limit: 512m
     cpus: "1.0"
     networks:
-      - monitoring
+      - observability
+    depends_on:
+      grafana-lgtm:
+        condition: service_started
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/q/health/live"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 45s
+      start_period: 60s
     labels:
-      demo: "gc-monitoring"
+      demo: "quarkus-gc-monitoring"
       gc: "ZGC"
-    depends_on:
-      - jaeger
+      framework: "quarkus-3.33.1"
 
   # ── Prometheus ────────────────────────────────────────────
+  # Still used for /q/metrics scraping and Grafana data source
   prometheus:
     image: prom/prometheus:v3.2.1
     container_name: prometheus
@@ -82,52 +88,41 @@ services:
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--storage.tsdb.path=/prometheus"
+      - "--web.enable-remote-write-receiver"
       - "--web.enable-lifecycle"
-      - "--storage.tsdb.retention.time=1h"
+      - "--storage.tsdb.retention.time=2h"
     networks:
-      - monitoring
+      - observability
     depends_on:
-      java-app-g1gc:
+      quarkus-app-g1gc:
         condition: service_healthy
 
-  # ── Grafana ───────────────────────────────────────────────
-  grafana:
-    image: grafana/grafana:11.6.0
-    container_name: grafana
+  # ── Grafana LGTM — Grafana + Loki + Tempo + Prometheus in one image ──
+  # Pre-wired: no manual datasource config needed.
+  # Grafana UI: http://localhost:3000 (admin/admin)
+  # OTLP gRPC:  port 4317 — Quarkus sends traces here
+  # OTLP HTTP:  port 4318
+  grafana-lgtm:
+    image: grafana/otel-lgtm:0.8.1
+    container_name: grafana-lgtm
     ports:
-      - "3000:3000"
+      - "3000:3000"   # Grafana UI
+      - "4317:4317"   # OTLP gRPC (traces from Quarkus)
+      - "4318:4318"   # OTLP HTTP
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/jvm-gc-dashboard.json
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_AUTH_ANONYMOUS_ENABLED=true
     volumes:
-      - ./grafana/provisioning:/etc/grafana/provisioning:ro
-      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
-      - grafana_data:/var/lib/grafana
+      # External Prometheus datasource — mounted as single file so otel-lgtm's
+      # internal Tempo/Loki datasources remain intact
+      - ./grafana/provisioning/datasources/external-prometheus.yml:/etc/grafana/provisioning/datasources/external-prometheus.yml:ro
     networks:
-      - monitoring
-    depends_on:
-      - prometheus
-
-  # ── Jaeger — Distributed Tracing (Spring Boot 4.0 OTel) ──
-  # Receives OTLP traces from the Java apps via port 4318 (HTTP)
-  # UI available at http://localhost:16686
-  jaeger:
-    image: jaegertracing/all-in-one:1.65
-    container_name: jaeger
-    ports:
-      - "16686:16686"  # Jaeger UI
-      - "4318:4318"    # OTLP HTTP receiver (apps send traces here)
-      - "4317:4317"    # OTLP gRPC receiver (optional)
-    environment:
-      - COLLECTOR_OTLP_ENABLED=true
-    networks:
-      - monitoring
+      - observability
 
 networks:
-  monitoring:
+  observability:
     driver: bridge
 
 volumes:
   prometheus_data:
-  grafana_data:

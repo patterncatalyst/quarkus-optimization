@@ -5,58 +5,96 @@
          https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <parent>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-parent</artifactId>
-    <version>4.0.5</version>
-    <relativePath/>
-  </parent>
-
   <groupId>demo</groupId>
-  <artifactId>gc-monitoring</artifactId>
+  <artifactId>quarkus-gc-monitoring</artifactId>
   <version>1.0.0</version>
-  <name>gc-monitoring</name>
-  <description>Demo 02: GC Monitoring with Prometheus + OpenTelemetry — Spring Boot 4.0.5 / Java 21</description>
+  <name>quarkus-gc-monitoring</name>
+  <description>Demo 02: GC Monitoring with Grafana LGTM stack — Quarkus 3.33.1 LTS / Java 21</description>
 
   <properties>
-    <java.version>21</java.version>
+    <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
+    <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
+    <quarkus.platform.version>3.33.1</quarkus.platform.version>
+    <maven.compiler.release>21</maven.compiler.release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>${quarkus.platform.group-id}</groupId>
+        <artifactId>${quarkus.platform.artifact-id}</artifactId>
+        <version>${quarkus.platform.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
   <dependencies>
-    <!-- Web -->
+    <!-- RESTEasy Reactive -->
     <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-web</artifactId>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-rest</artifactId>
     </dependency>
-
-    <!-- Actuator -->
     <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-actuator</artifactId>
-    </dependency>
-
-    <!-- Micrometer Prometheus registry — scrape via /actuator/prometheus -->
-    <dependency>
-      <groupId>io.micrometer</groupId>
-      <artifactId>micrometer-registry-prometheus</artifactId>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-rest-jackson</artifactId>
     </dependency>
 
     <!--
-      Spring Boot 4.0 new starter: OpenTelemetry SDK auto-configuration.
-      Provides distributed tracing via OTLP export (Jaeger, Tempo, etc.)
-      and integrates with Micrometer Observation for zero-code instrumentation.
+      quarkus-micrometer-registry-prometheus: exposes /q/metrics for Prometheus scraping.
+      Required for the Grafana JVM GC dashboard to have data.
     -->
     <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-opentelemetry</artifactId>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-micrometer-registry-prometheus</artifactId>
+    </dependency>
+
+    <!--
+      quarkus-opentelemetry: distributed tracing via OTLP.
+      @WithSpan, HTTP spans, exports traces to Grafana Tempo.
+    -->
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-opentelemetry</artifactId>
+    </dependency>
+
+    <!-- Health endpoints at /q/health -->
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-health</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-arc</artifactId>
     </dependency>
   </dependencies>
 
   <build>
     <plugins>
       <plugin>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-maven-plugin</artifactId>
+        <groupId>${quarkus.platform.group-id}</groupId>
+        <artifactId>quarkus-maven-plugin</artifactId>
+        <version>${quarkus.platform.version}</version>
+        <extensions>true</extensions>
+        <executions>
+          <execution>
+            <goals>
+              <goal>build</goal>
+              <goal>generate-code</goal>
+              <goal>generate-code-tests</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <release>21</release>
+        </configuration>
       </plugin>
     </plugins>
   </build>

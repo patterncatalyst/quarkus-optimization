@@ -31,12 +31,15 @@ services:
     cpus: "1.0"
     networks:
       - observability
+    depends_on:
+      grafana-lgtm:
+        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/q/health/live"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 30s
+      start_period: 60s
     labels:
       demo: "quarkus-gc-monitoring"
       gc: "G1GC"
@@ -57,12 +60,15 @@ services:
     cpus: "1.0"
     networks:
       - observability
+    depends_on:
+      grafana-lgtm:
+        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/q/health/live"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 30s
+      start_period: 60s
     labels:
       demo: "quarkus-gc-monitoring"
       gc: "ZGC"
@@ -91,44 +97,28 @@ services:
       quarkus-app-g1gc:
         condition: service_healthy
 
-  # ── Grafana Tempo — Distributed Traces via OTLP ───────────
-  # Receives traces from Quarkus via quarkus-micrometer-opentelemetry
-  # Replaces Jaeger — traces visible in Grafana under "Explore → Tempo"
-  tempo:
-    image: grafana/tempo:latest
-    container_name: tempo
+  # ── Grafana LGTM — Grafana + Loki + Tempo + Prometheus in one image ──
+  # Pre-wired: no manual datasource config needed.
+  # Grafana UI: http://localhost:3000 (admin/admin)
+  # OTLP gRPC:  port 4317 — Quarkus sends traces here
+  # OTLP HTTP:  port 4318
+  grafana-lgtm:
+    image: grafana/otel-lgtm:0.8.1
+    container_name: grafana-lgtm
     ports:
-      - "4317:4317"   # OTLP gRPC — Quarkus sends traces here
-      - "4318:4318"   # OTLP HTTP (optional)
-      - "3200:3200"   # Tempo API (Grafana data source)
-    command: ["-config.file=/etc/tempo.yaml"]
-    volumes:
-      - ./tempo/tempo.yaml:/etc/tempo.yaml:ro
-      - tempo_data:/tmp/tempo
-    networks:
-      - observability
-
-  # ── Grafana — Unified UI for Metrics + Traces + Logs ──────
-  grafana:
-    image: grafana/grafana:11.6.0
-    container_name: grafana
-    ports:
-      - "3000:3000"
+      - "3000:3000"   # Grafana UI
+      - "4317:4317"   # OTLP gRPC (traces from Quarkus)
+      - "4318:4318"   # OTLP HTTP
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/jvm-gc-dashboard.json
-      # Feature toggle for Grafana Traces correlation
-      - GF_FEATURE_TOGGLES_ENABLE=traceqlEditor
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_AUTH_ANONYMOUS_ENABLED=true
     volumes:
-      - ./grafana/provisioning:/etc/grafana/provisioning:ro
-      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
-      - grafana_data:/var/lib/grafana
+      # External Prometheus datasource — mounted as single file so otel-lgtm's
+      # internal Tempo/Loki datasources remain intact
+      - ./grafana/provisioning/datasources/external-prometheus.yml:/etc/grafana/provisioning/datasources/external-prometheus.yml:ro
     networks:
       - observability
-    depends_on:
-      - prometheus
-      - tempo
 
 networks:
   observability:
@@ -136,5 +126,3 @@ networks:
 
 volumes:
   prometheus_data:
-  grafana_data:
-  tempo_data:

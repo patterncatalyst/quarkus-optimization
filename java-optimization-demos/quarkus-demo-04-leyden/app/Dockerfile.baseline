@@ -7,15 +7,13 @@
 # But NO -XX:AOTCache flag → cold class loading every start
 # ============================================================
 
-FROM eclipse-temurin:25-jdk AS builder
+FROM docker.io/library/maven:3.9-eclipse-temurin-25 AS builder
 WORKDIR /build
 COPY pom.xml .
-RUN --mount=type=cache,target=/root/.m2 \
-    mvn dependency:go-offline -q 2>/dev/null || true
 COPY src ./src
-RUN mvn package -DskipTests -q
+RUN mvn package -Dmaven.test.skip=true --no-transfer-progress
 
-FROM eclipse-temurin:25-jre
+FROM registry.access.redhat.com/ubi9/openjdk-25-runtime
 WORKDIR /deployments
 
 COPY --from=builder /build/target/quarkus-app/lib/     ./lib/
@@ -29,4 +27,5 @@ ENV JAVA_OPTS="-XX:+UseContainerSupport \
 
 # ❌ NO -XX:AOTCache flag — baseline measurement
 EXPOSE 8080
+USER 185
 ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar quarkus-run.jar"]
