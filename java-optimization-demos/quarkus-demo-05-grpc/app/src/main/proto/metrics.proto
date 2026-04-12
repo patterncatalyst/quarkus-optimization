@@ -1,0 +1,27 @@
+syntax = "proto3";
+option java_package = "demo.grpc.proto";
+option java_multiple_files = true;
+
+// Demo 05 — REST vs gRPC comparison
+// Same data, two protocols — quarkus-grpc generates all Java stubs from this file.
+
+service MetricsService {
+    // Unary — equivalent to GET /metrics
+    rpc GetJvmMetrics  (MetricsRequest) returns (MetricsResponse) {}
+    // Server streaming — NO REST equivalent without SSE/WebSocket
+    rpc StreamMetrics  (MetricsRequest) returns (stream MetricsResponse) {}
+}
+
+message MetricsRequest {
+    string host = 1;
+}
+
+message MetricsResponse {
+    int64  heap_used_mb   = 1;
+    int64  heap_max_mb    = 2;
+    double heap_used_pct  = 3;
+    int64  timestamp      = 4;
+    string jvm_version    = 5;
+    string gc_name        = 6;
+    int64  uptime_ms      = 7;
+}

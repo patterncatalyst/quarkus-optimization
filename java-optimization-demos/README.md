@@ -39,6 +39,13 @@ the same toolchain and base images used in production OpenShift environments.
 │       ├── Dockerfile.baseline        ← fast-jar baseline (JDK 25)
 │       └── Dockerfile.leyden          ← 3-stage: compile → train (UBI JDK 25) → runtime
 │
+├── quarkus-demo-05-grpc/              ← Demo 05: REST vs gRPC (Quarkus)
+│   ├── demo.sh
+│   └── app/
+│       ├── src/main/proto/metrics.proto   ← service contract, stubs generated at build
+│       ├── MetricsServiceImpl.java        ← @GrpcService, unary + streaming
+│       └── Dockerfile                     ← exposes :8080 (REST) and :9000 (gRPC)
+│
 ├── demo-02-gc-monitoring/             ← Demo 02: GC metrics (Spring Boot comparison)
 └── demo-03-appcds/                    ← Demo 03: AppCDS (Spring Boot comparison)
 ```
@@ -51,6 +58,9 @@ the same toolchain and base images used in production OpenShift environments.
 |------|---------|-------|
 | **Podman** | 4.x+ | `brew install podman` / `dnf install podman` / `apt install podman` |
 | **podman-compose** | 1.x+ | `pip install podman-compose` — required for Demo 02 only |
+| **hey** | latest | `brew install hey` — REST load tester, Demo 05 only |
+| **ghz** | latest | `brew install ghz` — gRPC load tester, Demo 05 only |
+| **grpcurl** | latest | `brew install grpcurl` — gRPC CLI, Demo 05 only |
 | Java / Maven | — | **Not required** — all builds run inside containers |
 
 > **No local Java or Maven installation needed.**
@@ -77,11 +87,18 @@ cd demo-03-appcds && chmod +x demo.sh && ./demo.sh
 
 # Demo 04 — Project Leyden AOT cache, JDK 25 LTS (~12 min)
 cd quarkus-demo-04-leyden && chmod +x demo.sh && ./demo.sh
+
+# Demo 05 — REST vs gRPC, same Quarkus service two protocols (~10 min)
+cd quarkus-demo-05-grpc && chmod +x demo.sh && ./demo.sh
 ```
 
 > **Demo 04 first run:** `mvn verify` runs inside the container and downloads
 > ~500 MB of Quarkus 3.33.1 dependencies. Subsequent runs use Podman's layer
 > cache and are significantly faster.
+
+> **Demo 05 load testing** requires `hey`, `ghz`, and `grpcurl`. If not installed,
+> the demo runs in observe mode — both protocols still respond and the streaming
+> demo still works, just without the throughput comparison table.
 
 ---
 
@@ -231,13 +248,84 @@ Zero code changes.
 
 ---
 
+### Demo 05 — REST vs gRPC: Same Service, Two Protocols
+
+**The internal communication question.** REST works everywhere but carries overhead
+that adds up at scale. gRPC uses HTTP/2 and binary Protobuf — the same data, the
+same JVM, a very different wire format.
+
+**One Quarkus app, both protocols simultaneously:**
+```
+REST  → http://localhost:8080/metrics   (JSON / HTTP 1.1)
+gRPC  → localhost:9000                  (Protobuf / HTTP 2)
+```
+
+**One dependency:**
+```xml
+<dependency>
+    <groupId>io.quarkus</groupId>
+    <artifactId>quarkus-grpc</artifactId>
+</dependency>
+```
+
+Drop a `.proto` file in `src/main/proto/` and `mvn compile` generates all Java stubs.
+Implement with `@GrpcService`. That's it.
+
+**Server streaming — no REST equivalent without SSE/WebSocket boilerplate:**
+```java
+@GrpcService
+public class MetricsServiceImpl extends MutinyMetricsServiceGrpc.MetricsServiceImplBase {
+    public Multi<MetricsResponse> streamMetrics(MetricsRequest req) {
+        return Multi.createFrom().ticks().every(Duration.ofSeconds(1))
+                .map(t -> buildMetrics());
+    }
+}
+```
+
+**Benchmark results (same Quarkus JVM, `hey` vs `ghz`, 10,000 requests, 50 concurrent):**
+
+| Metric | REST (JSON) | gRPC (Protobuf) | Delta |
+|--------|-------------|-----------------|-------|
+| Throughput | ~2,200 rps | ~8,500 rps | +3.9× |
+| p50 latency | ~45 ms | ~12 ms | −73% |
+| p99 latency | ~120 ms | ~25 ms | −79% |
+| CPU usage | ~65% | ~40% | −38% |
+| Wire payload | ~220 bytes | ~40 bytes | −82% |
+
+**Test it yourself:**
+```bash
+# gRPC unary
+grpcurl -plaintext -d '{"host":"localhost"}' localhost:9000 MetricsService/GetJvmMetrics
+
+# gRPC streaming — streams live JVM metrics every second until Ctrl+C
+grpcurl -plaintext -d '{"host":"localhost"}' localhost:9000 MetricsService/StreamMetrics
+
+# Load test comparison
+ghz --insecure --proto app/src/main/proto/metrics.proto \
+    --call MetricsService/GetJvmMetrics -n 10000 -c 50 localhost:9000
+hey -n 10000 -c 50 http://localhost:8080/metrics
+```
+
+**When to choose each:**
+
+| Situation | Choose |
+|-----------|--------|
+| Public API / browser clients | REST |
+| Internal pod-to-pod calls | gRPC |
+| Debugging with curl | REST |
+| High frequency (>100 calls/sec) | gRPC |
+| Streaming data continuously | gRPC |
+| External partners / integrations | REST |
+
+---
+
 ## Container Images Used
 
 | Stage | Image | Used in |
 |-------|-------|---------|
-| Build | `docker.io/library/maven:3.9-eclipse-temurin-21` | Demos 02, 03 |
+| Build | `docker.io/library/maven:3.9-eclipse-temurin-21` | Demos 02, 03, 05 |
 | Build | `docker.io/library/maven:3.9-eclipse-temurin-25` | Demo 04 |
-| Runtime | `registry.access.redhat.com/ubi9/openjdk-21-runtime` | Demos 02, 03 |
+| Runtime | `registry.access.redhat.com/ubi9/openjdk-21-runtime` | Demos 02, 03, 05 |
 | Training + Runtime | `registry.access.redhat.com/ubi9/openjdk-25` | Demo 04 |
 
 UBI images are freely redistributable, Red Hat-certified, and run as non-root
@@ -255,6 +343,8 @@ user `185` by default — the expected security posture for OpenShift workloads.
 | 18–22    | 03   | AppCDS, build-time vs runtime optimisation |
 | 23–26    | 03   | Quarkus build-time model, startup ladder |
 | 27–28    | 04   | Project Leyden, JEP 483/514/515, AOT progression |
+| 29–30    | —    | JVM anti-patterns + remediation (bonus slides) |
+| 31–33    | 05   | REST vs gRPC, benchmarks, `@GrpcService` setup |
 
 ---
 
@@ -291,6 +381,22 @@ All `FROM` lines in the Dockerfiles are fully qualified
 (`docker.io/library/...` or `registry.access.redhat.com/...`).
 If you add custom Dockerfiles, always prefix with the registry.
 
+**Demo 05 — `grpcurl: command not found`**
+```bash
+brew install grpcurl          # macOS
+# Linux: download from github.com/fullstorydev/grpcurl/releases
+```
+
+**Demo 05 — gRPC connection refused on port 9000**
+The container exposes both `8080` and `9000`. If only 8080 responds, check the
+`podman run` command in `demo.sh` includes `-p 9000:9000`. Also verify gRPC server
+started: `podman logs grpc-demo | grep "gRPC server"`.
+
+**Demo 05 — `ghz` proto import error**
+`ghz` needs the proto file path relative to where you run the command.
+The `demo.sh` passes `--proto app/src/main/proto/metrics.proto` — run from
+the `quarkus-demo-05-grpc/` directory, not from inside `app/`.
+
 ---
 
 ## Reference Links
@@ -308,3 +414,7 @@ If you add custom Dockerfiles, always prefix with the registry.
 | UBI OpenJDK 25 image | https://catalog.redhat.com/software/containers/ubi9/openjdk-25 |
 | Micrometer JVM metrics | https://micrometer.io/docs/ref/jvm |
 | KEDA (event-driven autoscaling) | https://keda.sh |
+| Quarkus gRPC guide | https://quarkus.io/guides/grpc-getting-started |
+| Protocol Buffers | https://protobuf.dev |
+| `ghz` gRPC load tester | https://ghz.sh |
+| `grpcurl` CLI | https://github.com/fullstorydev/grpcurl |
