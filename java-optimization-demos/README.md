@@ -42,6 +42,10 @@ the same toolchain and base images used in production OpenShift environments.
 ├── quarkus-demo-05-grpc/              ← Demo 05: REST vs gRPC (Quarkus)
 │   ├── demo.sh
 │   └── app/
+│
+└── quarkus-demo-06-latency/           ← Demo 06: Low-Latency JVM — G1GC vs ZGC
+    ├── demo.sh
+    └── app/
 │       ├── src/main/proto/metrics.proto   ← service contract, stubs generated at build
 │       ├── MetricsServiceImpl.java        ← @GrpcService, unary + streaming
 │       └── Dockerfile                     ← exposes :8080 (REST) and :9000 (gRPC)
@@ -90,6 +94,9 @@ cd quarkus-demo-04-leyden && chmod +x demo.sh && ./demo.sh
 
 # Demo 05 — REST vs gRPC, same Quarkus service two protocols (~10 min)
 cd quarkus-demo-05-grpc && chmod +x demo.sh && ./demo.sh
+
+# Demo 06 — Low-latency JVM: G1GC vs ZGC pause delta (~10 min)
+cd quarkus-demo-06-latency && chmod +x demo.sh && ./demo.sh
 ```
 
 > **Demo 04 first run:** `mvn verify` runs inside the container and downloads
@@ -99,6 +106,14 @@ cd quarkus-demo-05-grpc && chmod +x demo.sh && ./demo.sh
 > **Demo 05 load testing** requires `hey`, `ghz`, and `grpcurl`. If not installed,
 > the demo runs in observe mode — both protocols still respond and the streaming
 > demo still works, just without the throughput comparison table.
+
+> **Demo 06 ZGC throughput:** ZGC will likely show lower throughput and higher
+> average latency than G1GC in the `hey` load test. This is **expected and
+> correct** — ZGC pays a small constant cost (load barriers) on every object
+> read. The meaningful comparison is the **GC pause delta** shown in Steps 4
+> and 5: how much time application threads were completely frozen. G1GC
+> accumulates 50–300ms of pause time per run; ZGC accumulates near-zero.
+> See the demo README for the full on-stage framing.
 
 ---
 
@@ -260,6 +275,20 @@ REST  → http://localhost:8080/metrics   (JSON / HTTP 1.1)
 gRPC  → localhost:9000                  (Protobuf / HTTP 2)
 ```
 
+> **⚠️ Localhost benchmark caveat:** gRPC unary will likely be *slower* than REST
+> when both run on `localhost`. This is expected — gRPC's advantages (persistent
+> HTTP/2 connections, no per-request TCP handshake, header compression) only
+> materialise when there is real network latency between caller and callee.
+> On loopback, network cost is zero and REST's simpler framing wins.
+>
+> **What the demo shows clearly even on localhost:**
+> - **Streaming** — 1,000 gRPC messages over 1 connection vs 1,000 REST requests
+> - **High concurrency (c=500)** — HTTP/2 multiplexing vs 500 TCP connections
+>
+> **In production (pod-to-pod, real Kubernetes network):** gRPC wins ~3-4× on
+> throughput and ~73% on p50 latency. The demo is designed to show the honest
+> result and explain why, not hide it.
+
 **One dependency:**
 ```xml
 <dependency>
@@ -399,6 +428,44 @@ the `quarkus-demo-05-grpc/` directory, not from inside `app/`.
 
 ---
 
+---
+
+### Demo 06 — Low-Latency JVM: G1GC vs ZGC
+
+**The GC algorithm choice question.** G1GC is the right default for most
+workloads. But if your service has a p99 SLA tighter than your GC pause
+time, G1GC will breach it on schedule. ZGC eliminates GC as a cause of
+latency breaches.
+
+**Two apps, one Quarkus codebase, one flag difference:**
+```
+G1GC  → http://localhost:8080  (-XX:+UseG1GC)
+ZGC   → http://localhost:8081  (-XX:+UseZGC -XX:+ZGenerational)
+```
+
+> **⚠️ ZGC will show lower throughput in load tests — this is expected.**
+> ZGC inserts load barriers at every object reference read, enabling
+> concurrent object relocation. This costs ~5-15% throughput. In a
+> micro-benchmark that hammers allocation, the cost is maximally visible.
+>
+> **The number that matters is the GC pause delta** (Steps 4 and 5): how
+> much cumulative time application threads were completely frozen. G1GC
+> accumulates 50–300ms per run. ZGC accumulates near-zero. That delta is
+> the ms your service served zero requests — and the ms that breaches SLAs.
+>
+> **On-stage framing:** "ZGC is slower in throughput here — that's the load
+> barrier cost, and it's real. But G1GC froze the app for [N]ms. ZGC froze
+> it for less than 1ms. If your p99 SLA is 50ms and G1GC pauses for 150ms,
+> you breach it on schedule. Choose based on your SLA, not this benchmark."
+
+**The HPA connection:** G1GC's CPU bursts during stop-the-world pauses look
+like traffic spikes to CPU-based HPA → false scale-out → JIT warmup on new
+pod → false scale-in → repeat. ZGC's smooth CPU profile eliminates this.
+
+**What you cannot demo locally** (shown via slides and config examples):
+huge pages, CPU Manager static policy, Topology Manager single-numa-node,
+`isolcpus`/`nohz_full` kernel isolation, OpenShift PerformanceProfile.
+
 ## Reference Links
 
 | Resource | URL |
@@ -418,3 +485,7 @@ the `quarkus-demo-05-grpc/` directory, not from inside `app/`.
 | Protocol Buffers | https://protobuf.dev |
 | `ghz` gRPC load tester | https://ghz.sh |
 | `grpcurl` CLI | https://github.com/fullstorydev/grpcurl |
+| ZGC overview | https://wiki.openjdk.org/display/zgc |
+| Generational ZGC (JEP 439) | https://openjdk.org/jeps/439 |
+| OpenShift low-latency tuning | https://docs.openshift.com/container-platform/latest/scalability_and_performance/cnf-low-latency-tuning.html |
+| Kubernetes CPU Manager | https://kubernetes.io/docs/tasks/administer-cluster/cpu-management-policies/ |

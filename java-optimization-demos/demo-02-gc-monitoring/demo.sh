@@ -35,12 +35,20 @@ podman-compose up -d --build 2>&1 | grep -E "✓|Container|Network|Volume" | hea
 
 echo
 echo -e "${YELLOW}Step 2: Waiting for services...${RESET}"
+wait_for "http://localhost:3000/api/health"     "Grafana LGTM (port 3000)"
 wait_for "http://localhost:8080/q/health/live" "Quarkus G1GC (port 8080) — /q/health/live"
 wait_for "http://localhost:8081/q/health/live" "Quarkus ZGC  (port 8081) — /q/health/live"
-wait_for "http://localhost:9090/-/ready"        "Prometheus   (port 9090)"
-# Tempo starts asynchronously — traces appear in Grafana ~30s after stack is up
+# Prometheus starts independently — soft wait, demo continues without blocking
+echo -ne "${YELLOW}  Waiting for Prometheus   (port 9090)...${RESET}"
+PROM_READY=false
+for i in {1..20}; do
+  if curl -sf "http://localhost:9090/-/ready" > /dev/null 2>&1; then
+    echo -e " ${GREEN}✅${RESET}"; PROM_READY=true; break
+  fi
+  echo -n "."; sleep 2
+done
+[ "$PROM_READY" = "false" ] && echo -e " ${YELLOW}(still starting — continuing)${RESET}"
 echo -e "    Tempo starting async — traces visible in Grafana within ~30s"
-wait_for "http://localhost:3000/api/health"     "Grafana LGTM (port 3000)"
 
 echo
 hr

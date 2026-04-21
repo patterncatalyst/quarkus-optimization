@@ -1,4 +1,4 @@
-# Quarkus Demo 02 — GC Monitoring with Prometheus, Grafana & Jaeger
+# Quarkus Demo 02 — GC Monitoring with Prometheus & Grafana
 
 ## Framework
 **Quarkus 3.33.1 LTS** / Java 21 (released March 25, 2026)
@@ -28,12 +28,14 @@ to know for real-world adoption.
 | Quarkus ZGC App  | 8081 | same app, Generational ZGC |
 | Prometheus | 9090 | scrapes `/q/metrics` every 5s |
 | Grafana | 3000 | JVM GC dashboard (admin/admin) |
-| Jaeger | 16686 | OTel traces via OTLP gRPC port 4317 |
+| Grafana Tempo | 4317 | OTel traces via OTLP gRPC — view in Grafana Explore |
 
 ## Prerequisites
 
-- Docker Desktop with at least 4 GB RAM available
-- Ports 3000, 4317, 4318, 8080, 8081, 9090, 16686 free
+- **Podman** 4.x+ (`dnf install podman` / `brew install podman`)
+- **podman-compose** (`pip install podman-compose` / `dnf install podman-compose`)
+- At least 4 GB RAM available
+- Ports 3000, 4317, 4318, 8080, 8081, 9090 free
 
 ## Running
 
@@ -45,12 +47,12 @@ chmod +x demo.sh
 Or manually:
 
 ```bash
-docker compose up -d --build
+podman-compose up -d --build
 
 # Wait ~60s for first-time build, then:
 # Grafana:     http://localhost:3000  (admin / admin)
 # Prometheus:  http://localhost:9090
-# Jaeger:      http://localhost:16686  → service: quarkus-gc-monitoring-demo
+# Traces:      Grafana → Explore → Tempo datasource
 
 # Generate GC load
 curl "http://localhost:8080/allocate?mb=100&iterations=10"   # G1GC
@@ -63,7 +65,7 @@ curl "http://localhost:8080/virtual-threads?tasks=500&workMs=5"
 curl http://localhost:8080/q/metrics | grep jvm_gc
 
 # Tear down
-docker compose down -v
+podman-compose down -v
 ```
 
 ## Quarkus-Specific Extensions Used

@@ -1,6 +1,6 @@
 # Grafana Tempo 2.7.x — minimal single-instance config
 # Breaking change in 2.7: OTLP receivers default to localhost, not 0.0.0.0
-# Must explicitly bind to 0.0.0.0 for Docker container networking.
+# Must explicitly bind to 0.0.0.0 for container networking.
 
 server:
   http_listen_port: 3200

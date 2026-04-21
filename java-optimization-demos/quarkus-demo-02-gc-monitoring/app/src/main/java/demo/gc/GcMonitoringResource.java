@@ -54,15 +54,15 @@ public class GcMonitoringResource {
 
     private Counter allocCounter() {
         return Counter.builder("demo.allocations.total")
-                .description("Total MB allocated through demo endpoints")
-                .register(registry);
+            .description("Total MB allocated through demo endpoints")
+            .register(registry);
     }
 
     private Timer requestTimer() {
         return Timer.builder("demo.request.duration")
-                .description("Demo endpoint processing time")
-                .publishPercentiles(0.5, 0.95, 0.99)
-                .register(registry);
+            .description("Demo endpoint processing time")
+            .publishPercentiles(0.5, 0.95, 0.99)
+            .register(registry);
     }
 
     // ── Endpoints ────────────────────────────────────────────────────
@@ -71,13 +71,13 @@ public class GcMonitoringResource {
     @Path("/")
     public Map<String, String> home() {
         return Map.of(
-                "app",     "quarkus-gc-monitoring-demo",
-                "quarkus", "3.33.1 LTS",
-                "java",    System.getProperty("java.version"),
-                "status",  "running",
-                "metrics", "/q/metrics",
-                "health",  "/q/health/live",
-                "traces",  "http://localhost:3000  (Grafana → Explore → Tempo)"
+            "app",     "quarkus-gc-monitoring-demo",
+            "quarkus", "3.33.1 LTS",
+            "java",    System.getProperty("java.version"),
+            "status",  "running",
+            "metrics", "/q/metrics",
+            "health",  "/q/health/live",
+            "traces",  "http://localhost:3000  (Grafana → Explore → Tempo)"
         );
     }
 
@@ -107,10 +107,10 @@ public class GcMonitoringResource {
         requestTimer().record(durationMs, TimeUnit.MILLISECONDS);
 
         return new AllocResponse(
-                (long) mb * iterations, iterations,
-                totalGCCount() - gcsBefore,
-                totalGCTime()  - gcTimeBefore,
-                durationMs, heapUsedMB(), heapMaxMB(), activeGCName()
+            (long) mb * iterations, iterations,
+            totalGCCount() - gcsBefore,
+            totalGCTime()  - gcTimeBefore,
+            durationMs, heapUsedMB(), heapMaxMB(), activeGCName()
         );
     }
 
@@ -133,10 +133,10 @@ public class GcMonitoringResource {
             Thread.sleep(delayMs);
         }
         return Map.of(
-                "totalAllocatedMB", total / (1024 * 1024),
-                "rounds", rounds,
-                "heapUsedMB", heapUsedMB(),
-                "heapMaxMB",  heapMaxMB()
+            "totalAllocatedMB", total / (1024 * 1024),
+            "rounds", rounds,
+            "heapUsedMB", heapUsedMB(),
+            "heapMaxMB",  heapMaxMB()
         );
     }
 
@@ -172,9 +172,9 @@ public class GcMonitoringResource {
             """.formatted(tasks, durationMs, peakPlatformThreads.get());
 
         return new VirtualThreadResult(
-                tasks, durationMs, peakPlatformThreads.get(),
-                "Executors.newVirtualThreadPerTaskExecutor() — Java 21 JEP 444",
-                msg
+            tasks, durationMs, peakPlatformThreads.get(),
+            "Executors.newVirtualThreadPerTaskExecutor() — Java 21 JEP 444",
+            msg
         );
     }
 
@@ -187,17 +187,17 @@ public class GcMonitoringResource {
         long used = heap.getUsed(), max = heap.getMax();
 
         var gcInfoList = ManagementFactory.getGarbageCollectorMXBeans().stream()
-                .map(gc -> new GcInfo(gc.getName(), gc.getCollectionCount(), gc.getCollectionTime()))
-                .toList();
+            .map(gc -> new GcInfo(gc.getName(), gc.getCollectionCount(), gc.getCollectionTime()))
+            .toList();
 
         return new JvmSummary(
-                used / MB, max / MB, heap.getCommitted() / MB,
-                max > 0 ? (used * 100.0 / max) : 0,
-                Runtime.getRuntime().availableProcessors(),
-                ManagementFactory.getThreadMXBean().getThreadCount(),
-                System.getProperty("java.vm.name") + " " + System.getProperty("java.version"),
-                gcInfoList,
-                readContainerLimit()
+            used / MB, max / MB, heap.getCommitted() / MB,
+            max > 0 ? (used * 100.0 / max) : 0,
+            Runtime.getRuntime().availableProcessors(),
+            ManagementFactory.getThreadMXBean().getThreadCount(),
+            System.getProperty("java.vm.name") + " " + System.getProperty("java.version"),
+            gcInfoList,
+            readContainerLimit()
         );
     }
 
@@ -205,12 +205,12 @@ public class GcMonitoringResource {
 
     private long totalGCCount() {
         return ManagementFactory.getGarbageCollectorMXBeans()
-                .stream().mapToLong(GarbageCollectorMXBean::getCollectionCount).sum();
+            .stream().mapToLong(GarbageCollectorMXBean::getCollectionCount).sum();
     }
 
     private long totalGCTime() {
         return ManagementFactory.getGarbageCollectorMXBeans()
-                .stream().mapToLong(GarbageCollectorMXBean::getCollectionTime).sum();
+            .stream().mapToLong(GarbageCollectorMXBean::getCollectionTime).sum();
     }
 
     private long heapUsedMB() {
@@ -224,7 +224,7 @@ public class GcMonitoringResource {
 
     private String activeGCName() {
         return ManagementFactory.getGarbageCollectorMXBeans()
-                .stream().map(GarbageCollectorMXBean::getName).findFirst().orElse("Unknown");
+            .stream().map(GarbageCollectorMXBean::getName).findFirst().orElse("Unknown");
     }
 
     /** Read container memory limit via cgroup — uses FQN to avoid Path import conflict */

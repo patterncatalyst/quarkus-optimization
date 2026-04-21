@@ -1,0 +1,61 @@
+version: "3.9"
+
+# Demo 06 — Low-Latency JVM: G1GC vs ZGC
+# Same application code, same heap size, different GC algorithm.
+# Run both simultaneously and compare p99 latency under identical load.
+#
+# G1GC app : http://localhost:8080
+# ZGC app  : http://localhost:8081
+# Prometheus: http://localhost:9090
+
+services:
+
+  # ── G1GC — Default GC, stop-the-world pauses ─────────────────────
+  app-g1gc:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    image: quarkus-latency:g1gc
+    container_name: latency-g1gc
+    ports:
+      - "8080:8080"
+    environment:
+      # G1GC with 200ms pause target (typical production setting)
+      JAVA_OPTS: >-
+        -XX:+UseG1GC
+        -XX:MaxGCPauseMillis=200
+        -XX:G1HeapRegionSize=4m
+    mem_limit: 512m
+    labels:
+      demo: "g1gc"
+
+  # ── ZGC — Concurrent GC, sub-millisecond pauses ──────────────────
+  app-zgc:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    image: quarkus-latency:zgc
+    container_name: latency-zgc
+    ports:
+      - "8081:8080"
+    environment:
+      # ZGC Generational — JDK 21+
+      # No pause target needed — ZGC always targets < 1ms
+      JAVA_OPTS: >-
+        -XX:+UseZGC
+        -XX:+ZGenerational
+    mem_limit: 512m
+    labels:
+      demo: "zgc"
+
+  # ── Prometheus — scrapes both apps ───────────────────────────────
+  prometheus:
+    image: docker.io/prom/prometheus:latest
+    container_name: latency-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:Z
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=1h'

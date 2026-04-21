@@ -1,0 +1,17 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: 'latency-g1gc'
+    static_configs:
+      - targets: ['app-g1gc:8080']
+    metrics_path: '/q/metrics'
+    labels:
+      gc: 'G1GC'
+
+  - job_name: 'latency-zgc'
+    static_configs:
+      - targets: ['app-zgc:8080']
+    metrics_path: '/q/metrics'
+    labels:
+      gc: 'ZGC'

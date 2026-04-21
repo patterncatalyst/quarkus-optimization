@@ -3,6 +3,7 @@ datasources:
   - name: JVM Metrics (Prometheus)
     type: prometheus
     uid: ext-prometheus
+    # Standalone prom/prometheus container on the observability network
     url: http://prometheus:9090
     access: proxy
     isDefault: false
