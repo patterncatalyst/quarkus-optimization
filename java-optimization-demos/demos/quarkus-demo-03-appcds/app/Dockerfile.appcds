@@ -1,0 +1,57 @@
+# Demo 03 — Quarkus 3.33.1 LTS + AppCDS (JDK 21)
+# 3-stage: build → train (generates app-cds.jsa) → runtime
+# Training MUST run from /deployments (the runtime path) because
+# AppCDS embeds absolute classpath paths in the archive.
+
+# ── Stage 1: Build ───────────────────────────────────────────────
+FROM docker.io/library/maven:3.9-eclipse-temurin-21 AS builder
+WORKDIR /build
+
+COPY pom.xml .
+
+COPY src ./src
+RUN     mvn package -Dmaven.test.skip=true --no-transfer-progress
+
+# ── Stage 2: Training ─────────────────────────────────────────────
+# Run from /deployments so archive paths match the runtime stage.
+# Uses JDK (not JRE) for -XX:ArchiveClassesAtExit support.
+FROM registry.access.redhat.com/ubi9/openjdk-21 AS trainer
+WORKDIR /deployments
+
+COPY --from=builder /build/target/quarkus-app/lib/     ./lib/
+COPY --from=builder /build/target/quarkus-app/*.jar    ./
+COPY --from=builder /build/target/quarkus-app/app/     ./app/
+COPY --from=builder /build/target/quarkus-app/quarkus/ ./quarkus/
+
+# Start app in background, wait for full startup, send SIGTERM.
+# JVM writes app-cds.jsa via shutdown hook on clean exit.
+RUN java \
+    -XX:ArchiveClassesAtExit=app-cds.jsa \
+    -XX:+UseContainerSupport \
+    -XX:MaxRAMPercentage=75.0 \
+    -jar quarkus-run.jar & \
+    JVM_PID=$! && \
+    sleep 8 && \
+    kill -TERM $JVM_PID && \
+    wait $JVM_PID || true && \
+    echo "Archive generated:" && ls -lh app-cds.jsa && \
+    test -s app-cds.jsa || (echo "❌ Archive empty" && exit 1)
+
+# ── Stage 3: Runtime ──────────────────────────────────────────────
+FROM registry.access.redhat.com/ubi9/openjdk-21-runtime
+WORKDIR /deployments
+
+COPY --from=trainer /deployments/lib/        ./lib/
+COPY --from=trainer /deployments/*.jar       ./
+COPY --from=trainer /deployments/app/        ./app/
+COPY --from=trainer /deployments/quarkus/    ./quarkus/
+COPY --from=trainer /deployments/app-cds.jsa ./app-cds.jsa
+
+ENV JAVA_OPTS="-XX:+UseContainerSupport \
+               -XX:MaxRAMPercentage=75.0 \
+               -Djava.security.egd=file:/dev/./urandom"
+ENV EXTRA_JAVA_OPTS=""
+
+EXPOSE 8080
+USER 185
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS $EXTRA_JAVA_OPTS -XX:SharedArchiveFile=app-cds.jsa -jar quarkus-run.jar"]

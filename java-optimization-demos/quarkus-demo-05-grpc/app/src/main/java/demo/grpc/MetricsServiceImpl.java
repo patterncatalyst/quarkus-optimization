@@ -29,12 +29,26 @@ public class MetricsServiceImpl extends MutinyMetricsServiceGrpc.MetricsServiceI
     }
 
     /**
-     * Server streaming — pushes a new JVM snapshot every second.
-     * Client receives a continuous stream until it cancels or the server stops.
-     * In Quarkus + Mutiny this is just a Multi — framework handles HTTP/2 framing.
+     * Server streaming — two modes depending on the request:
+     *
+     *   count == 0  → live mode: pushes a new snapshot every second indefinitely
+     *                 Used in the demo "watch the stream" step
+     *
+     *   count  > 0  → benchmark mode: pushes N messages as fast as possible then stops
+     *                 Used in the streaming throughput comparison vs REST polling
+     *
+     * In both cases: one HTTP/2 connection, zero per-message round-trip overhead.
+     * The REST equivalent requires count separate HTTP requests.
      */
     @Override
     public Multi<MetricsResponse> streamMetrics(MetricsRequest request) {
+        int count = request.getCount();
+        if (count > 0) {
+            // Benchmark mode — emit N items as fast as possible
+            return Multi.createFrom().range(0, count)
+                    .map(i -> buildMetrics());
+        }
+        // Live mode — one update per second
         return Multi.createFrom().ticks().every(Duration.ofSeconds(1))
                 .map(tick -> buildMetrics());
     }

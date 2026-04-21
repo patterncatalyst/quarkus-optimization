@@ -1,0 +1,35 @@
+FROM docker.io/library/maven:3.9-eclipse-temurin-21 AS builder
+WORKDIR /build
+COPY pom.xml .
+COPY src ./src
+RUN mvn package -Dmaven.test.skip=true --no-transfer-progress
+
+FROM registry.access.redhat.com/ubi9/openjdk-21
+USER root
+WORKDIR /app
+COPY --from=builder /build/target/spring-startup-demo-*.jar fat.jar
+
+# Step 1: Extract to CDS-friendly layout (jarmode=tools needs write access)
+RUN java -Djarmode=tools -jar fat.jar extract --destination extracted && \
+    echo "=== extracted/ contents ===" && \
+    find extracted -name "*.jar" | sort
+
+# Step 2: Train — find the extracted JAR, generate AppCDS archive
+RUN JAR=$(find extracted -maxdepth 2 -name "*.jar" | grep -v "lib" | head -1) && \
+    echo "Training with: $JAR" && \
+    java -XX:ArchiveClassesAtExit=application.jsa \
+         -Dspring.context.exit=onRefresh \
+         -XX:+UseContainerSupport \
+         -XX:MaxRAMPercentage=75.0 \
+         -jar "$JAR" && \
+    test -s application.jsa && \
+    echo "✅ archive: $(ls -lh application.jsa | awk '{print $5}')"
+
+# Save JAR path for ENTRYPOINT
+RUN find extracted -maxdepth 2 -name "*.jar" | grep -v "lib" | head -1 \
+    > /app/jar-path.txt && cat /app/jar-path.txt
+
+ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
+EXPOSE 8080
+USER 185
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -XX:SharedArchiveFile=/app/application.jsa -jar $(cat /app/jar-path.txt)"]

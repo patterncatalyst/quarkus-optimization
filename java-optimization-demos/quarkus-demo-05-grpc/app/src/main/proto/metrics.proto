@@ -13,7 +13,8 @@ service MetricsService {
 }
 
 message MetricsRequest {
-    string host = 1;
+    string host  = 1;
+    int32  count = 2;  // 0 = live stream (1/sec), >0 = emit exactly N messages fast
 }
 
 message MetricsResponse {

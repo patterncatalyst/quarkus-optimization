@@ -1,0 +1,128 @@
+version: "3.9"
+
+# ============================================================
+# Demo 02 (Quarkus): GC Monitoring — Grafana LGTM Stack
+#   Framework: Quarkus 3.33.1 LTS / Java 21
+#   Extension: quarkus-micrometer-opentelemetry (unified)
+#
+#   • Quarkus G1GC app  (port 8080) — all telemetry via OTLP
+#   • Quarkus ZGC app   (port 8081) — same app, different GC
+#   • Grafana Tempo     (port 4317)  — OTLP trace receiver
+#   • Prometheus        (port 9090)  — scrapes /q/metrics
+#   • Grafana           (port 3000)  — unified: metrics + traces + logs
+#
+# Grafana LGTM replaces Jaeger — traces, metrics, logs all in one UI.
+# See: quarkus.io/guides/telemetry-micrometer-to-opentelemetry
+# ============================================================
+
+services:
+
+  # ── Quarkus App — G1GC ────────────────────────────────────
+  quarkus-app-g1gc:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: quarkus-app-g1gc
+    ports:
+      - "8080:8080"
+    environment:
+      GC_TYPE: g1gc
+    mem_limit: 512m
+    cpus: "1.0"
+    networks:
+      - observability
+    depends_on:
+      grafana-lgtm:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/q/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    labels:
+      demo: "quarkus-gc-monitoring"
+      gc: "G1GC"
+      framework: "quarkus-3.33.1"
+
+  # ── Quarkus App — ZGC (Generational, Java 21) ─────────────
+  quarkus-app-zgc:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: quarkus-app-zgc
+    ports:
+      - "8081:8080"
+    environment:
+      GC_TYPE: zgc
+      JAVA_OPTS: "-XX:ZCollectionInterval=5 -XX:ZUncommitDelay=60"
+    mem_limit: 512m
+    cpus: "1.0"
+    networks:
+      - observability
+    depends_on:
+      grafana-lgtm:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/q/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    labels:
+      demo: "quarkus-gc-monitoring"
+      gc: "ZGC"
+      framework: "quarkus-3.33.1"
+
+  # ── Prometheus ────────────────────────────────────────────
+  # Still used for /q/metrics scraping and Grafana data source
+  prometheus:
+    image: prom/prometheus:v3.2.1
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/rules.yml:/etc/prometheus/rules.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.enable-remote-write-receiver"
+      - "--web.enable-lifecycle"
+      - "--storage.tsdb.retention.time=2h"
+    networks:
+      - observability
+    depends_on:
+      quarkus-app-g1gc:
+        condition: service_healthy
+
+  # ── Grafana LGTM — Grafana + Loki + Tempo + Prometheus in one image ──
+  # Pre-wired: no manual datasource config needed.
+  # Grafana UI: http://localhost:3000 (admin/admin)
+  # OTLP gRPC:  port 4317 — Quarkus sends traces here
+  # OTLP HTTP:  port 4318
+  grafana-lgtm:
+    image: grafana/otel-lgtm:0.8.1
+    container_name: grafana-lgtm
+    ports:
+      - "3000:3000"   # Grafana UI
+      - "4317:4317"   # OTLP gRPC (traces from Quarkus)
+      - "4318:4318"   # OTLP HTTP
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+    volumes:
+      # External Prometheus datasource — mounted as single file so otel-lgtm's
+      # internal Tempo/Loki datasources remain intact
+      - ./grafana/provisioning/datasources/external-prometheus.yml:/etc/grafana/provisioning/datasources/external-prometheus.yml:ro
+    networks:
+      - observability
+
+networks:
+  observability:
+    driver: bridge
+
+volumes:
+  prometheus_data:
