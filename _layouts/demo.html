@@ -1,0 +1,54 @@
+---
+layout: default
+---
+<div class="container demo-page">
+
+  <nav class="breadcrumb">
+    <a href="{{ '/' | relative_url }}">Home</a> /
+    <a href="{{ '/demos/' | relative_url }}">Demos</a> /
+    <span>{{ page.title }}</span>
+  </nav>
+
+  <div class="demo-header">
+    <div class="demo-badge">{{ page.demo_number }}</div>
+    <div>
+      <h1>{{ page.title }}</h1>
+      <div class="tag-row">
+        {% if page.runtime %}<span class="tag">{{ page.runtime }}</span>{% endif %}
+        {% if page.time %}<span class="tag tag-muted">⏱ {{ page.time }}</span>{% endif %}
+        {% if page.cluster_required == false %}<span class="tag tag-green">No cluster needed</span>{% endif %}
+        {% if page.jdk25 %}<span class="tag tag-purple">JDK 25</span>{% endif %}
+      </div>
+    </div>
+  </div>
+
+  {% if page.run_command %}
+  <div class="run-box">
+    <div class="run-box-header">
+      <span>Run this demo</span>
+      <a href="{{ site.repo }}/tree/main/java-optimization-demos/{{ page.demo_dir }}"
+         target="_blank" class="btn btn-sm btn-outline">View source on GitHub ↗</a>
+    </div>
+    <pre><code>cd {{ page.demo_dir }}
+chmod +x demo.sh
+{{ page.run_command }}</code></pre>
+  </div>
+  {% endif %}
+
+  <div class="markdown-body">{{ content }}</div>
+
+  <div class="demo-nav">
+    {% if page.prev_url %}
+      <a href="{{ page.prev_url | relative_url }}" class="nav-btn">← {{ page.prev_title }}</a>
+    {% else %}
+      <span></span>
+    {% endif %}
+    <a href="{{ '/demos/' | relative_url }}" class="nav-btn">All Demos</a>
+    {% if page.next_url %}
+      <a href="{{ page.next_url | relative_url }}" class="nav-btn">{{ page.next_title }} →</a>
+    {% else %}
+      <span></span>
+    {% endif %}
+  </div>
+
+</div>

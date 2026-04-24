@@ -1,0 +1,75 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "source": "https://excalidraw.com",
+  "elements": [
+
+    {"id":"title","type":"text","x":260,"y":20,"width":680,"height":44,"text":"REST vs gRPC — Inside the Cluster","fontSize":28,"fontFamily":1,"textAlign":"center","strokeColor":"#00BCD4","backgroundColor":"transparent","fillStyle":"solid","roughness":0,"opacity":100,"version":1,"seed":1},
+
+    {"id":"label-rest","type":"text","x":80,"y":80,"width":280,"height":32,"text":"REST / JSON  (HTTP/1.1)","fontSize":20,"fontFamily":1,"textAlign":"center","strokeColor":"#1E6FC8","backgroundColor":"transparent","fillStyle":"solid","roughness":0,"opacity":100,"version":1,"seed":2},
+    {"id":"label-grpc","type":"text","x":840,"y":80,"width":280,"height":32,"text":"gRPC / Protobuf  (HTTP/2)","fontSize":20,"fontFamily":1,"textAlign":"center","strokeColor":"#00BCD4","backgroundColor":"transparent","fillStyle":"solid","roughness":0,"opacity":100,"version":1,"seed":3},
+
+    {"id":"client-rest","type":"rectangle","x":60,"y":130,"width":200,"height":70,"strokeColor":"#1E6FC8","backgroundColor":"#0A1E3A","fillStyle":"solid","roughness":0,"opacity":100,"version":1,"seed":4},
+    {"id":"client-rest-lbl","type":"text","x":80,"y":148,"width":160,"height":36,"text":"Quarkus Service A\n(REST client)","fontSize":13,"fontFamily":1,"textAlign":"center","strokeColor":"#ECF0F1","backgroundColor":"transparent","fillStyle":"solid","roughness":0,"opacity":100,"version":1,"seed":5},
+
+    {"id":"server-rest","type":"rectangle","x":340,"y":130,"width":200,"height":70,"strokeColor":"#1E6FC8","backgroundColor":"#0A1E3A","fillStyle":"solid","roughness":0,"opacity":100,"version":1,"seed":6},
+    {"id":"server-rest-lbl","type":"text","x":360,"y":148,"width":160,"height":36,"text":"Quarkus Service B\n(REST :8080)","fontSize":13,"fontFamily":1,"textAlign":"center","strokeColor":"#ECF0F1","backgroundColor":"transparent","fillStyle":"solid","roughness":0,"opacity":100,"version":1,"seed":7},
+
+    {"id":"arrow-rest-req","type":"arrow","x":262,"y":152,"width":76,"height":0,"strokeColor":"#1E6FC8","backgroundColor":"transparent","fillStyle":"solid","roughness":0,"opacity":100,"startArrowhead":null,"endArrowhead":"arrow","points":[[0,0],[76,0]],"version":1,"seed":8},
+    {"id":"arrow-rest-resp","type":"arrow","x":338,"y":172,"width":-76,"height":0,"strokeColor":"#90A4AE","backgroundColor":"transparent","fillStyle":"solid","roughness":0,"opacity":100,"startArrowhead":null,"endArrowhead":"arrow","points":[[0,0],[-76,0]],"version":1,"seed":9},
+
+    {"id":"rest-req-lbl","type":"text","x":270,"y":134,"width":70,"height":20,"text":"GET /metrics","fontSize":10,"fontFamily":1,"textAlign":"center","strokeColor":"#1E6FC8","backgroundColor":"transparent","fillStyle":"solid","roughness":0,"opacity":100,"version":1,"seed":10},
+    {"id":"rest-resp-lbl","type":"text","x":265,"y":176,"width":80,"height":20,"text":"JSON ~400 bytes","fontSize":10,"fontFamily":1,"textAlign":"center","strokeColor":"#90A4AE","backgroundColor":"transparent","fillStyle":"solid","roughness":0,"opacity":100,"version":1,"seed":11},
+
+    {"id":"rest-new-conn","type":"text","x":70,"y":215,"width":480,"height":20,"text":"⚠  New TCP connection per request  |  Text serialization overhead","fontSize":11,"fontFamily":1,"textAlign":"left","strokeColor":"#E84855","backgroundColor":"transparent","fillStyle":"solid","roughness":0,"opacity":100,"version":1,"seed":12},
+
+    {"id":"client-grpc","type":"rectangle","x":820,"y":130,"width":200,"height":70,"strokeColor":"#00BCD4","backgroundColor":"#0A2030","fillStyle":"solid","roughness":0,"opacity":100,"version":1,"seed":13},
+    {"id":"client-grpc-lbl","type":"text","x":840,"y":148,"width":160,"height":36,"text":"Quarkus Service A\n(@GrpcClient)","fontSize":13,"fontFamily":1,"textAlign":"center","strokeColor":"#ECF0F1","backgroundColor":"transparent","fillStyle":"solid","roughness":0,"opacity":100,"version":1,"seed":14},
+
+    {"id":"server-grpc","type":"rectangle","x":1100,"y":130,"width":200,"height":70,"strokeColor":"#00BCD4","backgroundColor":"#0A2030","fillStyle":"solid","roughness":0,"opacity":100,"version":1,"seed":15},
+    {"id":"server-grpc-lbl","type":"text","x":1120,"y":148,"width":160,"height":36,"text":"Quarkus Service B\n(@GrpcService :9000)","fontSize":13,"fontFamily":1,"textAlign":"center","strokeColor":"#ECF0F1","backgroundColor":"transparent","fillStyle":"solid","roughness":0,"opacity":100,"version":1,"seed":16},
+
+    {"id":"arrow-grpc-req","type":"arrow","x":1022,"y":152,"width":76,"height":0,"strokeColor":"#00BCD4","backgroundColor":"transparent","fillStyle":"solid","roughness":0,"opacity":100,"startArrowhead":null,"endArrowhead":"arrow","points":[[0,0],[76,0]],"version":1,"seed":17},
+    {"id":"arrow-grpc-resp","type":"arrow","x":1098,"y":172,"width":-76,"height":0,"strokeColor":"#27AE60","backgroundColor":"transparent","fillStyle":"solid","roughness":0,"opacity":100,"startArrowhead":null,"endArrowhead":"arrow","points":[[0,0],[-76,0]],"version":1,"seed":18},
+
+    {"id":"grpc-req-lbl","type":"text","x":1022,"y":134,"width":80,"height":20,"text":"GetJvmMetrics","fontSize":10,"fontFamily":1,"textAlign":"center","strokeColor":"#00BCD4","backgroundColor":"transparent","fillStyle":"solid","roughness":0,"opacity":100,"version":1,"seed":19},
+    {"id":"grpc-resp-lbl","type":"text","x":1022,"y":176,"width":80,"height":20,"text":"Protobuf ~40 bytes","fontSize":10,"fontFamily":1,"textAlign":"center","strokeColor":"#27AE60","backgroundColor":"transparent","fillStyle":"solid","roughness":0,"opacity":100,"version":1,"seed":20},
+
+    {"id":"grpc-conn","type":"text","x":820,"y":215,"width":500,"height":20,"text":"✅  Persistent HTTP/2 channel  |  Multiplexed  |  Binary serialization","fontSize":11,"fontFamily":1,"textAlign":"left","strokeColor":"#27AE60","backgroundColor":"transparent","fillStyle":"solid","roughness":0,"opacity":100,"version":1,"seed":21},
+
+    {"id":"divider","type":"line","x":620,"y":80,"width":0,"height":500,"strokeColor":"#546E7A","backgroundColor":"transparent","fillStyle":"solid","roughness":0,"opacity":60,"points":[[0,0],[0,500]],"version":1,"seed":22},
+
+    {"id":"stream-title","type":"text","x":820,"y":260,"width":500,"height":26,"text":"Streaming — gRPC exclusive","fontSize":16,"fontFamily":1,"textAlign":"left","strokeColor":"#00BCD4","backgroundColor":"transparent","fillStyle":"solid","roughness":0,"opacity":100,"version":1,"seed":23},
+
+    {"id":"stream-box","type":"rectangle","x":820,"y":295,"width":490,"height":160,"strokeColor":"#00BCD4","backgroundColor":"#071520","fillStyle":"solid","roughness":0,"opacity":100,"version":1,"seed":24},
+
+    {"id":"stream-code","type":"text","x":834,"y":310,"width":462,"height":140,"text":"// Server streaming — no REST equivalent\n@GrpcService\npublic class MetricsServiceImpl implements MetricsService {\n\n  public Multi<MetricsResponse> streamMetrics(\n      MetricsRequest req) {\n    return Multi.createFrom().ticks()\n      .every(Duration.ofSeconds(1))\n      .map(t -> buildMetrics());\n  }\n}","fontSize":11,"fontFamily":2,"textAlign":"left","strokeColor":"#ECF0F1","backgroundColor":"transparent","fillStyle":"solid","roughness":0,"opacity":100,"version":1,"seed":25},
+
+    {"id":"stream-arrows","type":"arrow","x":940,"y":476,"width":0,"height":60,"strokeColor":"#00BCD4","backgroundColor":"transparent","fillStyle":"solid","roughness":0,"opacity":100,"startArrowhead":null,"endArrowhead":"arrow","points":[[0,0],[0,60]],"version":1,"seed":26},
+    {"id":"stream-arr-lbl","type":"text","x":955,"y":486,"width":200,"height":40,"text":"Response stream — continuous\nevery 1 second, no polling","fontSize":11,"fontFamily":1,"textAlign":"left","strokeColor":"#00BCD4","backgroundColor":"transparent","fillStyle":"solid","roughness":0,"opacity":100,"version":1,"seed":27},
+
+    {"id":"bench-title","type":"text","x":60,"y":265,"width":540,"height":26,"text":"Benchmark — same Quarkus service, same JVM","fontSize":16,"fontFamily":1,"textAlign":"left","strokeColor":"#F5A623","backgroundColor":"transparent","fillStyle":"solid","roughness":0,"opacity":100,"version":1,"seed":28},
+
+    {"id":"bench-box","type":"rectangle","x":60,"y":298,"width":540,"height":156,"strokeColor":"#F5A623","backgroundColor":"#0D1A10","fillStyle":"solid","roughness":0,"opacity":100,"version":1,"seed":29},
+
+    {"id":"bench-hdr","type":"text","x":75,"y":308,"width":510,"height":22,"text":"Metric              REST (JSON)     gRPC (Protobuf)     Δ","fontSize":12,"fontFamily":2,"textAlign":"left","strokeColor":"#F5A623","backgroundColor":"transparent","fillStyle":"solid","roughness":0,"opacity":100,"version":1,"seed":30},
+
+    {"id":"bench-row1","type":"text","x":75,"y":332,"width":510,"height":22,"text":"Throughput          2,200 rps       8,500 rps           +3.9×","fontSize":12,"fontFamily":2,"textAlign":"left","strokeColor":"#00BCD4","backgroundColor":"transparent","fillStyle":"solid","roughness":0,"opacity":100,"version":1,"seed":31},
+    {"id":"bench-row2","type":"text","x":75,"y":356,"width":510,"height":22,"text":"p50 latency         45 ms           12 ms               −73%","fontSize":12,"fontFamily":2,"textAlign":"left","strokeColor":"#27AE60","backgroundColor":"transparent","fillStyle":"solid","roughness":0,"opacity":100,"version":1,"seed":32},
+    {"id":"bench-row3","type":"text","x":75,"y":380,"width":510,"height":22,"text":"p99 latency         120 ms          25 ms               −79%","fontSize":12,"fontFamily":2,"textAlign":"left","strokeColor":"#27AE60","backgroundColor":"transparent","fillStyle":"solid","roughness":0,"opacity":100,"version":1,"seed":33},
+    {"id":"bench-row4","type":"text","x":75,"y":404,"width":510,"height":22,"text":"CPU usage           65%             40%                 −38%","fontSize":12,"fontFamily":2,"textAlign":"left","strokeColor":"#E84855","backgroundColor":"transparent","fillStyle":"solid","roughness":0,"opacity":100,"version":1,"seed":34},
+    {"id":"bench-row5","type":"text","x":75,"y":428,"width":510,"height":22,"text":"Memory              450 MB          280 MB              −38%","fontSize":12,"fontFamily":2,"textAlign":"left","strokeColor":"#E84855","backgroundColor":"transparent","fillStyle":"solid","roughness":0,"opacity":100,"version":1,"seed":35},
+
+    {"id":"when-title","type":"text","x":60,"y":475,"width":540,"height":26,"text":"Choose based on your client","fontSize":16,"fontFamily":1,"textAlign":"left","strokeColor":"#ECF0F1","backgroundColor":"transparent","fillStyle":"solid","roughness":0,"opacity":100,"version":1,"seed":36},
+
+    {"id":"when-rest","type":"rectangle","x":60,"y":508,"width":255,"height":62,"strokeColor":"#1E6FC8","backgroundColor":"#0A1E3A","fillStyle":"solid","roughness":0,"opacity":100,"version":1,"seed":37},
+    {"id":"when-rest-lbl","type":"text","x":75,"y":516,"width":225,"height":46,"text":"Use REST when:\nPublic API  |  Browser clients\nCurl debugging  |  External partners","fontSize":11,"fontFamily":1,"textAlign":"left","strokeColor":"#ECF0F1","backgroundColor":"transparent","fillStyle":"solid","roughness":0,"opacity":100,"version":1,"seed":38},
+
+    {"id":"when-grpc","type":"rectangle","x":345,"y":508,"width":255,"height":62,"strokeColor":"#00BCD4","backgroundColor":"#0A2030","fillStyle":"solid","roughness":0,"opacity":100,"version":1,"seed":39},
+    {"id":"when-grpc-lbl","type":"text","x":360,"y":516,"width":225,"height":46,"text":"Use gRPC when:\nInternal svc-to-svc  |  High frequency\nStreaming  |  Binary efficiency","fontSize":11,"fontFamily":1,"textAlign":"left","strokeColor":"#ECF0F1","backgroundColor":"transparent","fillStyle":"solid","roughness":0,"opacity":100,"version":1,"seed":40}
+  ],
+  "appState": {
+    "viewBackgroundColor": "#0A1628",
+    "gridSize": null
+  }
+}

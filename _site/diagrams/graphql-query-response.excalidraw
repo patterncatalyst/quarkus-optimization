@@ -1,0 +1,70 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "source": "https://excalidraw.com",
+  "elements": [
+
+    {"type":"rectangle","id":"client","x":40,"y":220,"width":120,"height":60,
+      "strokeColor":"#1971c2","backgroundColor":"#d0ebff","fillStyle":"solid",
+      "roughness":1,"opacity":100,"angle":0,"strokeWidth":2},
+    {"type":"text","id":"client-t","x":42,"y":242,"width":116,"height":20,
+      "text":"Client","fontSize":16,"fontFamily":2,"textAlign":"center",
+      "strokeColor":"#1971c2","backgroundColor":"transparent","roughness":0,"opacity":100,"angle":0},
+
+    {"type":"rectangle","id":"gql-header","x":620,"y":180,"width":160,"height":36,
+      "strokeColor":"#333","backgroundColor":"#2c2c2c","fillStyle":"solid",
+      "roughness":0,"opacity":100,"angle":0,"strokeWidth":2},
+    {"type":"text","id":"gql-header-t","x":622,"y":190,"width":156,"height":18,
+      "text":"GraphQL","fontSize":13,"fontFamily":2,"textAlign":"center",
+      "strokeColor":"#fff","backgroundColor":"transparent","roughness":0,"opacity":100,"angle":0},
+
+    {"type":"rectangle","id":"product","x":620,"y":216,"width":160,"height":64,
+      "strokeColor":"#2f9e44","backgroundColor":"#d3f9d8","fillStyle":"solid",
+      "roughness":1,"opacity":100,"angle":0,"strokeWidth":2},
+    {"type":"text","id":"product-t","x":622,"y":240,"width":156,"height":20,
+      "text":"Product","fontSize":16,"fontFamily":2,"textAlign":"center",
+      "strokeColor":"#2f9e44","backgroundColor":"transparent","roughness":0,"opacity":100,"angle":0},
+
+    {"type":"arrow","id":"req-arrow","x":162,"y":238,"width":456,"height":0,
+      "points":[[0,0],[456,0]],"strokeColor":"#333","backgroundColor":"transparent",
+      "roughness":0,"opacity":100,"angle":0,"strokeWidth":2,
+      "startArrowhead":null,"endArrowhead":"arrow"},
+    {"type":"text","id":"req-http","x":360,"y":244,"width":60,"height":18,
+      "text":"HTTP","fontSize":13,"fontFamily":2,"textAlign":"center",
+      "strokeColor":"#333","backgroundColor":"transparent","roughness":0,"opacity":100,"angle":0},
+
+    {"type":"arrow","id":"res-arrow","x":618,"y":262,"width":-456,"height":0,
+      "points":[[0,0],[-456,0]],"strokeColor":"#333","backgroundColor":"transparent",
+      "roughness":0,"opacity":100,"angle":0,"strokeWidth":2,
+      "startArrowhead":null,"endArrowhead":"arrow"},
+
+    {"type":"rectangle","id":"query-box","x":190,"y":10,"width":300,"height":218,
+      "strokeColor":"#aaa","backgroundColor":"#f8f9fa","fillStyle":"solid",
+      "roughness":1,"opacity":100,"angle":0,"strokeWidth":1},
+    {"type":"text","id":"query-text","x":202,"y":18,"width":280,"height":204,
+      "text":"query getProduct {\n  product {\n    name\n    id\n    price\n    components {\n      name\n      description\n    }\n  }\n}",
+      "fontSize":12,"fontFamily":3,"textAlign":"left",
+      "strokeColor":"#333","backgroundColor":"transparent","roughness":0,"opacity":100,"angle":0},
+
+    {"type":"line","id":"query-connector","x":340,"y":228,"width":0,"height":10,
+      "points":[[0,0],[0,10]],"strokeColor":"#aaa","backgroundColor":"transparent",
+      "roughness":0,"opacity":100,"angle":0,"strokeWidth":1,"strokeStyle":"dashed"},
+
+    {"type":"rectangle","id":"response-box","x":40,"y":290,"width":540,"height":250,
+      "strokeColor":"#aaa","backgroundColor":"#f8f9fa","fillStyle":"solid",
+      "roughness":1,"opacity":100,"angle":0,"strokeWidth":1},
+    {"type":"text","id":"response-text","x":52,"y":300,"width":516,"height":234,
+      "text":"{\n  \"data\": {\n    \"product\": {\n      \"name\": \"Product1-Name\",\n      \"id\": \"XID453454\",\n      \"price\": 24.99,\n      \"components\": [\n        {\n          \"name\": \"comp 1\",\n          \"description\": \"sample desc 1\"\n        },\n        {\n          \"name\": \"comp 2\",\n          \"description\": \"sample desc 2\"\n        }\n      ]\n    }\n  }\n}",
+      "fontSize":12,"fontFamily":3,"textAlign":"left",
+      "strokeColor":"#333","backgroundColor":"transparent","roughness":0,"opacity":100,"angle":0},
+
+    {"type":"line","id":"response-connector","x":161,"y":280,"width":0,"height":10,
+      "points":[[0,0],[0,10]],"strokeColor":"#aaa","backgroundColor":"transparent",
+      "roughness":0,"opacity":100,"angle":0,"strokeWidth":1,"strokeStyle":"dashed"}
+
+  ],
+  "appState": {
+    "gridSize": null,
+    "viewBackgroundColor": "#ffffff"
+  }
+}

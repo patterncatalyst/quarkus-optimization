@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Taming the JVM: Optimizing Java Workloads on OpenShift & Kubernetes | Taming the JVM</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/theme/black.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <link rel="stylesheet" href="/quarkus-optimization/assets/css/reveal-custom.css">
+</head>
+<body class="reveal-body">
+
+<div class="reveal-bar">
+  <a href="/quarkus-optimization/" class="reveal-back">← Site</a>
+  <span class="reveal-title-bar">Taming the JVM</span>
+  <span id="slide-counter" class="reveal-counter"></span>
+</div>
+
+<div class="reveal" style="margin-top:38px">
+  <div class="slides"><!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 1 — Title                                                    -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<section data-background-color="#0A1628">
+  <div style="text-align:center;padding:2rem 0;">
+    <p style="font-size:0.7em;color:#00BCD4;letter-spacing:3px;text-transform:uppercase;margin-bottom:0.5em;">60-Minute Deep Dive</p>
+    <h1 style="font-size:2em;font-weight:800;line-height:1.1;margin-bottom:0.4em;">TAMING THE JVM</h1>
+    <h2 style="font-size:1.1em;color:#90A4AE;font-weight:400;margin-bottom:1.5em;">Optimizing Java Workloads<br>on OpenShift &amp; Kubernetes</h2>
+    <div style="display:flex;justify-content:center;gap:0.5em;flex-wrap:wrap;font-size:0.5em;margin-bottom:1.5em;">
+      <span style="background:#122040;border:1px solid #1E3A5F;padding:0.3em 0.8em;border-radius:20px;color:#00BCD4;font-family:monospace;">Quarkus 3.33.1 LTS</span>
+      <span style="background:#122040;border:1px solid #1E3A5F;padding:0.3em 0.8em;border-radius:20px;color:#00BCD4;font-family:monospace;">Java 21</span>
+      <span style="background:#122040;border:1px solid #1E3A5F;padding:0.3em 0.8em;border-radius:20px;color:#00BCD4;font-family:monospace;">G1GC / ZGC / Shenandoah</span>
+      <span style="background:#122040;border:1px solid #1E3A5F;padding:0.3em 0.8em;border-radius:20px;color:#00BCD4;font-family:monospace;">AppCDS</span>
+      <span style="background:#122040;border:1px solid #1E3A5F;padding:0.3em 0.8em;border-radius:20px;color:#00BCD4;font-family:monospace;">Virtual Threads</span>
+    </div>
+    <p style="font-size:0.55em;color:#90A4AE;">Based on: <em>Optimizing Cloud Native Java</em> &nbsp;|&nbsp; <em>SRE with Java Microservices</em> &nbsp;|&nbsp; Quarkus 3.33.1 LTS</p>
+    <p style="font-size:0.5em;color:#1E6FC8;margin-top:0.5em;">github.com/patterncatalyst/quarkus-optimization</p>
+  </div>
+  <aside class="notes">
+    Welcome. This talk is about closing the gap between how Java was designed — owning the whole machine — and how it actually runs in Kubernetes — sharing a cgroup with 20 other pods.
+    Everything in this talk has a live demo. All slides, code, and demos are in the GitHub repo on screen.
+  </aside>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 2 — Agenda                                                   -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<section data-background-color="#0A1628">
+  <h2 style="color:#00BCD4;margin-bottom:0.8em;">Agenda</h2>
+  <div class="card-grid" style="font-size:0.7em;">
+    <div class="r-card"><h4>01</h4><p>Container-Native JVM Fundamentals</p></div>
+    <div class="r-card"><h4>02</h4><p>Right-Sizing Java Workloads</p></div>
+    <div class="r-card"><h4>03</h4><p>Garbage Collection Optimization</p></div>
+    <div class="r-card"><h4>04</h4><p>Startup Time Reduction (AppCDS)</p></div>
+    <div class="r-card"><h4>05</h4><p>Observability &amp; Instrumentation</p></div>
+    <div class="r-card"><h4>06</h4><p>Autoscaling Integration</p></div>
+    <div class="r-card"><h4>07</h4><p>Systematic Tuning &amp; Cost ROI</p></div>
+    <div class="r-card" style="border-color:#9B59B6;"><h4 style="color:#9B59B6;">Bonus</h4><p>Leyden · gRPC · Latency · Panama · Valhalla</p></div>
+  </div>
+  <aside class="notes">Seven sections, three live demos in the core 60 minutes, six bonus demos for extended sessions. The repo has all nine.</aside>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 3 — The Problem                                              -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<section data-background-color="#0A1628">
+  <span class="section-tag">THE PROBLEM</span>
+  <h2>Why Java + Kubernetes = Complexity</h2>
+  <div class="stat-row" style="margin:0.75em 0;">
+    <div class="stat-item"><span class="stat-val">60%</span><span class="stat-label">of Java apps<br>overprovision memory</span></div>
+    <div class="stat-item"><span class="stat-val">4–8s</span><span class="stat-label">typical JVM cold<br>start on Kubernetes</span></div>
+    <div class="stat-item"><span class="stat-val">2–3×</span><span class="stat-label">infrastructure waste<br>from poor bin-packing</span></div>
+    <div class="stat-item"><span class="stat-val">$$$</span><span class="stat-label">unnecessary cloud<br>spend each month</span></div>
+  </div>
+  <div class="callout" style="font-size:0.65em;margin-top:0.5em;">
+    Default JVM reads <code>/proc/meminfo</code> and sees the NODE's full RAM — claims 64 GB heap inside a 512 MB container → OOMKill
+  </div>
+  <aside class="notes">
+    These four statistics come from real customer environments. The $$$  line has an actual number for each of them — and it's usually five or six figures annually.
+    The root cause of most of these problems is the same: the JVM was designed before containers existed.
+  </aside>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 4 — Container-Native Fundamentals                            -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<section data-background-color="#0A1628">
+  <span class="section-tag">SECTION 01</span>
+  <h2>Container-Native JVM Fundamentals</h2>
+  <div class="cols" style="font-size:0.65em;margin-top:0.75em;">
+    <div>
+      <p style="color:#E84855;margin-bottom:0.5em;"><strong>❌ Before</strong></p>
+      <pre><code class="language-bash"># Hardcoded — breaks with resize / VPA
+-Xms512m -Xmx2048m</code></pre>
+      <p style="color:#90A4AE;margin-top:0.5em;">JVM reads <code>/proc/meminfo</code> → host RAM<br>Claims 64GB inside 512MB container</p>
+    </div>
+    <div>
+      <p style="color:#27AE60;margin-bottom:0.5em;"><strong>✅ Java 21</strong></p>
+      <pre><code class="language-bash">-XX:MaxRAMPercentage=75.0
+-XX:InitialRAMPercentage=50.0
+-XX:MinRAMPercentage=25.0
+-XX:NativeMemoryTracking=summary</code></pre>
+    </div>
+  </div>
+  <div class="callout" style="font-size:0.6em;margin-top:0.75em;">
+    <strong>UseContainerSupport</strong> is ON by default in Java 21. Reads cgroup limits correctly.
+    cgroup v2 (RHEL 9 / OCP 4.14+): reads <code>/sys/fs/cgroup/memory.max</code>
+  </div>
+  <aside class="notes">
+    UseContainerSupport is the foundational fix. It's been on by default since Java 10 but most teams don't know about MaxRAMPercentage.
+    The old -Xmx approach breaks silently whenever a VPA changes the container limit or the cluster admin resizes the node.
+    Reference: Optimizing Cloud Native Java Ch. 3 — Container Memory Management.
+  </aside>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 5–7 — Memory Regions (abbreviated for Reveal.js)             -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<section data-background-color="#0A1628">
+  <span class="section-tag">SECTION 01</span>
+  <h2>JVM Memory Regions — Six Buckets, Not One</h2>
+  <table style="font-size:0.6em;margin-top:0.75em;">
+    <thead><tr><th>Region</th><th>Typical Size</th><th>Controlled By</th></tr></thead>
+    <tbody>
+      <tr><td><strong style="color:#27AE60;">Heap (Old + Young Gen)</strong></td><td>50–75%</td><td><code>MaxRAMPercentage</code></td></tr>
+      <tr><td>Metaspace</td><td>50–200 MB</td><td><code>-XX:MaxMetaspaceSize=256m</code></td></tr>
+      <tr><td>Platform Thread Stacks</td><td>1 MB/thread</td><td><code>-Xss</code> or Virtual Threads</td></tr>
+      <tr><td>Native Memory (JIT, GC)</td><td>100–300 MB</td><td>—</td></tr>
+      <tr><td>Direct ByteBuffers</td><td>Varies</td><td>Netty / NIO config</td></tr>
+      <tr><td>GC Bookkeeping</td><td>50–100 MB</td><td>—</td></tr>
+    </tbody>
+  </table>
+  <div class="callout" style="font-size:0.6em;margin-top:0.75em;">
+    Java 21 Virtual Threads: stacks live in heap as tiny continuations — eliminates 1MB/thread platform thread stack budget for I/O-bound workloads
+  </div>
+  <aside class="notes">
+    MaxRAMPercentage=75 only controls the heap. The remaining 25% must cover five other regions.
+    Setting 90% starves Metaspace and Netty buffers — OOMKills even when your heap metric looks fine.
+    Measure with: jcmd pid VM.native_memory summary
+  </aside>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 8–9 — Right-Sizing                                           -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<section data-background-color="#0A1628">
+  <span class="section-tag">SECTION 02</span>
+  <h2>Right-Sizing Java Workloads</h2>
+  <div class="cols" style="font-size:0.6em;margin-top:0.75em;">
+    <div>
+      <h4 style="color:#00BCD4;">requests — Scheduling Guarantee</h4>
+      <ul style="color:#90A4AE;line-height:1.6;">
+        <li>Scheduler uses this to find a node</li>
+        <li>Set to <strong>P50 steady-state RSS</strong></li>
+        <li>Too high → pods can't schedule</li>
+        <li>Too low → CPU throttle on full node</li>
+      </ul>
+    </div>
+    <div>
+      <h4 style="color:#E84855;">limits — Hard Ceiling</h4>
+      <ul style="color:#90A4AE;line-height:1.6;">
+        <li>Memory exceeded → OOMKill (exit 137)</li>
+        <li>CPU exceeded → throttled (not killed)</li>
+        <li>Set memory limit <strong>25-30% above P99 RSS</strong></li>
+        <li>Set CPU limit <strong>2-4× request</strong> to absorb GC spikes</li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout" style="font-size:0.58em;margin-top:0.75em;">
+    <strong>Demo 07:</strong> 7-workload analysis · 4 nodes → 2 nodes · +67% pod density · $6,720/month saving · 17× ROI
+  </div>
+  <aside class="notes">
+    The key insight: requests and limits serve different purposes. Requests are for the scheduler. Limits are for safety.
+    Most teams set them equal — that gives you Guaranteed QoS (good for CPU Manager) but no GC surge headroom.
+    Demo 07 shows this analysis run on a real 7-service cluster.
+  </aside>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 10–13 — GC Optimization                                      -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<section data-background-color="#0A1628">
+  <span class="section-tag">SECTION 03</span>
+  <h2>GC in Containers: Four Challenges</h2>
+  <div class="card-grid" style="font-size:0.6em;margin-top:0.75em;">
+    <div class="r-card">
+      <h4>CPU Throttling Extends GC</h4>
+      <p>CPU limits throttle GC threads mid-pause. 100ms G1GC → 400ms under throttle. Set limit ≥ 2× request.</p>
+    </div>
+    <div class="r-card">
+      <h4>ParallelGCThreads Default</h4>
+      <p>JVM defaults to host CPU count. 64-core node + 4 CPU limit = 64 threads competing for 4 CPUs.</p>
+    </div>
+    <div class="r-card">
+      <h4>GC-Induced HPA Thrash</h4>
+      <p>GC pause → CPU spike → HPA fires → new pods GC → repeat. Scale on RPS, not CPU.</p>
+    </div>
+    <div class="r-card">
+      <h4>Heap Sizing vs GC Pressure</h4>
+      <p>Small heap = frequent GC. Too large = infrequent but long GC. Start at MaxRAMPercentage=75.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    Row 4 of the ParallelGCThreads problem is the most surprising to most people. Write this down:
+    -XX:ParallelGCThreads=N where N equals whatever is in your resources.requests.cpu.
+    This costs nothing and immediately improves GC pause duration on any shared-node cluster.
+  </aside>
+</section>
+
+<section data-background-color="#0A1628">
+  <span class="section-tag">SECTION 03</span>
+  <h2>GC Selection Guide</h2>
+  <table style="font-size:0.55em;margin-top:0.5em;">
+    <thead><tr><th>Collector</th><th>Pause</th><th>Best For</th><th>Key Flags</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>G1GC</strong></td>
+        <td>50–300ms</td>
+        <td>General purpose, Temurin/Corretto default</td>
+        <td><code>-XX:+UseG1GC -XX:MaxGCPauseMillis=200</code></td>
+      </tr>
+      <tr>
+        <td><strong style="color:#E84855;">Shenandoah</strong></td>
+        <td>1–20ms</td>
+        <td><strong style="color:#E84855;">UBI9 default</strong> — Red Hat images ship this</td>
+        <td><code>-XX:+UseShenandoahGC</code></td>
+      </tr>
+      <tr>
+        <td><strong style="color:#00BCD4;">ZGC (Gen)</strong></td>
+        <td>&lt;1ms</td>
+        <td>Low-latency APIs, any heap size, HPA stability</td>
+        <td><code>-XX:+UseZGC -XX:+ZGenerational</code></td>
+      </tr>
+      <tr>
+        <td>Serial GC</td>
+        <td>STW</td>
+        <td>CLI tools, batch, &lt;256MB heap only</td>
+        <td><code>-XX:+UseSerialGC</code></td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="callout" style="font-size:0.58em;margin-top:0.75em;">
+    <strong>Note:</strong> UBI9 ships Shenandoah. Demos 02 and 06 override to <code>-XX:+UseG1GC</code> / <code>-XX:+UseZGC</code> for clean comparison.
+  </div>
+  <aside class="notes">
+    Tip from SRE with Java Microservices: monitor jvm.gc.pause via Micrometer.
+    If P99 pause > 500ms, switch from G1GC to ZGC or Shenandoah. Don't tune G1GC parameters hoping to get there — switch the algorithm.
+  </aside>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 15–17 — Startup                                              -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<section data-background-color="#0A1628">
+  <span class="section-tag">SECTION 04</span>
+  <h2>Startup Time Reduction</h2>
+  <div class="cols" style="font-size:0.6em;margin-top:0.75em;">
+    <div>
+      <h4>Spring Boot vs Quarkus Baseline</h4>
+      <table style="font-size:0.9em;margin-top:0.5em;">
+        <tr><td>Spring Boot 4.0.5</td><td style="color:#E84855;">~4–8s</td></tr>
+        <tr><td>Quarkus 3.33.1 JVM</td><td style="color:#F5A623;">~0.3–0.8s</td></tr>
+        <tr><td>Quarkus + AppCDS (JDK 21)</td><td style="color:#27AE60;">~0.15–0.4s</td></tr>
+        <tr><td><strong>Quarkus + Leyden (JDK 25)</strong></td><td style="color:#00BCD4;"><strong>~148ms (Demo 04)</strong></td></tr>
+      </table>
+    </div>
+    <div>
+      <h4>One Property</h4>
+      <pre><code class="language-properties"># application.properties
+quarkus.package.jar.aot.enabled=true</code></pre>
+      <pre><code class="language-bash"># Build + train
+mvn verify   # (not package)
+# → runs @QuarkusIntegrationTest
+# → writes target/quarkus-app/app.aot</code></pre>
+    </div>
+  </div>
+  <aside class="notes">
+    Quarkus is already 5-10x faster than Spring Boot before any optimisation. That's because Quarkus moves classpath scanning and DI wiring to build time.
+    AppCDS gives ~5% on Quarkus vs ~40% on Spring Boot — the small Quarkus improvement proves the point: less work to cache because less work happens at runtime.
+    Leyden on JDK 25: 609ms → 148ms, a 75% reduction. Verified in Demo 04.
+  </aside>
+</section>
+
+<section data-background-color="#0A1628">
+  <span class="section-tag">SECTION 04</span>
+  <h2>Virtual Threads — @RunOnVirtualThread</h2>
+  <div class="cols" style="font-size:0.6em;margin-top:0.75em;">
+    <div>
+      <pre><code class="language-java">@Path("/allocate")
+@ApplicationScoped
+public class GcResource {
+    @GET
+    @RunOnVirtualThread   // ← One annotation. Done.
+    public AllocResponse allocate(
+            @QueryParam("mb") int mb) {
+        return doHeavyWork(mb);
+    }
+}</code></pre>
+    </div>
+    <div>
+      <h4>Container sizing impact</h4>
+      <ul style="color:#90A4AE;line-height:1.6;">
+        <li>Platform thread stacks: 1MB each</li>
+        <li>200 threads = 200MB off-heap</li>
+        <li>Virtual thread stacks → in heap</li>
+        <li>10,000 concurrent I/O tasks, same memory</li>
+      </ul>
+      <pre><code class="language-yaml">resources:
+  requests:
+    memory: "256Mi"  # Was 512Mi
+  limits:
+    memory: "512Mi"</code></pre>
+    </div>
+  </div>
+  <aside class="notes">
+    JEP 444, Java 21. One annotation in Quarkus. Avoid synchronized + I/O (pins carrier thread) — use ReentrantLock instead.
+    The container sizing impact is real: a REST service that needed 512m for 200 platform threads can handle 10,000 virtual threads with the same memory.
+  </aside>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 18–20 — Observability                                        -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<section data-background-color="#0A1628">
+  <span class="section-tag">SECTION 05</span>
+  <h2>Observability — You Can't Tune What You Can't See</h2>
+  <div class="card-grid" style="font-size:0.6em;margin-top:0.75em;">
+    <div class="r-card">
+      <h4>JFR (JDK Flight Recorder)</h4>
+      <p>Built-in, &lt;1% overhead. GC events, allocations, IO. <code>jcmd pid JFR.start</code></p>
+    </div>
+    <div class="r-card">
+      <h4>Cryostat (OpenShift)</h4>
+      <p>OpenShift-native JFR management via Kubernetes operator. Auto-discover pods via annotation.</p>
+    </div>
+    <div class="r-card">
+      <h4>OTel → Grafana LGTM</h4>
+      <p><code>quarkus-micrometer-opentelemetry</code> — single extension, all telemetry via OTLP</p>
+    </div>
+    <div class="r-card">
+      <h4>Essential Metrics</h4>
+      <p><code>jvm_gc_pause_seconds</code> P99 &gt;500ms → switch GC<br><code>jvm_memory_used_bytes</code> heap + off-heap</p>
+    </div>
+  </div>
+  <div class="callout" style="font-size:0.58em;margin-top:0.75em;">
+    <strong>Required:</strong> <code>quarkus.micrometer.distribution.percentiles-histogram.jvm.gc.pause=true</code> — without this, Grafana GC panels show no data
+  </div>
+  <aside class="notes">
+    The histogram configuration is not optional. The jvm.gc.pause counter tells you "GC happened 40 times". The histogram tells you "GC P99 was 800ms — fire an alert". Set this before your next deployment.
+    quarkus-micrometer-opentelemetry replaces separate prometheus registry + otel extensions — one unified OTLP pipeline.
+  </aside>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 21–23 — Autoscaling                                          -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<section data-background-color="#0A1628">
+  <span class="section-tag">SECTION 06</span>
+  <h2>Autoscaling — HPA with JVM-Aware Metrics</h2>
+  <pre style="font-size:0.5em;"><code class="language-yaml">spec:
+  minReplicas: 2     # NEVER 1 — single pod + GC STW = 100% downtime
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 120  # Absorb GC CPU spikes up to 2min
+      policies:
+      - type: Pods
+        value: 2
+        periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300
+  metrics:
+  - type: External
+    external:
+      metric: { name: http_requests_per_second }
+      target: { type: AverageValue, averageValue: "50" }
+  - type: External
+    external:
+      metric: { name: jvm_memory_used_ratio }
+      target: { type: AverageValue, averageValue: "0.80" }</code></pre>
+  <aside class="notes">
+    Scale on RPS not CPU. GC pauses create CPU spikes — CPU-based HPA treats those as load signals and scales out.
+    The stabilisation window of 120s is longer than any normal GC pause. The memory ratio metric scales out before OOMKill.
+    minReplicas:2 is the single cheapest reliability improvement — one extra pod, zero downtime during GC pause.
+  </aside>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 24–25 — Tuning + ROI                                         -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<section data-background-color="#0A1628">
+  <span class="section-tag">SECTION 07</span>
+  <h2>Systematic Tuning Workflow</h2>
+  <div style="display:flex;align-items:center;justify-content:center;gap:0.5em;font-size:0.65em;margin:0.75em 0;flex-wrap:wrap;">
+    
+    
+    <div style="background:#122040;border:1px solid #1E3A5F;border-radius:6px;padding:0.5em 0.8em;text-align:center;min-width:100px;">
+      <div style="color:#00BCD4;font-weight:700;">1</div>
+      <div>Instrument</div>
+    </div>
+    <div style="color:#1E6FC8;">→</div>
+    
+    <div style="background:#122040;border:1px solid #1E3A5F;border-radius:6px;padding:0.5em 0.8em;text-align:center;min-width:100px;">
+      <div style="color:#00BCD4;font-weight:700;">2</div>
+      <div>Baseline</div>
+    </div>
+    <div style="color:#1E6FC8;">→</div>
+    
+    <div style="background:#122040;border:1px solid #1E3A5F;border-radius:6px;padding:0.5em 0.8em;text-align:center;min-width:100px;">
+      <div style="color:#00BCD4;font-weight:700;">3</div>
+      <div>Diagnose</div>
+    </div>
+    <div style="color:#1E6FC8;">→</div>
+    
+    <div style="background:#122040;border:1px solid #1E3A5F;border-radius:6px;padding:0.5em 0.8em;text-align:center;min-width:100px;">
+      <div style="color:#00BCD4;font-weight:700;">4</div>
+      <div>Tune</div>
+    </div>
+    <div style="color:#1E6FC8;">→</div>
+    
+    <div style="background:#122040;border:1px solid #1E3A5F;border-radius:6px;padding:0.5em 0.8em;text-align:center;min-width:100px;">
+      <div style="color:#00BCD4;font-weight:700;">5</div>
+      <div>Validate</div>
+    </div>
+    
+    
+  </div>
+  <div class="stat-row" style="margin-top:1em;">
+    <div class="stat-item"><span class="stat-val" style="color:#27AE60;">40-60%</span><span class="stat-label">Memory reduction<br>after right-sizing</span></div>
+    <div class="stat-item"><span class="stat-val" style="color:#27AE60;">2-3×</span><span class="stat-label">Pod density<br>per node</span></div>
+    <div class="stat-item"><span class="stat-val" style="color:#27AE60;">55%</span><span class="stat-label">Startup reduction<br>with AppCDS</span></div>
+    <div class="stat-item"><span class="stat-val" style="color:#27AE60;">$$$</span><span class="stat-label">Node savings<br>from bin-packing</span></div>
+  </div>
+  <aside class="notes">
+    One change at a time. Measure before and after. Commit or revert based on data.
+    If you accumulate five JVM flags without measuring each one, you can't attribute any improvement to any flag.
+    OpenShift Cost Management tracks cost per namespace before and after to show business value.
+  </aside>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- DEMO RECAPS (Slides 26-28)                                          -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<section data-background-color="#08111F">
+  <div style="text-align:center;padding:1rem 0;">
+    <p style="color:#27AE60;letter-spacing:3px;font-size:0.6em;text-transform:uppercase;">DEMO 01</p>
+    <h2 style="font-size:1.6em;">Container-Aware<br>Heap Sizing</h2>
+    <div style="text-align:left;max-width:600px;margin:1rem auto;font-size:0.6em;">
+      <ul style="color:#90A4AE;line-height:1.8;">
+        <li>Run WITHOUT UseContainerSupport → JVM claims host RAM</li>
+        <li>Run WITH UseContainerSupport + MaxRAMPercentage=75 → respects 512MB</li>
+        <li>Live jcmd output showing heap sizes before and after</li>
+        <li>OOMKill simulation when JVM ignores container limits</li>
+      </ul>
+    </div>
+    <pre style="font-size:0.55em;max-width:400px;margin:0 auto;"><code>cd demo-01-heap-sizing
+./demo.sh</code></pre>
+  </div>
+  <aside class="notes">Demo 01 is the foundational fix. Everything else in this talk builds on getting this right first.</aside>
+</section>
+
+<section data-background-color="#08111F">
+  <div style="text-align:center;padding:1rem 0;">
+    <p style="color:#27AE60;letter-spacing:3px;font-size:0.6em;text-transform:uppercase;">DEMO 02</p>
+    <h2 style="font-size:1.6em;">GC Monitoring<br>with Prometheus</h2>
+    <div style="text-align:left;max-width:600px;margin:1rem auto;font-size:0.6em;">
+      <ul style="color:#90A4AE;line-height:1.8;">
+        <li>Quarkus 3.33.1 + quarkus-micrometer-opentelemetry + Grafana LGTM</li>
+        <li>Live GC pause histograms at <code>/q/metrics</code></li>
+        <li>Generate GC pressure — watch metrics AND traces simultaneously</li>
+        <li>G1GC vs Generational ZGC side-by-side pause comparison</li>
+        <li>Virtual threads: 500 concurrent tasks, minimal platform thread count</li>
+      </ul>
+    </div>
+    <pre style="font-size:0.55em;max-width:500px;margin:0 auto;"><code>cd quarkus-demo-02-gc-monitoring
+./demo.sh   # starts podman-compose stack</code></pre>
+  </div>
+</section>
+
+<section data-background-color="#08111F">
+  <div style="text-align:center;padding:1rem 0;">
+    <p style="color:#27AE60;letter-spacing:3px;font-size:0.6em;text-transform:uppercase;">DEMO 03</p>
+    <h2 style="font-size:1.6em;">AppCDS Startup<br>Acceleration</h2>
+    <div style="text-align:left;max-width:600px;margin:1rem auto;font-size:0.6em;">
+      <ul style="color:#90A4AE;line-height:1.8;">
+        <li>Quarkus baseline: ~0.3-0.8s (already 10× faster than Spring Boot)</li>
+        <li><code>quarkus.package.jar.aot.enabled=true</code> — one property</li>
+        <li>Maven plugin handles training on @QuarkusIntegrationTest suite</li>
+        <li>Quarkus + AOT Cache: ~0.15-0.4s (30-50% additional gain)</li>
+        <li>Progression: AppCDS (JDK 21) → Leyden -XX:AOTCache (JDK 25)</li>
+      </ul>
+    </div>
+    <pre style="font-size:0.55em;max-width:500px;margin:0 auto;"><code>cd quarkus-demo-03-appcds
+./demo.sh</code></pre>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 29 — Key Takeaways                                           -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<section data-background-color="#0A1628">
+  <h2 style="color:#00BCD4;margin-bottom:0.75em;">Key Takeaways</h2>
+  <ol style="font-size:0.65em;color:#90A4AE;line-height:2;max-width:800px;margin:0 auto;">
+    <li><strong style="color:#ECF0F1;">Always enable UseContainerSupport + MaxRAMPercentage</strong> — hardcoded -Xmx is a container anti-pattern</li>
+    <li><strong style="color:#ECF0F1;">Right-size first, then tune</strong> — measure RSS + off-heap before setting requests/limits</li>
+    <li><strong style="color:#ECF0F1;">Match GC to workload</strong> — G1GC general, ZGC/Shenandoah for latency-sensitive APIs</li>
+    <li><strong style="color:#ECF0F1;">Quarkus AppCDS: one property</strong> — <code>quarkus.package.jar.aot.enabled=true</code>. Already 5-10× faster than Spring Boot</li>
+    <li><strong style="color:#ECF0F1;">Observe before you tune</strong> — JFR + Cryostat + Prometheus validates every change</li>
+    <li><strong style="color:#ECF0F1;">Autoscale on RPS not CPU</strong> — GC pauses lie to HPA. Use <code>@RunOnVirtualThread</code></li>
+    <li><strong style="color:#ECF0F1;">Quantify savings</strong> — track cost per namespace to show business value from engineering work</li>
+  </ol>
+  <aside class="notes">Read each one slowly. This is the audience's callback for their own environments.</aside>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- SLIDE 30 — Q&A                                                     -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<section data-background-color="#0A1628">
+  <h2>Resources &amp; Q&amp;A</h2>
+  <div style="font-size:0.65em;max-width:700px;margin:1rem auto;">
+    <p style="margin-bottom:0.5em;">📗 <strong>Optimizing Cloud Native Java</strong> — Benjamin Evans et al. · O'Reilly</p>
+    <p style="margin-bottom:0.5em;">📗 <strong>SRE with Java Microservices</strong> — Jonathan Schneider · O'Reilly</p>
+    <p style="margin-bottom:1em;">🔗 <strong>Demo Repo:</strong> <a href="https://github.com/patterncatalyst/quarkus-optimization" style="color:#00BCD4;">github.com/patterncatalyst/quarkus-optimization</a></p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5em;font-size:0.9em;color:#90A4AE;">
+      <div>Quarkus AOT: <a href="https://quarkus.io/guides/aot" style="color:#1E6FC8;">quarkus.io/guides/aot</a></div>
+      <div>Grafana JVM: <a href="https://grafana.com/grafana/dashboards/4701" style="color:#1E6FC8;">Dashboard 4701</a></div>
+      <div>Virtual Threads: <a href="https://quarkus.io/guides/virtual-threads" style="color:#1E6FC8;">quarkus.io/guides/virtual-threads</a></div>
+      <div>JVM Tuning: <a href="https://access.redhat.com/articles/2988411" style="color:#1E6FC8;">Red Hat JVM Guide</a></div>
+    </div>
+  </div>
+  <h2 style="margin-top:1.5em;color:#27AE60;">Questions?</h2>
+  <aside class="notes">Slides and all demos are in the GitHub repo. PRs welcome — especially if a demo breaks on your platform.</aside>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- BONUS SLIDES 31-33 — Project Leyden                                -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<section data-background-color="#0A1628">
+  <span class="section-tag section-tag--purple">LEYDEN</span>
+  <h2>Project Leyden — JVM AOT Cache</h2>
+  <div style="font-size:0.6em;">
+    <table>
+      <thead><tr><th>Release</th><th>JEP</th><th>What it adds</th><th>Gain</th></tr></thead>
+      <tbody>
+        <tr><td>JDK 24</td><td>483</td><td>AOT class loading &amp; linking</td><td>~40% startup</td></tr>
+        <tr><td><strong>JDK 25 LTS</strong></td><td>514+515</td><td>Ergonomics + JIT method profiles</td><td><strong style="color:#00BCD4;">~75% startup (Demo 04: 609→148ms)</strong></td></tr>
+        <tr><td>JDK 26</td><td>516</td><td>ZGC support — no longer have to choose</td><td>+ZGC compat</td></tr>
+        <tr><td>Future</td><td>—</td><td>Pre-compiled native code in cache</td><td>Instant peak perf</td></tr>
+      </tbody>
+    </table>
+    <div class="callout" style="margin-top:0.75em;">
+      <strong>Quarkus 3.33.1:</strong> <code>quarkus.package.jar.aot.enabled=true</code> — one property, all JDK versions, cache automatically richer on each upgrade
+    </div>
+  </div>
+  <aside class="notes">
+    The key message: you configure this once with one property. Upgrade the JDK at your own pace. The cache automatically becomes richer on each JDK upgrade.
+    Leyden vs GraalVM Native: Leyden stays on the JVM — full reflection, dynamic loading, JIT all continue to work. Native is the closed-world AOT option.
+  </aside>
+</section>
+
+<section data-background-color="#08111F">
+  <div style="text-align:center;padding:1rem 0;">
+    <p style="color:#9B59B6;letter-spacing:3px;font-size:0.6em;text-transform:uppercase;">DEMO 04 · JDK 25 LTS</p>
+    <h2 style="font-size:1.6em;">Quarkus + Project Leyden<br>AOT Cache</h2>
+    <div style="text-align:left;max-width:600px;margin:1rem auto;font-size:0.6em;">
+      <ul style="color:#90A4AE;line-height:1.8;">
+        <li>One property: <code>quarkus.package.jar.aot.enabled=true</code></li>
+        <li>Build trains on @QuarkusIntegrationTest suite</li>
+        <li>Output: <code>app.aot</code> alongside <code>quarkus-run.jar</code></li>
+        <li><strong style="color:#00BCD4;">609ms → 148ms startup (−75%)</strong></li>
+      </ul>
+    </div>
+    <pre style="font-size:0.55em;max-width:500px;margin:0 auto;"><code>cd quarkus-demo-04-leyden
+./demo.sh   # JDK 25 required (in container)</code></pre>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- BONUS SLIDES 34-37 — gRPC                                          -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<section data-background-color="#0A1628">
+  <span class="section-tag section-tag--teal">gRPC</span>
+  <h2>REST vs gRPC — Inside the Cluster</h2>
+  <div class="cols" style="font-size:0.6em;margin-top:0.5em;">
+    <div>
+      <h4 style="color:#E84855;">REST / JSON</h4>
+      <ul style="color:#90A4AE;line-height:1.7;">
+        <li>HTTP/1.1 (or 2)</li>
+        <li>JSON text (~400 bytes)</li>
+        <li>New connection per request</li>
+        <li>SSE / WebSocket only for streaming</li>
+        <li>curl friendly ✅</li>
+        <li>Browser native ✅</li>
+      </ul>
+    </div>
+    <div>
+      <h4 style="color:#00BCD4;">gRPC / Protobuf</h4>
+      <ul style="color:#90A4AE;line-height:1.7;">
+        <li>HTTP/2 always</li>
+        <li>Binary Protobuf (~40 bytes)</li>
+        <li>Multiplexed, persistent</li>
+        <li>Built-in streaming (4 modes) ✅</li>
+        <li>Needs grpcurl / Postman</li>
+        <li>Generated stubs</li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout" style="font-size:0.58em;margin-top:0.5em;">
+    ⚠️ <strong>Localhost caveat:</strong> gRPC unary is SLOWER than REST on localhost — network cost is zero. gRPC wins streaming and high concurrency (c=500) even locally.
+  </div>
+  <aside class="notes">
+    The localhost result is expected. Show it — hiding it would be dishonest. In production with pod-to-pod latency, gRPC wins 3-4x on throughput and 73% on p50 latency.
+    The streaming comparison is real regardless of where you run it.
+  </aside>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- BONUS SLIDES 38-42 — Low Latency                                   -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<section data-background-color="#0A1628">
+  <span class="section-tag">LOW LATENCY</span>
+  <h2>Why the JVM Breaks Latency SLAs</h2>
+  <div class="cols" style="font-size:0.6em;margin-top:0.5em;">
+    <div>
+      <h4 style="color:#E84855;">G1GC — Default</h4>
+      <ul style="color:#90A4AE;line-height:1.8;">
+        <li>Young GC pause: 10–200ms</li>
+        <li>Mixed GC pause: 50–500ms</li>
+        <li>Full GC (worst): 1–10s</li>
+        <li>Pauses SCALE with heap size</li>
+        <li>CPU spike → HPA false scale-out</li>
+      </ul>
+    </div>
+    <div>
+      <h4 style="color:#00BCD4;">ZGC Generational — JDK 21+</h4>
+      <ul style="color:#90A4AE;line-height:1.8;">
+        <li>All pauses: &lt;1ms</li>
+        <li>Scales with thread count, not heap</li>
+        <li>Load barrier overhead: ~5-15%</li>
+        <li>Smooth CPU profile → no HPA thrash</li>
+      </ul>
+      <pre style="font-size:0.9em;"><code>-XX:+UseZGC
+-XX:+ZGenerational</code></pre>
+    </div>
+  </div>
+  <aside class="notes">
+    Same app, same heap, same Quarkus config. Different GC = different production behaviour.
+    ZGC will show lower throughput in the hey load test — that's the load barrier cost. The meaningful metric is the GC pause delta.
+  </aside>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- BONUS SLIDES 43-47 — Right-Sizing                                  -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<section data-background-color="#0A1628">
+  <span class="section-tag--green section-tag">RIGHT-SIZING</span>
+  <h2>Cost Impact Analysis &amp; Business Case</h2>
+  <div style="text-align:center;margin:0.5em 0;">
+    <span style="font-size:3em;font-weight:800;color:#27AE60;">$80,640</span>
+    <p style="color:#90A4AE;font-size:0.65em;margin-top:0.2em;">annual saving · 2 nodes × $0.384/hr × 8,760 hrs · this cluster alone</p>
+  </div>
+  <div class="card-grid" style="font-size:0.58em;margin-top:0.5em;">
+    <div class="r-card">
+      <h4>💰 Direct savings</h4>
+      <p>2 nodes eliminated · $1,120 → $560/month</p>
+    </div>
+    <div class="r-card">
+      <h4>⏱ Engineering cost</h4>
+      <p>~4 hours · rolling restarts · 17× ROI</p>
+    </div>
+    <div class="r-card">
+      <h4>📈 Indirect benefits</h4>
+      <p>HPA stability · VPA trustworthy · correct thresholds</p>
+    </div>
+    <div class="r-card">
+      <h4>🏢 At scale</h4>
+      <p>10 clusters = $67,200/year · OpenShift Cost Management</p>
+    </div>
+  </div>
+  <aside class="notes">
+    $80,640/year from one cluster, one afternoon of analysis. That's not a rounding error.
+    The ROI argument: $6,720 saving for ~$400 engineering time = 17x return.
+  </aside>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- BONUS SLIDES 48-50 — Panama                                        -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<section data-background-color="#0A1628">
+  <span class="section-tag section-tag--orange">PANAMA</span>
+  <h2>Project Panama — The End of JNI</h2>
+  <div class="cols" style="font-size:0.6em;margin-top:0.5em;">
+    <div>
+      <h4 style="color:#E84855;">JNI (1996)</h4>
+      <ul style="color:#90A4AE;line-height:1.7;">
+        <li>Write Java + C header + C wrapper</li>
+        <li>Compile C per platform/arch</li>
+        <li>Manual native memory — leaks kill JVM</li>
+        <li>JNI crash = no Java stack trace</li>
+        <li>sun.misc.Unsafe: private API, breaks each JDK</li>
+      </ul>
+    </div>
+    <div>
+      <h4 style="color:#00BCD4;">Panama FFM (JDK 22 — finalized)</h4>
+      <pre><code class="language-java">try (Arena arena = Arena.ofConfined()) {
+  MemorySegment data =
+    arena.allocateFrom(JAVA_DOUBLE, arr);
+  int result = (int) methodHandle
+    .invoke(data, arr.length, outP99);
+} // freed here — zero leaks possible</code></pre>
+    </div>
+  </div>
+  <aside class="notes">
+    FFM is production-ready in JDK 22, stable in JDK 25. No --enable-preview required.
+    The Arena is the key safety feature. Everything allocated in a confined arena is freed when it closes. You cannot leak if you use try-with-resources.
+    allocateFrom() — not allocateArray(). The preview API was renamed at GA.
+  </aside>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- BONUS SLIDES 51-52 — Valhalla                                      -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<section data-background-color="#0A1628">
+  <span class="section-tag section-tag--purple">VALHALLA</span>
+  <h2>Project Valhalla — Closing the 30-Year Gap</h2>
+  <div class="cols" style="font-size:0.6em;margin-top:0.5em;">
+    <div>
+      <h4 style="color:#27AE60;">Today — Value Class</h4>
+      <pre><code class="language-java">// Heap object — pointer in array
+// 8-byte header per element
+// GC-tracked — every allocation
+record Point(double x, double y) {}</code></pre>
+    </div>
+    <div>
+      <h4 style="color:#00BCD4;">Valhalla (preview JDK 25+)</h4>
+      <pre><code class="language-java">// Stored inline — no header
+// x0,y0,x1,y1 densely packed
+// GC never sees it
+value class Point {
+  double x; double y;
+}</code></pre>
+    </div>
+  </div>
+  <div class="card-grid" style="font-size:0.55em;margin-top:0.5em;">
+    <div class="r-card"><h4>📉 Memory</h4><p>List&lt;double&gt;: 1× vs List&lt;Double&gt;: 3×. Pod requests cut up to 50%.</p></div>
+    <div class="r-card"><h4>♻️ GC Pressure</h4><p>Value types: zero heap allocation, zero GC tracking. HPA stays quiet.</p></div>
+    <div class="r-card"><h4>⚡ Cache Performance</h4><p>Sequential memory access. L1/L2 cache-friendly. SIMD-friendly layout.</p></div>
+    <div class="r-card"><h4>📅 Timeline</h4><p>Preview JDK 25+. Universal generics (List&lt;int&gt;) after primitive classes. Stable ~JDK 27-29.</p></div>
+  </div>
+  <aside class="notes">
+    Valhalla doesn't change how you write code — it changes what the JVM does with your code.
+    A List<Point> written today will automatically get better memory layout on a Valhalla JVM if Point is a value class.
+  </aside>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<!-- BONUS SLIDES 53-54 — Anti-Patterns                                 -->
+<!-- ══════════════════════════════════════════════════════════════════ -->
+<section data-background-color="#0A1628">
+  <span class="section-tag section-tag--coral">ANTI-PATTERNS</span>
+  <h2>Common JVM Anti-Patterns on Kubernetes</h2>
+  <div style="font-size:0.55em;display:grid;grid-template-columns:1fr 1fr;gap:0.5em;">
+    <div>
+      <p style="color:#E84855;font-weight:700;margin-bottom:0.3em;">🧠 Memory</p>
+      <ul style="color:#90A4AE;line-height:1.6;margin-left:1em;">
+        <li>❌ Hardcoded -Xmx/-Xms</li>
+        <li>❌ MaxRAMPercentage=90 — starves off-heap</li>
+        <li>❌ No -XX:MaxMetaspaceSize</li>
+      </ul>
+    </div>
+    <div>
+      <p style="color:#E84855;font-weight:700;margin-bottom:0.3em;">⚙️ GC &amp; CPU</p>
+      <ul style="color:#90A4AE;line-height:1.6;margin-left:1em;">
+        <li>❌ Default ParallelGCThreads on large node</li>
+        <li>❌ CPU-based HPA with Java workloads</li>
+        <li>❌ minReplicas: 1 in HPA</li>
+        <li>❌ No stabilizationWindowSeconds</li>
+      </ul>
+    </div>
+    <div>
+      <p style="color:#E84855;font-weight:700;margin-bottom:0.3em;">🚀 AOT / Startup</p>
+      <ul style="color:#90A4AE;line-height:1.6;margin-left:1em;">
+        <li>❌ @QuarkusTest for AOT training</li>
+        <li>❌ Manual -XX:AOTCache in Dockerfile</li>
+        <li>❌ mvn package instead of mvn verify</li>
+        <li>❌ Ignoring JDK version on rebuild</li>
+      </ul>
+    </div>
+    <div>
+      <p style="color:#E84855;font-weight:700;margin-bottom:0.3em;">👁 Observability</p>
+      <ul style="color:#90A4AE;line-height:1.6;margin-left:1em;">
+        <li>❌ No GC pause histogram</li>
+        <li>❌ Separate prometheus + otel extensions</li>
+        <li>❌ No PrometheusRule on jvm_gc_pause</li>
+        <li>❌ Tuning JVM flags without baseline</li>
+      </ul>
+    </div>
+  </div>
+  <aside class="notes">
+    Pick 2-3 from each category that resonate with your audience. Ask for a show of hands — usually half the room has seen rows 1-3 firsthand.
+  </aside>
+</section>
+
+<section data-background-color="#0A1628">
+  <span class="section-tag section-tag--green">ANTI-PATTERNS</span>
+  <h2>Anti-Pattern Remediation</h2>
+  <div style="font-size:0.52em;display:grid;grid-template-columns:1fr 1fr;gap:0.5em;">
+    <div>
+      <p style="color:#27AE60;font-weight:700;margin-bottom:0.3em;">✅ Memory Fixes</p>
+      <ul style="color:#90A4AE;line-height:1.6;margin-left:1em;">
+        <li>→ <code>-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0</code></li>
+        <li>→ Use 75%, not 90% — reserve 25% for off-heap</li>
+        <li>→ Add <code>-XX:MaxMetaspaceSize=256m</code></li>
+      </ul>
+    </div>
+    <div>
+      <p style="color:#27AE60;font-weight:700;margin-bottom:0.3em;">✅ GC &amp; CPU Fixes</p>
+      <ul style="color:#90A4AE;line-height:1.6;margin-left:1em;">
+        <li>→ <code>-XX:ParallelGCThreads=N</code> (= CPU request)</li>
+        <li>→ HPA on RPS, not CPU (KEDA or Prometheus Adapter)</li>
+        <li>→ <code>minReplicas: 2</code> minimum</li>
+        <li>→ <code>stabilizationWindowSeconds: 120</code></li>
+      </ul>
+    </div>
+    <div>
+      <p style="color:#27AE60;font-weight:700;margin-bottom:0.3em;">✅ AOT / Startup Fixes</p>
+      <ul style="color:#90A4AE;line-height:1.6;margin-left:1em;">
+        <li>→ Use @QuarkusIntegrationTest, not @QuarkusTest</li>
+        <li>→ Don't add -XX:AOTCache — Quarkus sets it automatically</li>
+        <li>→ Run <code>mvn verify</code>, not <code>mvn package</code></li>
+        <li>→ Pin JDK minor version in Dockerfile FROM</li>
+      </ul>
+    </div>
+    <div>
+      <p style="color:#27AE60;font-weight:700;margin-bottom:0.3em;">✅ Observability Fixes</p>
+      <ul style="color:#90A4AE;line-height:1.6;margin-left:1em;">
+        <li>→ <code>percentiles-histogram.jvm.gc.pause=true</code></li>
+        <li>→ Use <code>quarkus-micrometer-opentelemetry</code> (unified)</li>
+        <li>→ PrometheusRule: GC P99 &gt;500ms for 2m → alert</li>
+        <li>→ Baseline first. Change one flag. Measure again.</li>
+      </ul>
+    </div>
+  </div>
+  <aside class="notes">
+    Everything on this slide is a drop-in change. No application code changes. No architectural redesign.
+    Configuration and build pipeline changes only. The golden rule: one change at a time, measure before and after.
+  </aside>
+</section>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/notes/notes.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/zoom/zoom.min.js"></script>
+<script>
+  Reveal.initialize({
+    hash: true, slideNumber: 'c/t', transition: 'fade',
+    transitionSpeed: 'fast', center: false, width: 1280, height: 720,
+    margin: 0.04,
+    plugins: [RevealHighlight, RevealNotes, RevealZoom]
+  });
+  Reveal.on('slidechanged', () => {
+    const i = Reveal.getIndices();
+    const t = document.querySelectorAll('.slides > section').length;
+    document.getElementById('slide-counter').textContent = (i.h+1) + ' / ' + t;
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demo 04 — Project Leyden AOT Cache | Taming the JVM</title>
+  <meta name="description" content="Optimizing Java Workloads on OpenShift & Kubernetes">
+  <link rel="stylesheet" href="/quarkus-optimization/assets/css/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container hflex">
+    <a class="site-title" href="/quarkus-optimization/">
+      <span class="logo-icon">⚡</span>
+      <span class="logo-text">Taming the JVM</span>
+    </a>
+    <nav class="site-nav">
+      <a href="/quarkus-optimization/demos/"        class="active">Demos</a>
+      <a href="/quarkus-optimization/presentation/" >Slides</a>
+      <a href="/quarkus-optimization/diagrams/"     >Diagrams</a>
+      <a href="/quarkus-optimization/docs/"         >Docs</a>
+      <a href="https://github.com/patterncatalyst/quarkus-optimization" class="gh-btn" target="_blank" rel="noopener">
+        <svg height="16" viewBox="0 0 16 16" width="16"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+    </nav>
+  </div>
+</header>
+
+<main><div class="container demo-page">
+
+  <nav class="breadcrumb">
+    <a href="/quarkus-optimization/">Home</a> /
+    <a href="/quarkus-optimization/demos/">Demos</a> /
+    <span>Demo 04 — Project Leyden AOT Cache</span>
+  </nav>
+
+  <div class="demo-header">
+    <div class="demo-badge">04</div>
+    <div>
+      <h1>Demo 04 — Project Leyden AOT Cache</h1>
+      <div class="tag-row">
+        <span class="tag">Quarkus 3.33.1 / JDK 25 LTS</span>
+        <span class="tag tag-muted">⏱ ~12 min</span>
+        
+        <span class="tag tag-purple">JDK 25</span>
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="run-box">
+    <div class="run-box-header">
+      <span>Run this demo</span>
+      <a href="https://github.com/patterncatalyst/quarkus-optimization/tree/main/java-optimization-demos/quarkus-demo-04-leyden"
+         target="_blank" class="btn btn-sm btn-outline">View source on GitHub ↗</a>
+    </div>
+    <pre><code>cd quarkus-demo-04-leyden
+chmod +x demo.sh
+./demo.sh</code></pre>
+  </div>
+  
+
+  <div class="markdown-body"><p><strong>Verified result: 609ms → 148ms (−75%)</strong> startup on JDK 25 LTS. Caches parsed + linked classes AND JIT method profiles. First requests after startup get near-peak JIT performance.</p>
+
+<h2 id="configuration">Configuration</h2>
+
+<div class="language-properties highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># application.properties
+</span><span class="py">quarkus.package.jar.aot.enabled</span><span class="p">=</span><span class="s">true</span>
+<span class="c"># Quarkus automatically switches to aot-jar packaging
+</span></code></pre></div></div>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>mvn verify   <span class="c"># runs @QuarkusIntegrationTest → writes app.aot</span>
+</code></pre></div></div>
+
+<h2 id="three-stage-dockerfile">Three-stage Dockerfile</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Stage</th>
+      <th>Image</th>
+      <th>Purpose</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>compiler</td>
+      <td><code class="language-plaintext highlighter-rouge">maven:3.9-eclipse-temurin-25</code></td>
+      <td>Build JAR</td>
+    </tr>
+    <tr>
+      <td>trainer</td>
+      <td><code class="language-plaintext highlighter-rouge">ubi9/openjdk-25</code></td>
+      <td>Run integration tests → create app.aot</td>
+    </tr>
+    <tr>
+      <td>runtime</td>
+      <td><code class="language-plaintext highlighter-rouge">ubi9/openjdk-25-runtime</code></td>
+      <td>Copy JAR + app.aot</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>JVM fingerprint must match between trainer and runtime.</p>
+
+<h2 id="common-pitfalls">Common pitfalls</h2>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">@QuarkusIntegrationTest</code> not <code class="language-plaintext highlighter-rouge">@QuarkusTest</code> — only integration tests train the cache</li>
+  <li><code class="language-plaintext highlighter-rouge">mvn verify</code> not <code class="language-plaintext highlighter-rouge">mvn package</code> — failsafe plugin only fires in verify phase</li>
+  <li>Don’t add <code class="language-plaintext highlighter-rouge">-XX:AOTCache</code> to Dockerfile — Quarkus sets it automatically</li>
+</ul>
+
+<h2 id="reference">Reference</h2>
+
+<ul>
+  <li><a href="https://github.com/patterncatalyst/quarkus-optimization/tree/main/java-optimization-demos/quarkus-demo-04-leyden">Demo source</a></li>
+  <li><a href="https://openjdk.org/jeps/483">JEP 483</a> / <a href="https://openjdk.org/jeps/514">JEP 514</a> / <a href="https://openjdk.org/jeps/515">JEP 515</a></li>
+  <li><a href="https://quarkus.io/blog/leyden-2/">Quarkus + Leyden blog</a></li>
+</ul>
+</div>
+
+  <div class="demo-nav">
+    
+      <a href="/quarkus-optimization/demos/demo-03-appcds/" class="nav-btn">← Demo 03 — AppCDS</a>
+    
+    <a href="/quarkus-optimization/demos/" class="nav-btn">All Demos</a>
+    
+      <a href="/quarkus-optimization/demos/demo-05-grpc/" class="nav-btn">Demo 05 — gRPC →</a>
+    
+  </div>
+
+</div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <h4>Talk</h4>
+        <p>Taming the JVM: Optimizing Java Workloads on OpenShift &amp; Kubernetes</p>
+        <p>Quarkus 3.33.1 LTS &nbsp;·&nbsp; Java 21 &amp; 25</p>
+      </div>
+      <div>
+        <h4>Based On</h4>
+        <p>📗 <a href="https://www.oreilly.com/library/view/optimizing-cloud-native/9781098149338/" target="_blank" rel="noopener">Optimizing Cloud Native Java</a> (O'Reilly)</p>
+        <p>📗 <a href="https://www.oreilly.com/library/view/sre-with-java/9781492073918/" target="_blank" rel="noopener">SRE with Java Microservices</a> (O'Reilly)</p>
+      </div>
+      <div>
+        <h4>Links</h4>
+        <ul>
+          <li><a href="https://github.com/patterncatalyst/quarkus-optimization" target="_blank">GitHub Repository</a></li>
+          <li><a href="/quarkus-optimization/presentation/">Reveal.js Slides</a></li>
+          <li><a href="/quarkus-optimization/demos/">All Demos</a></li>
+          <li><a href="/quarkus-optimization/docs/">Reference Docs</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="footer-copy">Open source · <a href="https://github.com/patterncatalyst/quarkus-optimization" target="_blank">patterncatalyst/quarkus-optimization</a></p>
+  </div>
+</footer>
+
+<script src="/quarkus-optimization/assets/js/main.js"></script>
+</body>
+</html>

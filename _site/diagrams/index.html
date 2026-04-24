@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diagrams | Taming the JVM</title>
+  <meta name="description" content="Optimizing Java Workloads on OpenShift & Kubernetes">
+  <link rel="stylesheet" href="/quarkus-optimization/assets/css/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container hflex">
+    <a class="site-title" href="/quarkus-optimization/">
+      <span class="logo-icon">⚡</span>
+      <span class="logo-text">Taming the JVM</span>
+    </a>
+    <nav class="site-nav">
+      <a href="/quarkus-optimization/demos/"        >Demos</a>
+      <a href="/quarkus-optimization/presentation/" >Slides</a>
+      <a href="/quarkus-optimization/diagrams/"     class="active">Diagrams</a>
+      <a href="/quarkus-optimization/docs/"         >Docs</a>
+      <a href="https://github.com/patterncatalyst/quarkus-optimization" class="gh-btn" target="_blank" rel="noopener">
+        <svg height="16" viewBox="0 0 16 16" width="16"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+    </nav>
+  </div>
+</header>
+
+<main><div class="container">
+  <div style="margin-top:2rem">
+    <h1>Architecture Diagrams</h1>
+    <p class="sub">All diagrams are in <a href="https://excalidraw.com" target="_blank">Excalidraw</a> format. Click any diagram to open the interactive viewer — view in-browser, download the <code>.excalidraw</code> file, or open directly in excalidraw.com to edit.</p>
+  </div>
+
+  <div class="callout">
+    <strong>Presenting live?</strong> Keep <a href="https://excalidraw.com" target="_blank">excalidraw.com</a> open in a browser tab. Click "Open in Excalidraw" on any diagram page to load it with one click. Use these as whiteboard moments to break up slide-deck monotony.
+  </div>
+
+  <div class="grid grid-2" style="margin-top:1.5rem">
+    
+    
+    <a href="/quarkus-optimization/diagrams/01-gc-hpa-thrash-cycle/" class="card">
+      <div class="card-num">01</div>
+      <h3>GC-Induced HPA Thrash Cycle</h3>
+      <p>Why CPU-based HPA and JVM GC are a dangerous combination. The feedback loop that takes 3 pods to 20 with zero real load.</p>
+      <div class="card-foot">
+        <span class="tag" style="font-family:monospace;font-size:.7rem">01-gc-hpa-thrash-cycle.excalidraw</span>
+        <span class="tag tag-teal">Slide 10–11, 21</span>
+      </div>
+    </a>
+    
+    <a href="/quarkus-optimization/diagrams/diagram-01/" class="card">
+      <div class="card-num">01</div>
+      <h3>GC-Induced HPA Thrash Cycle</h3>
+      <p>The GC pause → CPU spike → HPA false scale-out feedback loop.</p>
+      <div class="card-foot">
+        <span class="tag" style="font-family:monospace;font-size:.7rem">01-gc-hpa-thrash-cycle.excalidraw</span>
+        <span class="tag tag-teal">Slide 10–11, 21</span>
+      </div>
+    </a>
+    
+    <a href="/quarkus-optimization/diagrams/diagram-02/" class="card">
+      <div class="card-num">02</div>
+      <h3>JVM Memory Regions Breakdown</h3>
+      <p>Six JVM memory regions — only the heap is controlled by MaxRAMPercentage.</p>
+      <div class="card-foot">
+        <span class="tag" style="font-family:monospace;font-size:.7rem">02-jvm-memory-regions.excalidraw</span>
+        <span class="tag tag-teal">Slide 6</span>
+      </div>
+    </a>
+    
+    <a href="/quarkus-optimization/diagrams/diagram-03/" class="card">
+      <div class="card-num">03</div>
+      <h3>AOT Cache Progression: CDS → AppCDS → Leyden</h3>
+      <p>JDK 21 AppCDS → JDK 24 class linking → JDK 25 JIT profiles → JDK 26 ZGC support.</p>
+      <div class="card-foot">
+        <span class="tag" style="font-family:monospace;font-size:.7rem">03-aot-cache-progression.excalidraw</span>
+        <span class="tag tag-teal">Slide 14, 16, 31</span>
+      </div>
+    </a>
+    
+    <a href="/quarkus-optimization/diagrams/diagram-04/" class="card">
+      <div class="card-num">04</div>
+      <h3>Container-Aware JVM Memory</h3>
+      <p>Before: JVM reads host RAM, OOMKill. After: UseContainerSupport reads cgroup limits.</p>
+      <div class="card-foot">
+        <span class="tag" style="font-family:monospace;font-size:.7rem">04-container-aware-jvm.excalidraw</span>
+        <span class="tag tag-teal">Slide 4–5</span>
+      </div>
+    </a>
+    
+    <a href="/quarkus-optimization/diagrams/diagram-05/" class="card">
+      <div class="card-num">05</div>
+      <h3>How Project Leyden Works</h3>
+      <p>Three columns: Normal startup (all the work), training run (records it once), production (skips it).</p>
+      <div class="card-foot">
+        <span class="tag" style="font-family:monospace;font-size:.7rem">05-how-project-leyden-works.excalidraw</span>
+        <span class="tag tag-teal">Slide 32</span>
+      </div>
+    </a>
+    
+    <a href="/quarkus-optimization/diagrams/diagram-06/" class="card">
+      <div class="card-num">06</div>
+      <h3>JVM Anti-Patterns vs Fixes</h3>
+      <p>16 anti-patterns with exact fixes — Memory, GC, AOT/Startup, and Observability.</p>
+      <div class="card-foot">
+        <span class="tag" style="font-family:monospace;font-size:.7rem">06-antipatterns-vs-fixes.excalidraw</span>
+        <span class="tag tag-teal">Slide 53–54</span>
+      </div>
+    </a>
+    
+    <a href="/quarkus-optimization/diagrams/diagram-07/" class="card">
+      <div class="card-num">07</div>
+      <h3>REST vs gRPC Protocol Comparison</h3>
+      <p>Wire format, HTTP/2 connection model, and streaming comparison.</p>
+      <div class="card-foot">
+        <span class="tag" style="font-family:monospace;font-size:.7rem">07-grpc-vs-rest.excalidraw</span>
+        <span class="tag tag-teal">Slide 34–37</span>
+      </div>
+    </a>
+    
+    <a href="/quarkus-optimization/diagrams/diagram-08/" class="card">
+      <div class="card-num">08</div>
+      <h3>RPC Architecture — REST at Boundary, gRPC Inside</h3>
+      <p>When to use REST vs gRPC architecturally — public API boundary vs internal service mesh.</p>
+      <div class="card-foot">
+        <span class="tag" style="font-family:monospace;font-size:.7rem">rpc-architecture.excalidraw</span>
+        <span class="tag tag-teal">Slide 34</span>
+      </div>
+    </a>
+    
+    <a href="/quarkus-optimization/diagrams/diagram-09/" class="card">
+      <div class="card-num">09</div>
+      <h3>REST Request Sequence — Per-Request Overhead</h3>
+      <p>Full lifecycle of a single REST request showing DNS, TCP, TLS, HTTP overhead vs gRPC streaming.</p>
+      <div class="card-foot">
+        <span class="tag" style="font-family:monospace;font-size:.7rem">rest-order-sequence.excalidraw</span>
+        <span class="tag tag-teal">Slide 34</span>
+      </div>
+    </a>
+    
+    <a href="/quarkus-optimization/diagrams/diagram-10/" class="card">
+      <div class="card-num">10</div>
+      <h3>GraphQL Query / Response Shape</h3>
+      <p>GraphQL query and response shape — reference diagram for audiences evaluating REST vs GraphQL vs gRPC.</p>
+      <div class="card-foot">
+        <span class="tag" style="font-family:monospace;font-size:.7rem">graphql-query-response.excalidraw</span>
+        <span class="tag tag-teal">Slide Reference</span>
+      </div>
+    </a>
+    
+  </div>
+</div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <h4>Talk</h4>
+        <p>Taming the JVM: Optimizing Java Workloads on OpenShift &amp; Kubernetes</p>
+        <p>Quarkus 3.33.1 LTS &nbsp;·&nbsp; Java 21 &amp; 25</p>
+      </div>
+      <div>
+        <h4>Based On</h4>
+        <p>📗 <a href="https://www.oreilly.com/library/view/optimizing-cloud-native/9781098149338/" target="_blank" rel="noopener">Optimizing Cloud Native Java</a> (O'Reilly)</p>
+        <p>📗 <a href="https://www.oreilly.com/library/view/sre-with-java/9781492073918/" target="_blank" rel="noopener">SRE with Java Microservices</a> (O'Reilly)</p>
+      </div>
+      <div>
+        <h4>Links</h4>
+        <ul>
+          <li><a href="https://github.com/patterncatalyst/quarkus-optimization" target="_blank">GitHub Repository</a></li>
+          <li><a href="/quarkus-optimization/presentation/">Reveal.js Slides</a></li>
+          <li><a href="/quarkus-optimization/demos/">All Demos</a></li>
+          <li><a href="/quarkus-optimization/docs/">Reference Docs</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="footer-copy">Open source · <a href="https://github.com/patterncatalyst/quarkus-optimization" target="_blank">patterncatalyst/quarkus-optimization</a></p>
+  </div>
+</footer>
+
+<script src="/quarkus-optimization/assets/js/main.js"></script>
+</body>
+</html>

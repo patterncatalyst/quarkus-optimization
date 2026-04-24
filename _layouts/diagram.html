@@ -1,0 +1,116 @@
+---
+layout: default
+---
+<div class="container diagram-page">
+
+  <nav class="breadcrumb">
+    <a href="{{ '/' | relative_url }}">Home</a> /
+    <a href="{{ '/diagrams/' | relative_url }}">Diagrams</a> /
+    <span>{{ page.title }}</span>
+  </nav>
+
+  <div class="diagram-header">
+    <div>
+      <h1>{{ page.title }}</h1>
+      {% if page.slide_ref %}
+      <p class="diagram-placement">📍 Used after slide {{ page.slide_ref }}</p>
+      {% endif %}
+    </div>
+    <div class="diagram-actions">
+      <a href="{{ site.repo }}/blob/main/diagrams/{{ page.excalidraw_file }}"
+         target="_blank" class="btn btn-sm btn-outline">View JSON on GitHub ↗</a>
+      <a href="{{ site.repo_raw }}/diagrams/{{ page.excalidraw_file }}"
+         download="{{ page.excalidraw_file }}" class="btn btn-sm btn-outline">⬇ Download</a>
+      <button id="open-btn" class="btn btn-sm">Open in Excalidraw ↗</button>
+    </div>
+  </div>
+
+  <!-- Excalidraw viewer -->
+  <div class="excalidraw-wrap" id="excalidraw-wrap">
+    <div id="ex-loading">
+      <div class="spinner"></div>
+      <p>Loading diagram…</p>
+    </div>
+    <div id="ex-error" style="display:none">
+      <p>⚠ Could not load diagram from GitHub.
+         <a href="{{ site.repo }}/blob/main/diagrams/{{ page.excalidraw_file }}"
+            target="_blank">View on GitHub →</a>
+      </p>
+    </div>
+    <!-- Excalidraw renders here via React -->
+    <div id="excalidraw-root"></div>
+  </div>
+
+  {% if page.description %}
+  <p class="diagram-desc">{{ page.description }}</p>
+  {% endif %}
+
+  <div class="markdown-body diagram-notes">
+    <h2>Speaker Notes</h2>
+    {{ content }}
+  </div>
+
+  <div class="demo-nav">
+    {% if page.prev_url %}
+      <a href="{{ page.prev_url | relative_url }}" class="nav-btn">← {{ page.prev_title }}</a>
+    {% else %}<span></span>{% endif %}
+    <a href="{{ '/diagrams/' | relative_url }}" class="nav-btn">All Diagrams</a>
+    {% if page.next_url %}
+      <a href="{{ page.next_url | relative_url }}" class="nav-btn">{{ page.next_title }} →</a>
+    {% else %}<span></span>{% endif %}
+  </div>
+
+</div>
+
+<!-- React + Excalidraw bundle from CDN -->
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@excalidraw/excalidraw@0.17.6/dist/excalidraw.production.min.js" crossorigin></script>
+
+<script>
+(function () {
+  const RAW   = "{{ site.repo_raw }}/diagrams/{{ page.excalidraw_file }}";
+  const root  = document.getElementById("excalidraw-root");
+  const load  = document.getElementById("ex-loading");
+  const err   = document.getElementById("ex-error");
+
+  fetch(RAW)
+    .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(data => {
+      load.style.display = "none";
+      root.style.display = "block";
+
+      // Mount the Excalidraw React component (read-only / view mode)
+      const { Excalidraw } = ExcalidrawLib;
+      const app = React.createElement(Excalidraw, {
+        initialData: {
+          elements:  data.elements  || [],
+          appState:  Object.assign(
+            { viewBackgroundColor: "#0A1628", theme: "dark" },
+            data.appState || {},
+            { viewModeEnabled: true, zenModeEnabled: false, gridModeEnabled: false }
+          ),
+          files: data.files || {}
+        },
+        viewModeEnabled: true,
+        theme: "dark",
+      });
+      ReactDOM.render(app, root);
+    })
+    .catch(() => {
+      load.style.display = "none";
+      err.style.display  = "block";
+    });
+
+  // Open in excalidraw.com with the data pre-loaded
+  document.getElementById("open-btn").addEventListener("click", () => {
+    fetch(RAW)
+      .then(r => r.json())
+      .then(data => {
+        const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+        window.open("https://excalidraw.com/#json=" + encoded, "_blank");
+      })
+      .catch(() => window.open("{{ site.repo }}/blob/main/diagrams/{{ page.excalidraw_file }}", "_blank"));
+  });
+})();
+</script>

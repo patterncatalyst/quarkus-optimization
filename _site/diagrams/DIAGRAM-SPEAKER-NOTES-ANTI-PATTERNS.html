@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Excalidraw Diagrams — Speaker Notes &amp; Slide Placement | Taming the JVM</title>
+  <meta name="description" content="Optimizing Java Workloads on OpenShift & Kubernetes">
+  <link rel="stylesheet" href="/quarkus-optimization/assets/css/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container hflex">
+    <a class="site-title" href="/quarkus-optimization/">
+      <span class="logo-icon">⚡</span>
+      <span class="logo-text">Taming the JVM</span>
+    </a>
+    <nav class="site-nav">
+      <a href="/quarkus-optimization/demos/"        >Demos</a>
+      <a href="/quarkus-optimization/presentation/" >Slides</a>
+      <a href="/quarkus-optimization/diagrams/"     class="active">Diagrams</a>
+      <a href="/quarkus-optimization/docs/"         >Docs</a>
+      <a href="https://github.com/patterncatalyst/quarkus-optimization" class="gh-btn" target="_blank" rel="noopener">
+        <svg height="16" viewBox="0 0 16 16" width="16"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+    </nav>
+  </div>
+</header>
+
+<main><h1 id="excalidraw-diagrams--speaker-notes--slide-placement">Excalidraw Diagrams — Speaker Notes &amp; Slide Placement</h1>
+
+<p>These diagrams are designed as <strong>supplementary visuals</strong> — use them as:</p>
+<ul>
+  <li>A live whiteboard moment during Q&amp;A (“let me draw this out”)</li>
+  <li>A pre-shared handout alongside the slide deck</li>
+  <li>A reference for deeper-dive sessions or workshop settings</li>
+  <li>Backup slides if you want to add a “pause and explain” moment</li>
+</ul>
+
+<p><strong>Deck reference:</strong> All slide numbers refer to the 54-slide deck
+<code class="language-plaintext highlighter-rouge">optimizing-quarkus-on-kubernetes.pptx</code> (30 core slides + 24 bonus slides).</p>
+
+<hr />
+
+<h2 id="diagram-01--gc-induced-hpa-thrash-cycle">Diagram 01 — GC-Induced HPA Thrash Cycle</h2>
+
+<p><strong>File:</strong> <code class="language-plaintext highlighter-rouge">01-gc-hpa-thrash-cycle.excalidraw</code></p>
+
+<h3 id="where-it-fits-in-the-deck">Where it fits in the deck</h3>
+<ul>
+  <li><strong>Primary:</strong> After slide <strong>10</strong> (GC in Containers) and slide <strong>11</strong> (GC-Induced HPA Thrash Cycle visual)</li>
+  <li><strong>Optional:</strong> Open during live Q&amp;A when someone asks “why can’t I just use CPU-based HPA?”</li>
+  <li>Works well as a whiteboard trace-through — point to each box as you narrate the story</li>
+  <li>Also relevant after slide <strong>21</strong> (HPA with JVM-Aware Metrics) as the “why” behind the KEDA recommendation</li>
+</ul>
+
+<h3 id="speaker-notes">Speaker Notes</h3>
+
+<blockquote>
+  <p>“I want to show you why CPU-based HPA and the JVM are a dangerous combination. This is a loop that I have seen take a cluster from 3 pods to 20 pods with zero actual load increase.”</p>
+</blockquote>
+
+<p>Walk box by box:</p>
+
+<p><strong>① Normal Operation</strong></p>
+<blockquote>
+  <p>“Everything is fine. Your app is running. GC pauses are under 200ms. Requests are being served.”</p>
+</blockquote>
+
+<p><strong>② GC Pause</strong></p>
+<blockquote>
+  <p>“A normal GC cycle fires. This is not a problem — this is expected JVM behaviour. But during stop-the-world, all application threads halt. The GC threads hammer the CPU. You spike to 100% CPU for 50-200ms.”</p>
+</blockquote>
+
+<p><strong>③ HPA Scales Out</strong></p>
+<blockquote>
+  <p>“HPA is watching CPU utilisation on a 30-second scrape interval. It sees a spike over your threshold and adds three new pods. This is the wrong response — the spike was GC, not load.”</p>
+</blockquote>
+
+<p><strong>④ New Pods Also GC</strong></p>
+<blockquote>
+  <p>“Each new pod starts cold. They all do JVM bootstrap and JIT warmup. They ALL spike CPU during their startup GC cycles. This looks to HPA like sustained high CPU.”</p>
+</blockquote>
+
+<p><strong>⑤ HPA Scales Again</strong></p>
+<blockquote>
+  <p>“HPA adds three more pods. Those pods spike. And so on.”</p>
+</blockquote>
+
+<p><strong>⑥ Cost Explosion</strong></p>
+<blockquote>
+  <p>“I have seen this reach 20 pods for a 3-pod workload. Your on-call engineer wakes up, sees the alerts, sees 20 pods, and has no idea why. The root cause is that HPA was given the wrong metric.”</p>
+</blockquote>
+
+<p><strong>The Fix panel</strong></p>
+<blockquote>
+  <p>“Two things together solve this. First, change the HPA metric to RPS — requests per second. RPS is completely unaffected by GC CPU spikes. Second, add stabilisation windows. <code class="language-plaintext highlighter-rouge">stabilizationWindowSeconds: 120</code> on scale-up means HPA will wait 2 minutes before acting on a CPU spike. That’s longer than any normal GC pause. Together these make HPA work correctly for Java.”</p>
+</blockquote>
+
+<hr />
+
+<h2 id="diagram-02--jvm-memory-regions-breakdown">Diagram 02 — JVM Memory Regions Breakdown</h2>
+
+<p><strong>File:</strong> <code class="language-plaintext highlighter-rouge">02-jvm-memory-regions.excalidraw</code></p>
+
+<h3 id="where-it-fits-in-the-deck-1">Where it fits in the deck</h3>
+<ul>
+  <li><strong>Primary:</strong> After slide <strong>6</strong> (JVM Memory Regions) as a deeper visual reference</li>
+  <li><strong>Use case:</strong> Whenever audience members ask “how do I calculate my container limit?”</li>
+  <li>Particularly effective in workshops — walk through the sizing formula live</li>
+</ul>
+
+<h3 id="speaker-notes-1">Speaker Notes</h3>
+
+<blockquote>
+  <p>“This diagram is the answer to the most common question I get after talks: ‘how do I actually calculate my container memory limit?’”</p>
+</blockquote>
+
+<p><strong>Point to the left bar first:</strong></p>
+<blockquote>
+  <p>“This is your container. Let’s say it’s 2 GB. Most people set MaxRAMPercentage=75 and think they’re done. But look at what actually lives inside that 2 GB.”</p>
+</blockquote>
+
+<p><strong>Heap (green)</strong></p>
+<blockquote>
+  <p>“The heap is only one of six regions. MaxRAMPercentage=75 gives you 1.5 GB of heap. But the JVM needs memory for five other things, and most of them are completely ignored at sizing time.”</p>
+</blockquote>
+
+<p><strong>Metaspace (orange)</strong></p>
+<blockquote>
+  <p>“Metaspace holds class metadata — method bytecodes, field descriptors, constant pool entries. Without <code class="language-plaintext highlighter-rouge">-XX:MaxMetaspaceSize</code>, this grows unbounded. I have seen Metaspace eat 800 MB on a framework-heavy application. Set the limit. A good starting point is 256m.”</p>
+</blockquote>
+
+<p><strong>Thread Stacks (purple)</strong></p>
+<blockquote>
+  <p>“Every platform thread gets 1 MB of stack by default. If you have 200 threads — totally normal for a REST service — that is 200 MB of off-heap memory that most sizing calculations miss entirely. This is why Quarkus Virtual Threads matter for container sizing: virtual thread stacks live in the heap as tiny continuations, not 1 MB stacks.”</p>
+</blockquote>
+
+<p><strong>JIT Code Cache (red)</strong></p>
+<blockquote>
+  <p>“HotSpot compiles hot methods to native code and stores them here. Typically 128-256 MB. Project Leyden pre-populates this cache so the JIT starts compiling hot paths immediately rather than waiting for profiling data.”</p>
+</blockquote>
+
+<p><strong>Direct ByteBuffers and GC overhead</strong></p>
+<blockquote>
+  <p>“These are the ones that cause surprise OOMKills. Netty — which Quarkus uses under the hood via Vert.x — allocates direct buffers off-heap. Kafka clients do the same. GC bookkeeping structures add another 50-100 MB. None of these are bounded by your heap setting.”</p>
+</blockquote>
+
+<p><strong>Sizing formula</strong></p>
+<blockquote>
+  <p>“The formula at the bottom is the one I use: container limit equals heap divided by 0.75, plus MaxMetaspaceSize, plus threads times 1 MB, plus your direct buffer budget, plus GC overhead. Measure first with <code class="language-plaintext highlighter-rouge">jcmd &lt;pid&gt; VM.native_memory summary</code>. Then budget. Then set limits.”</p>
+</blockquote>
+
+<hr />
+
+<h2 id="diagram-03--aot-cache-progression-cds--appcds--leyden">Diagram 03 — AOT Cache Progression: CDS → AppCDS → Leyden</h2>
+
+<p><strong>File:</strong> <code class="language-plaintext highlighter-rouge">03-aot-cache-progression.excalidraw</code></p>
+
+<h3 id="where-it-fits-in-the-deck-2">Where it fits in the deck</h3>
+<ul>
+  <li><strong>Primary:</strong> After slide <strong>14</strong> (The AOT Cache Progression visual) and slide <strong>16</strong> (AOT Caching detail)</li>
+  <li><strong>Secondary:</strong> After slide <strong>31</strong> (Project Leyden topic slide) as a progression summary</li>
+  <li><strong>Use case:</strong> When audience asks “what’s the difference between AppCDS and Leyden?” or “what changed in JDK 25?”</li>
+  <li>Perfect for workshop deep-dives on startup optimisation</li>
+</ul>
+
+<h3 id="speaker-notes-2">Speaker Notes</h3>
+
+<blockquote>
+  <p>“This is the question I get most often about startup optimisation: what is the difference between AppCDS on JDK 21 and the Leyden AOT cache on JDK 25? This diagram answers it.”</p>
+</blockquote>
+
+<p><strong>The key framing line before opening:</strong></p>
+<blockquote>
+  <p>“The important thing to say upfront: the Quarkus property is identical across all four columns. <code class="language-plaintext highlighter-rouge">quarkus.package.jar.aot.enabled=true</code>. The command is <code class="language-plaintext highlighter-rouge">mvnw verify</code>. You change nothing. You just upgrade your JDK and you automatically get a richer, more effective cache.”</p>
+</blockquote>
+
+<p><strong>Column 1 — JDK 21 AppCDS</strong></p>
+<blockquote>
+  <p>“On JDK 21, the cache stores parsed class bytes and the class hierarchy — things the JVM would have had to compute from bytecode. This gives you 20 to 30 percent startup improvement. Not bad for one property.”</p>
+</blockquote>
+
+<p><strong>Column 2 — JDK 24 (JEP 483)</strong></p>
+<blockquote>
+  <p>“JDK 24 was the first Leyden feature to land in mainline OpenJDK. Now the cache stores the fully loaded and linked class state — not just the bytes, but the resolved references, the verified types, the initialisation state. Spring PetClinic dropped from 2 seconds to 1 second. Quarkus starts at a lower baseline, so the absolute improvement is smaller, but the percentage gain is similar.”</p>
+</blockquote>
+
+<p><strong>Column 3 — JDK 25 LTS (JEP 514+515) — highlight as current</strong></p>
+<blockquote>
+  <p>“This is where we are now. JDK 25 is the current LTS. JEP 515 adds JIT method profiling to the cache. Your hot methods are compiled immediately from the first request — that’s the warmup improvement on top of the startup gain. For a Quarkus app, Demo 04 shows 609ms baseline down to 148ms with the cache active on JDK 25 — a 75% reduction.”</p>
+</blockquote>
+
+<p><strong>Column 4 — JDK 26</strong></p>
+<blockquote>
+  <p>“JDK 26 adds ZGC support. Previously the AOT cache was incompatible with ZGC — you had to choose between low-latency garbage collection and fast startup. JEP 516 removes that constraint. If you’re on JDK 26 with ZGC enabled, you can also use the full AOT cache. You don’t have to pick.”</p>
+</blockquote>
+
+<p><strong>The key insight banner</strong></p>
+<blockquote>
+  <p>“The punchline is this: you do not need to change your Quarkus configuration to benefit from each JDK improvement. Set the property once. Upgrade the JDK at your own pace. The cache automatically becomes richer. This is intentional design — the Quarkus and OpenJDK teams are collaborating to make this progression seamless.”</p>
+</blockquote>
+
+<hr />
+
+<h2 id="diagram-04--container-aware-jvm-memory">Diagram 04 — Container-Aware JVM Memory</h2>
+
+<p><strong>File:</strong> <code class="language-plaintext highlighter-rouge">04-container-aware-jvm.excalidraw</code></p>
+
+<h3 id="where-it-fits-in-the-deck-3">Where it fits in the deck</h3>
+<ul>
+  <li><strong>Primary:</strong> As a companion to slide <strong>4</strong> (Container-Native JVM Fundamentals) and slide <strong>5</strong> (Before/After visual)</li>
+  <li><strong>Use case:</strong> Any time someone in the audience says “we had a pod OOMKill and didn’t know why”</li>
+  <li>Highly effective as the first whiteboard moment — it viscerally shows the problem</li>
+</ul>
+
+<h3 id="speaker-notes-3">Speaker Notes</h3>
+
+<p><strong>Open with the left side:</strong></p>
+<blockquote>
+  <p>“Let me show you what happens when a JVM starts inside a Kubernetes container without the right flags. This is a real scenario I see in production.”</p>
+</blockquote>
+
+<blockquote>
+  <p>“You have a 64-core node with 256 GB of RAM. You deploy a pod with a container limit of 512 MB. The JVM starts up. It asks the operating system: how much memory do I have? Without container support flags, it reads <code class="language-plaintext highlighter-rouge">/proc/meminfo</code>. That file reports the host memory — 256 GB. The JVM applies its default heuristic: 25 percent of available memory for heap. That’s 64 GB of heap inside a 512 MB container.”</p>
+</blockquote>
+
+<p><strong>Point to the OOMKill annotation:</strong></p>
+<blockquote>
+  <p>“Kubernetes enforces that 512 MB limit at the cgroup level. The moment the JVM tries to allocate beyond 512 MB — which it does almost immediately trying to claim 64 GB — the kernel OOMKills the process. Exit code 137. Your pod restarts. It happens again. You’re in a CrashLoopBackOff. And the error message tells you nothing about JVM heap sizing.”</p>
+</blockquote>
+
+<p><strong>Now move to the right side:</strong></p>
+<blockquote>
+  <p>“Java 21 — and actually Java 15 onward — ships with <code class="language-plaintext highlighter-rouge">UseContainerSupport</code> turned on by default. When this is active, the JVM reads the cgroup files instead of <code class="language-plaintext highlighter-rouge">/proc/meminfo</code>. On RHEL 9 and OpenShift 4.14 and later, that’s the cgroup v2 path at <code class="language-plaintext highlighter-rouge">/sys/fs/cgroup/memory.max</code>. On older systems, the v1 path. Either way, the JVM correctly reads 512 MB.”</p>
+</blockquote>
+
+<blockquote>
+  <p>“Then you set <code class="language-plaintext highlighter-rouge">MaxRAMPercentage=75</code>. The JVM claims 75 percent of 512 MB — 384 MB for heap. The remaining 128 MB covers Metaspace, thread stacks, JIT cache, and Netty buffers. The pod runs. No OOMKill.”</p>
+</blockquote>
+
+<p><strong>The critical point:</strong></p>
+<blockquote>
+  <p>“The old approach — hardcoding <code class="language-plaintext highlighter-rouge">-Xms512m -Xmx1024m</code> — is fragile. Every time your VPA changes the container limit, or you move to a different size instance, your hardcoded values are wrong. The percentage-based approach scales automatically. Set <code class="language-plaintext highlighter-rouge">MaxRAMPercentage=75</code> once. It’s correct on a 256 MB container and on a 32 GB container. The JVM calculates the right heap size at runtime.”</p>
+</blockquote>
+
+<p><strong>For Q&amp;A follow-up:</strong></p>
+<blockquote>
+  <p>“The most common follow-up question is: what about JDK 8 and 11? <code class="language-plaintext highlighter-rouge">UseContainerSupport</code> was backported to JDK 8u191 and JDK 11.0.1. If you’re on a patch release older than those, you’re running unsupported software and also have broken container memory detection. That’s two good reasons to upgrade.”</p>
+</blockquote>
+
+<hr />
+
+<h2 id="using-these-diagrams-in-your-presentation">Using These Diagrams in Your Presentation</h2>
+
+<h3 id="as-whiteboard-moments-recommended">As whiteboard moments (recommended)</h3>
+<p>Keep excalidraw.com open in a browser tab. Switch to it at the relevant slide and trace through the diagram live. This creates an interactive moment that breaks up slide-deck monotony and signals to the audience that you understand the material well enough to draw it.</p>
+
+<h3 id="as-a-handout">As a handout</h3>
+<p>Export each diagram to PNG from Excalidraw (<code class="language-plaintext highlighter-rouge">Export image</code>) and include in a PDF handout alongside the slides. Especially valuable for the sizing formula (Diagram 02) and the anti-patterns table (Diagram 06) which people want to take away.</p>
+
+<h3 id="as-backup-slides">As backup slides</h3>
+<p>If you have a technically engaged audience or a longer timeslot, add these directly into the deck as extra slides at the relevant positions. Excalidraw export to SVG or PNG works cleanly at any resolution.</p>
+
+<h3 id="suggested-flow-with-the-54-slide-deck">Suggested flow with the 54-slide deck</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Deck slide</th>
+      <th>Insert diagram after</th>
+      <th>Reason</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Slide 4 — Container-Native JVM</td>
+      <td>Diagram 04</td>
+      <td>Visual confirms the before/after story</td>
+    </tr>
+    <tr>
+      <td>Slide 6 — JVM Memory Regions</td>
+      <td>Diagram 02</td>
+      <td>Expands on each region with flags + sizing</td>
+    </tr>
+    <tr>
+      <td>Slide 10 — GC in Containers</td>
+      <td>Diagram 01</td>
+      <td>Draws the full HPA thrash domino chain</td>
+    </tr>
+    <tr>
+      <td>Slide 14 — AOT Cache Progression</td>
+      <td>Diagram 03</td>
+      <td>Clarifies the JDK 21→24→25→26 progression</td>
+    </tr>
+    <tr>
+      <td>Slide 16 — AOT Caching detail</td>
+      <td>Diagram 03</td>
+      <td>Second reference — deep-dive on the cache layers</td>
+    </tr>
+    <tr>
+      <td>Slide 21 — HPA with JVM Metrics</td>
+      <td>Diagram 01</td>
+      <td>Second reference — the fix is on this slide</td>
+    </tr>
+    <tr>
+      <td>Slide 31 — Project Leyden</td>
+      <td>Diagram 03</td>
+      <td>Deep-dive companion for Leyden section</td>
+    </tr>
+    <tr>
+      <td>Slide 32 — How Leyden Works</td>
+      <td>Diagram 05</td>
+      <td>Deeper three-column walk-through</td>
+    </tr>
+    <tr>
+      <td>Slide 53 — Anti-Patterns</td>
+      <td>Diagram 06</td>
+      <td>Side-by-side reference for all 16 patterns</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr />
+
+<h2 id="diagram-05--how-project-leyden-works">Diagram 05 — How Project Leyden Works</h2>
+
+<p><strong>File:</strong> <code class="language-plaintext highlighter-rouge">05-how-project-leyden-works.excalidraw</code></p>
+
+<h3 id="where-it-fits-in-the-deck-4">Where it fits in the deck</h3>
+<ul>
+  <li><strong>Primary:</strong> After slide <strong>32</strong> (How Project Leyden Works visual) and before slide <strong>33</strong> (Demo 04 intro)</li>
+  <li><strong>Ideal use:</strong> Open this when the audience asks “but what is the AOT cache actually doing?” — it answers the mechanism question that the topic slide raises</li>
+  <li>Also effective right after slide <strong>16</strong> (AOT Caching) as a deeper technical explainer</li>
+  <li>Works well as a <strong>whiteboard walk-through</strong> — trace the three columns left to right while narrating</li>
+</ul>
+
+<h3 id="speaker-notes-4">Speaker Notes</h3>
+
+<h4 id="opening">Opening</h4>
+
+<blockquote>
+  <p>“Slide 31 told you what Project Leyden <em>is</em>. This diagram shows you what it <em>does</em> — specifically, what work it eliminates and how.”</p>
+</blockquote>
+
+<blockquote>
+  <p>“The headline is this: every time a JVM starts, it repeats a significant amount of computation that it has already done before. Leyden’s insight is simple — record that work once during a training run, save it to a file, and skip it on every subsequent startup.”</p>
+</blockquote>
+
+<h4 id="column-1--normal-startup-walk-top-to-bottom">Column 1 — Normal Startup (walk top to bottom)</h4>
+
+<blockquote>
+  <p>“Without Leyden, here is what happens every single time a pod starts — on every node, for every HPA scale-out event, on every deployment.”</p>
+</blockquote>
+
+<p><strong>Read bytecodes from disk:</strong></p>
+<blockquote>
+  <p>“The JVM opens the JAR file and reads the raw bytecodes for every class the application uses. For a typical Quarkus application that’s between 15,000 and 25,000 class files. For Spring Boot it’s more. This is pure I/O, and it happens every time.”</p>
+</blockquote>
+
+<p><strong>Parse + verify:</strong></p>
+<blockquote>
+  <p>“Each class is parsed into the JVM’s internal representation. Bytecode verification runs — the JVM checks that the code is safe to execute. This is cryptographic-level paranoia baked into the JVM spec, and it runs on every class, every startup.”</p>
+</blockquote>
+
+<p><strong>Load + link:</strong></p>
+<blockquote>
+  <p>“This is the most expensive step. Linking resolves all the references between classes — when class A calls a method on class B, the JVM has to find B’s method table and bind the call. It lays out memory for fields. It resolves constant pool entries. This is what Leyden JEP 483 specifically targets.”</p>
+</blockquote>
+
+<p><strong>JIT interpreter mode:</strong></p>
+<blockquote>
+  <p>“Even after the classes are loaded, the JVM starts in interpreter mode. It runs your bytecode slowly and counts how many times each method is called. This profiling phase is necessary before the JIT will bother compiling a method to native code.”</p>
+</blockquote>
+
+<p><strong>JIT C1 compile:</strong></p>
+<blockquote>
+  <p>“Once a method is called enough times, the JIT promotes it to C1 — a quick native compile. Eventually hot methods reach C2, the optimising compiler. But all of this observation and compilation takes time — typically 30 to 60 seconds after startup before P99 latency stabilises.”</p>
+</blockquote>
+
+<p><strong>The punchline:</strong></p>
+<blockquote>
+  <p>“And tomorrow, when this pod restarts, it does ALL of this again. From scratch. Because the JVM has no memory between runs.”</p>
+</blockquote>
+
+<h4 id="column-2--training-run-walk-top-to-bottom">Column 2 — Training Run (walk top to bottom)</h4>
+
+<blockquote>
+  <p>“The training run is what Leyden introduces. It runs ONCE — in your CI/CD pipeline — and never again in production. That’s the key framing.”</p>
+</blockquote>
+
+<p><strong>mvn verify:</strong></p>
+<blockquote>
+  <p>“In Quarkus, the training run is triggered by <code class="language-plaintext highlighter-rouge">quarkus.package.jar.aot.enabled=true</code> in application.properties and running <code class="language-plaintext highlighter-rouge">mvn verify</code>. That’s the only change to your build.”</p>
+</blockquote>
+
+<p><strong>Plugin starts packaged app with observation mode:</strong></p>
+<blockquote>
+  <p>“The Quarkus Maven plugin starts the fully packaged <code class="language-plaintext highlighter-rouge">quarkus-run.jar</code> with the JVM’s observation hooks active. The JVM is watching everything — which classes are loaded, in what order, how they link to each other.”</p>
+</blockquote>
+
+<p><strong>@QuarkusIntegrationTest runs — highlight this:</strong></p>
+<blockquote>
+  <p>“Here’s the part that catches people off-guard: the training workload is your own test suite. The <code class="language-plaintext highlighter-rouge">@QuarkusIntegrationTest</code> tests you wrote for CI also train the JVM. Every endpoint you hit in your integration tests gets its class loading recorded, its method call patterns profiled. This is by design. The better your tests represent production traffic, the more effective the cache.”</p>
+
+  <p>“This is also why there’s a distinction between <code class="language-plaintext highlighter-rouge">@QuarkusTest</code> and <code class="language-plaintext highlighter-rouge">@QuarkusIntegrationTest</code>. <code class="language-plaintext highlighter-rouge">@QuarkusTest</code> runs in dev-mode JVM — it doesn’t contribute to the AOT cache. <code class="language-plaintext highlighter-rouge">@QuarkusIntegrationTest</code> runs against the packaged JAR — this is the training workload.”</p>
+</blockquote>
+
+<p><strong>The three cache layers — point to each:</strong></p>
+<blockquote>
+  <p>“What gets written to <code class="language-plaintext highlighter-rouge">app.aot</code> is stratified. Layer 1 is the base CDS layer — parsed bytecode representation, same as AppCDS on JDK 21. Layer 2, from JEP 483 on JDK 24, adds the full loaded and linked class state — the resolved references, the memory layouts, the verified types. Layer 3, from JEP 515 on JDK 25, adds the JIT method profiles — which methods got called, how many times, what data shapes the JIT observed.”</p>
+
+  <p>“The cache is self-invalidating. If your JARs change — different version, different classes — the JVM detects the mismatch at startup and rebuilds the cache rather than running stale data. You don’t need to manage invalidation manually.”</p>
+</blockquote>
+
+<h4 id="column-3--production-run-with-cache-walk-top-to-bottom">Column 3 — Production Run with Cache (walk top to bottom)</h4>
+
+<blockquote>
+  <p>“Now let’s follow a production startup with the cache present.”</p>
+</blockquote>
+
+<p><strong>Detects and memory-maps app.aot:</strong></p>
+<blockquote>
+  <p>“The JVM finds <code class="language-plaintext highlighter-rouge">app.aot</code> alongside <code class="language-plaintext highlighter-rouge">quarkus-run.jar</code>. With Quarkus, this happens automatically — the plugin sets <code class="language-plaintext highlighter-rouge">-XX:AOTCache=app.aot</code> when packaging, so you don’t add it to your Dockerfile. The JVM memory-maps the cache file — this is an OS-level operation that’s extremely fast and also allows the file to be shared across multiple JVM processes on the same node.”</p>
+</blockquote>
+
+<p><strong>The SKIPPED work box — this is the key moment:</strong></p>
+<blockquote>
+  <p>“Now read what the JVM skips. Parse and verify — skipped. Load and link for 25,000 classes — skipped. JIT interpreter warmup phase — skipped. C1 profiling pass — skipped.”</p>
+
+  <p>“The JVM loads the pre-linked class state directly from the cache. Classes appear already-resolved. Method profiles are pre-loaded so the JIT can start compiling hot methods immediately — at first request, not after 30 seconds of warmup.”</p>
+</blockquote>
+
+<p><strong>First request at ~148ms (Demo 04 verified result):</strong></p>
+<blockquote>
+  <p>“For a Quarkus app, this brings startup from 609ms on JDK 25 cold down to 148ms with the cache active — a 75% reduction. But the number I find more compelling is the warmup story — with the JIT profiles pre-loaded, your P99 latency is good from the very first request. Without Leyden, request number one hits interpreted bytecode. With Leyden, it hits code that’s already been JIT-compiled.”</p>
+</blockquote>
+
+<p><strong>Cache shared across pods:</strong></p>
+<blockquote>
+  <p>“One detail worth mentioning in a Kubernetes context: because the cache is memory-mapped, multiple pods on the same node can share the underlying physical memory pages for the read-only cache regions. It’s not quite as dramatic as Native Image’s single binary, but it does mean the cache file is not multiplied per pod at the RAM level.”</p>
+</blockquote>
+
+<h4 id="closing-the-diagram">Closing the Diagram</h4>
+
+<blockquote>
+  <p>“The summary is at the bottom. Left column: this work repeats on every pod start, every HPA scale-out, every deployment rollout. Right column: all of it is skipped. The cost was paid once during <code class="language-plaintext highlighter-rouge">mvn verify</code> in your CI pipeline.”</p>
+</blockquote>
+
+<blockquote>
+  <p>“And the Quarkus integration means you configure this with one property and one Maven command. The three columns you’re looking at — that entire lifecycle — is fully automated.”</p>
+</blockquote>
+
+<h3 id="suggested-slide-placement">Suggested Slide Placement</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Slide 31  Project Leyden (topic slide)
+Slide 32  How Project Leyden Works (deck visual)
+          ↓
+Diagram 05  How Leyden Works (whiteboard — deeper three-column walk-through)
+          ↓
+Slide 33  Demo 04 intro
+          ↓
+Live demo: quarkus-demo-04-leyden/demo.sh
+</code></pre></div></div>
+
+<p>The diagram bridges the “what is it” slide and the “watch it run” demo. After walking the three columns, opening the demo feels like a natural demonstration of column 2 followed by column 3.</p>
+
+<hr />
+
+<h2 id="diagram-06--jvm-anti-patterns-vs-fixes">Diagram 06 — JVM Anti-Patterns vs Fixes</h2>
+
+<p><strong>File:</strong> <code class="language-plaintext highlighter-rouge">06-antipatterns-vs-fixes.excalidraw</code></p>
+
+<h3 id="where-it-fits-in-the-deck-5">Where it fits in the deck</h3>
+<ul>
+  <li><strong>Primary:</strong> After slide <strong>53</strong> (Anti-Patterns — 16 items) and alongside slide <strong>54</strong> (Remediation)</li>
+  <li><strong>Use case:</strong> Q&amp;A reference — when someone asks “what’s the most important thing I can do today?” point to the priority bar at the bottom</li>
+  <li>Works well as a <strong>printed A3 handout</strong> — the three-column table is legible at full page width</li>
+  <li>Pin it to your conference chat or workshop Slack as a reference card</li>
+</ul>
+
+<h3 id="slide-placement">Slide Placement</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Slide 53  Common JVM Anti-Patterns on Kubernetes (16 items, 4 categories)
+    ↓
+Diagram 06  (whiteboard or handout — shows all 16 rows at a glance)
+    ↓
+Slide 54  Anti-Pattern Remediation — The Correct Approach
+</code></pre></div></div>
+
+<hr />
+
+<h3 id="speaker-notes-5">Speaker Notes</h3>
+
+<h4 id="opening-1">Opening</h4>
+
+<blockquote>
+  <p>“This diagram is the at-a-glance reference. Every row is one mistake I have seen in a real production system, and the fix column is what to replace it with. I’ll walk the most important ones — you can take the diagram as a reference for the rest.”</p>
+</blockquote>
+
+<hr />
+
+<h4 id="memory-section-rows-13">Memory section (rows 1–3)</h4>
+
+<p><strong>Row 1 — Hardcoded -Xmx</strong></p>
+<blockquote>
+  <p>“The fix for this is the single highest-leverage change in the whole talk. Delete the <code class="language-plaintext highlighter-rouge">-Xmx</code> flag. Add <code class="language-plaintext highlighter-rouge">-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0</code>. If you do nothing else from today, do this. It makes your heap sizing correct regardless of container limit, VPA changes, or cluster migrations.”</p>
+</blockquote>
+
+<p><strong>Row 2 — MaxRAMPercentage=90</strong></p>
+<blockquote>
+  <p>“This looks reasonable — 90% for the heap, 10% for everything else. But 10% of a 2 GB container is 200 MB. Metaspace alone can need 256 MB on a framework-heavy app. Thread stacks at 200 threads is another 200 MB. Netty buffers another 100 MB. You’re already over. Set 75 and add an explicit MaxMetaspaceSize cap.”</p>
+</blockquote>
+
+<p><strong>Row 3 — Requests equal limits for memory</strong></p>
+<blockquote>
+  <p>“This is the Kubernetes-specific version of the same mistake. Your memory limit should be 25-30% above your measured P99 peak RSS. The request is your scheduling guarantee — set it to your P50 steady state. The gap between them is your GC headroom. Without that gap, a GC surge at peak load will OOMKill the pod.”</p>
+</blockquote>
+
+<hr />
+
+<h4 id="gc--cpu-section-rows-47">GC &amp; CPU section (rows 4–7)</h4>
+
+<p><strong>Row 4 — Default ParallelGCThreads</strong></p>
+<blockquote>
+  <p>“Write this down. ParallelGCThreads defaults to the number of CPUs the JVM sees — which on a shared Kubernetes node is the host CPU count, not your container limit. On a 64-core node with a 2-core container, you get 64 GC threads sharing 2 CPUs. GC pauses can be 10 times longer than necessary. <code class="language-plaintext highlighter-rouge">-XX:ParallelGCThreads=2</code> — whatever your CPU request is.”</p>
+</blockquote>
+
+<p><strong>Row 5 — CPU-based HPA</strong></p>
+<blockquote>
+  <p>“I covered this in the GC thrash cycle diagram. The short version: GC pauses create CPU spikes. CPU-based HPA treats those spikes as load and scales out. The new pods also do GC. You get a feedback loop. Scale on RPS instead — it measures actual request load, which is unaffected by GC.”</p>
+</blockquote>
+
+<p><strong>Row 6 — minReplicas: 1</strong></p>
+<blockquote>
+  <p>“This one is cheap to fix. One extra pod. That’s it. The cost of running two pods instead of one is trivial compared to the cost of a 100% error rate during a GC stop-the-world event. Make this the default in your org’s Kubernetes templates.”</p>
+</blockquote>
+
+<p><strong>Row 7 — No HPA stabilizationWindowSeconds</strong></p>
+<blockquote>
+  <p>“GC CPU spikes last milliseconds to hundreds of milliseconds. Default HPA scale-up window is zero seconds — it acts on the very next scrape. Add <code class="language-plaintext highlighter-rouge">stabilizationWindowSeconds: 120</code> on scaleUp. That 2-minute window is longer than any normal GC pause and makes HPA invisible to GC transients.”</p>
+</blockquote>
+
+<hr />
+
+<h4 id="aot--startup-section-rows-811">AOT / Startup section (rows 8–11)</h4>
+
+<p><strong>Row 8 — Using @QuarkusTest for AOT training</strong></p>
+<blockquote>
+  <p>“This catches people because the annotation names look similar. <code class="language-plaintext highlighter-rouge">@QuarkusTest</code> runs in the development-mode JVM — it’s fast but it doesn’t exercise the packaged JAR, so the JVM’s observation hooks never fire. <code class="language-plaintext highlighter-rouge">@QuarkusIntegrationTest</code> runs against the real packaged artifact. That’s what contributes to the AOT cache. If your test suite is all <code class="language-plaintext highlighter-rouge">@QuarkusTest</code>, your <code class="language-plaintext highlighter-rouge">app.aot</code> will be tiny or empty.”</p>
+</blockquote>
+
+<p><strong>Row 9 — Manual -XX flags in Dockerfile</strong></p>
+<blockquote>
+  <p>“Quarkus puts <code class="language-plaintext highlighter-rouge">app.aot</code> alongside <code class="language-plaintext highlighter-rouge">quarkus-run.jar</code>. When the JAR is launched, Quarkus detects the cache file and sets <code class="language-plaintext highlighter-rouge">-XX:AOTCache=app.aot</code> automatically via its generated launch scripts. If you also set it in your Dockerfile ENTRYPOINT, the JVM sees the flag twice and either ignores one or fails. Trust Quarkus. Set the property in application.properties, run <code class="language-plaintext highlighter-rouge">mvn verify</code>, and don’t touch the launch flags.”</p>
+</blockquote>
+
+<p><strong>Row 10 — mvn package instead of mvn verify</strong></p>
+<blockquote>
+  <p>“If you fix the annotation but still run <code class="language-plaintext highlighter-rouge">mvn package</code>, you skip the failsafe plugin entirely — no integration tests, no training run, minimal cache. <code class="language-plaintext highlighter-rouge">mvn verify</code> is the one command that does all three: package the JAR, run <code class="language-plaintext highlighter-rouge">@QuarkusIntegrationTest</code>, write <code class="language-plaintext highlighter-rouge">app.aot</code>. Package alone gets you nothing.”</p>
+</blockquote>
+
+<p><strong>Row 11 — Ignoring JDK version on cache rebuild</strong></p>
+<blockquote>
+  <p>“The AOT cache is tied to the exact JDK that created it. If you pin <code class="language-plaintext highlighter-rouge">eclipse-temurin:25-jdk</code> and the next build pulls a newer patch version, the JVM detects the fingerprint mismatch at startup and silently rebuilds the cache from scratch — giving you none of the benefit until the second restart. Pin the minor version in your Dockerfile FROM line.”</p>
+</blockquote>
+
+<hr />
+
+<h4 id="observability-section-rows-1215--now-4-rows-not-2">Observability section (rows 12–15 — now 4 rows, not 2)</h4>
+
+<p><strong>Row 12 — No GC pause histogram</strong></p>
+<blockquote>
+  <p>“Without the histogram, you have counts and sums for GC pause time, but you can’t compute a P99. The <code class="language-plaintext highlighter-rouge">jvm.gc.pause</code> counter tells you ‘GC happened 40 times’. The histogram tells you ‘GC P99 was 800ms for the last minute — fire an alert’. Those are completely different operational signals. The Quarkus property is one line. Set it before your next deployment.”</p>
+</blockquote>
+
+<div class="language-properties highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="py">quarkus.micrometer.distribution.percentiles-histogram.jvm.gc.pause</span><span class="p">=</span><span class="s">true</span>
+</code></pre></div></div>
+
+<p><strong>Row 13 — quarkus-micrometer-registry-prometheus alone</strong></p>
+<blockquote>
+  <p>“If you’re running <code class="language-plaintext highlighter-rouge">quarkus-micrometer-registry-prometheus</code> and <code class="language-plaintext highlighter-rouge">quarkus-opentelemetry</code> as separate extensions, consolidate to <code class="language-plaintext highlighter-rouge">quarkus-micrometer-opentelemetry</code>. One dependency, unified OTLP pipeline — metrics and traces can be correlated by trace ID. The separate extensions create two independent telemetry paths that can’t be joined at query time.”</p>
+</blockquote>
+
+<p><strong>Row 14 — No PrometheusRule on jvm_gc_pause</strong></p>
+<blockquote>
+  <p>“GC degradation is invisible until it breaches your SLO if you have no alert. Add this rule — it’s two minutes of work and it will page you before your users notice:</p>
+
+  <p><code class="language-plaintext highlighter-rouge">histogram_quantile(0.99, rate(jvm_gc_pause_seconds_bucket[5m])) &gt; 0.5</code></p>
+
+  <p>P99 GC pause over 500ms for 2 minutes means you need to act — switch GC algorithm, resize the heap, or investigate allocation rate.”</p>
+</blockquote>
+
+<p><strong>Row 15 — Tuning without a baseline</strong></p>
+<blockquote>
+  <p>“This is the most important professional discipline in the whole talk. I have seen engineers spend two days tuning GC flags based on intuition, with no measurement, and ship a change that made things worse. The workflow is: measure P99 startup time, measure P99 latency under load, change exactly one flag, measure again, compare. If it improved — commit. If it didn’t — revert. Everything else is guesswork.”</p>
+</blockquote>
+
+<hr />
+
+<h4 id="priority-bar-bottom-of-diagram">Priority bar (bottom of diagram)</h4>
+
+<blockquote>
+  <p>“The footer shows my recommended priority order if you’re starting from scratch. Memory flags first — they prevent OOMKills. Then <code class="language-plaintext highlighter-rouge">minReplicas: 2</code> — it’s free reliability. Then ParallelGCThreads — it makes every GC faster immediately. Then fix the HPA metric and add stabilisation windows. Then the AOT cache setup. Then observability. That order will get you 80% of the value in the first day.”</p>
+</blockquote>
+
+<hr />
+
+<h3 id="using-this-diagram-in-a-workshop">Using this diagram in a workshop</h3>
+
+<p>Project this diagram and ask the audience to vote on which row most matches their current production setup. Usually at least half the hands go up for rows 1-3. That creates an immediate personal connection to the content — the people in the room have seen these failures firsthand, and the fixes are right there in the green column.</p>
+
+<hr />
+
+<h2 id="diagram-06--jvm-anti-patterns-and-fixes-reference-table">Diagram 06 — JVM Anti-Patterns and Fixes (Reference Table)</h2>
+
+<p><strong>File:</strong> <code class="language-plaintext highlighter-rouge">06-antipatterns-vs-fixes.excalidraw</code></p>
+
+<h3 id="where-it-fits-in-the-deck-6">Where it fits in the deck</h3>
+<ul>
+  <li><strong>Primary:</strong> After slide <strong>53</strong> (Anti-Patterns) and alongside slide <strong>54</strong> (Fixes) as a combined quick-reference</li>
+  <li><strong>Best use:</strong> Printed A3 handout — one page attendees can take away with every anti-pattern and its exact fix</li>
+  <li>Also effective as a projected reference during extended Q&amp;A — keep it on screen so the audience can read the flags themselves</li>
+  <li>Works as a whiteboard where you circle the specific patterns relevant to the audience’s stack</li>
+</ul>
+
+<hr />
+
+<h3 id="speaker-notes-6">Speaker Notes</h3>
+
+<h4 id="opening-if-projecting">Opening (if projecting)</h4>
+
+<blockquote>
+  <p>“Slides 53 and 54 showed you the anti-patterns and fixes as separate slides. This diagram puts them side-by-side so you can see each pair directly. I’m going to walk the priority order — most critical at the top, diminishing returns as you go down. If you only fix the top four items in this table, you will eliminate 80 percent of the production incidents I’ve seen.”</p>
+</blockquote>
+
+<hr />
+
+<h4 id="memory-row-top-3--walk-these-carefully">Memory row (top 3 — walk these carefully)</h4>
+
+<p><strong>Row 1 — Hardcoded -Xmx/-Xms:</strong></p>
+<blockquote>
+  <p>“Every single production OOMKill investigation I’ve been involved in eventually traces back to this. Someone hardcoded -Xmx2g in 2018. The container limit was changed to 1.5g in 2021. Nobody noticed until a Friday at 5pm. The fix is two flags: UseContainerSupport — which ships ON by default since Java 15 — and MaxRAMPercentage=75. You never touch it again when the limit changes.”</p>
+</blockquote>
+
+<p><strong>Row 2 — MaxRAMPercentage=90:</strong></p>
+<blockquote>
+  <p>“People Google ‘how to give Java more heap’ and find MaxRAMPercentage. They set it to 90. This leaves 10% for everything else. A Quarkus app with Vert.x, Netty, and a few framework extensions routinely needs 300-400 MB off-heap. At 90% in a 1 GB container, that’s 100 MB remaining for off-heap — not enough. 75 percent is the safe default. Go to 80 percent only after measuring.”</p>
+</blockquote>
+
+<p><strong>Row 3 — No MaxMetaspaceSize:</strong></p>
+<blockquote>
+  <p>“This one is subtle. Metaspace grows as new classes are loaded — framework scanning, proxies, dynamic code generation. Without a cap, it grows until the OS decides you’ve had enough. Set 256m. It’s enough for most Quarkus apps. If you hit ClassNotFoundException at startup, bump to 512m.”</p>
+</blockquote>
+
+<hr />
+
+<h4 id="gc--cpu-row-rows-47">GC &amp; CPU row (rows 4–7)</h4>
+
+<p><strong>Row 4 — ParallelGCThreads:</strong></p>
+<blockquote>
+  <p>“This one requires measuring to confirm, but on any cluster where pods run on large nodes, check your GC thread count. Run: <code class="language-plaintext highlighter-rouge">jcmd &lt;pid&gt; VM.flags | grep GCThreads</code>. If it says 32 or 64 inside a 2-CPU container, that’s the bug. The threads aren’t executing in parallel — they’re time-sliced, which makes GC take longer, not shorter.”</p>
+</blockquote>
+
+<p><strong>Row 5 — CPU-based HPA:</strong></p>
+<blockquote>
+  <p>“If you take nothing else from this diagram, take this: do not use CPU to autoscale Java services. CPU is a JVM internal metric. GC raises it. JIT compilation raises it. Startup raises it. None of these are load signals. RPS is a load signal. Use RPS.”</p>
+</blockquote>
+
+<p><strong>Rows 6 and 7 — minReplicas and stabilisation:</strong></p>
+<blockquote>
+  <p>“These two go together. minReplicas: 2 is the defensive posture — you never have a single point of failure during GC. The stabilisation window is the guard against HPA itself becoming the problem — it prevents the GC→HPA thrash cycle we drew in diagram 01. Fix row 6 first — add a second replica. Then fix row 7. In that order.”</p>
+</blockquote>
+
+<hr />
+
+<h4 id="aot--startup-row-rows-811">AOT / Startup row (rows 8–11)</h4>
+
+<blockquote>
+  <p>“These four are specifically Quarkus AOT patterns. The most common mistake is row 8 — using @QuarkusTest. If your AOT cache builds are producing zero improvement, this is almost certainly why. Check with: <code class="language-plaintext highlighter-rouge">ls -lh target/quarkus-app/app.aot</code>. If it’s under 10 MB, your training coverage is poor.”</p>
+</blockquote>
+
+<blockquote>
+  <p>“Rows 9 and 10 are build pipeline hygiene. Row 9: never add <code class="language-plaintext highlighter-rouge">-XX:AOTCache</code> to your Dockerfile manually — Quarkus sets it during packaging. Two conflicting flags = startup failure. Row 10: <code class="language-plaintext highlighter-rouge">mvn verify</code> not <code class="language-plaintext highlighter-rouge">mvn package</code> — the failsafe plugin that runs your <code class="language-plaintext highlighter-rouge">@QuarkusIntegrationTest</code> suite only fires in the verify phase.”</p>
+</blockquote>
+
+<blockquote>
+  <p>“Row 11 is the sneaky one. If you don’t pin the JDK minor version in your Dockerfile FROM line, a JDK patch release will silently invalidate the cache. The JVM detects the fingerprint mismatch and rebuilds from scratch — your pods get no benefit until the second restart after the build. Pin it.”</p>
+</blockquote>
+
+<hr />
+
+<h4 id="observability-row-rows-1215">Observability row (rows 12–15)</h4>
+
+<blockquote>
+  <p>“These four rows are the difference between having visibility into your JVM and flying blind.”</p>
+</blockquote>
+
+<blockquote>
+  <p>“Row 12 is one line in application.properties. Add it right now before you leave this room. It’s the difference between ‘our app is slow’ and ‘our app is slow because GC P99 is 800ms, which is a heap sizing issue.’”</p>
+</blockquote>
+
+<blockquote>
+  <p>“Row 13 is an architecture cleanup. If you’re running <code class="language-plaintext highlighter-rouge">quarkus-micrometer-registry-prometheus</code> and <code class="language-plaintext highlighter-rouge">quarkus-opentelemetry</code> as separate extensions, consolidate to <code class="language-plaintext highlighter-rouge">quarkus-micrometer-opentelemetry</code>. One dependency, unified OTLP pipeline, metrics and traces correlated by trace ID.”</p>
+</blockquote>
+
+<blockquote>
+  <p>“Row 14 is the proactive alert that wakes you up before your users notice. Add a PrometheusRule on <code class="language-plaintext highlighter-rouge">histogram_quantile(0.99, rate(jvm_gc_pause_seconds_bucket[5m])) &gt; 0.5</code>. Two minutes of work. It pages you when GC P99 exceeds 500ms — which is actionable, not catastrophic.”</p>
+</blockquote>
+
+<blockquote>
+  <p>“Row 15 — the baseline row — is the most important discipline in the whole table. I’ve seen teams spend three weeks tuning GC flags and end up with worse performance than they started because they had no baseline to compare against. Measure first. Change one thing. Measure again. This is not negotiable if you want to make claims about what you’ve improved.”</p>
+</blockquote>
+
+<hr />
+
+<h4 id="closing">Closing</h4>
+
+<blockquote>
+  <p>“The golden rule at the bottom applies to every row in this table. One change at a time. Measure before and after. Commit or revert based on data.”</p>
+</blockquote>
+
+<blockquote>
+  <p>“If there’s one thing I want you to take away from this diagram specifically, it’s row 4. Set ParallelGCThreads today. It costs nothing except adding one JVM flag to your Dockerfile. It will immediately improve GC pause duration on any node with more CPUs than your container limit.”</p>
+</blockquote>
+
+<hr />
+
+<h3 id="printhandout-notes">Print/Handout Notes</h3>
+
+<p>The diagram is designed to be readable at A3 or letter landscape. The three-column layout (anti-pattern → why it fails → fix) means attendees can use it as a quick-reference checklist against their own deployment configuration. The coloured section headers (Memory, GC &amp; CPU, AOT/Startup, Observability) make it easy to scan for the relevant category.</p>
+
+<p>The golden rule box at the bottom is intentionally prominent — it’s the meta-fix that validates all the specific fixes.</p>
+
+<hr />
+
+<h3 id="suggested-slide-placement-1">Suggested Slide Placement</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Slide 53  Common JVM Anti-Patterns on Kubernetes (16 items in 4 red cards)
+          ↓
+Diagram 06  Anti-Patterns vs Fixes side-by-side (this diagram)
+          ↓
+Slide 54  Anti-Pattern Remediation (16 fixes in 4 colour-coded cards)
+</code></pre></div></div>
+
+<p>The diagram works best as a <strong>whiteboard handout moment</strong> — give the audience 60 seconds to scan both columns before you start narrating. People will immediately start mapping the left column to their own infrastructure.</p>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <h4>Talk</h4>
+        <p>Taming the JVM: Optimizing Java Workloads on OpenShift &amp; Kubernetes</p>
+        <p>Quarkus 3.33.1 LTS &nbsp;·&nbsp; Java 21 &amp; 25</p>
+      </div>
+      <div>
+        <h4>Based On</h4>
+        <p>📗 <a href="https://www.oreilly.com/library/view/optimizing-cloud-native/9781098149338/" target="_blank" rel="noopener">Optimizing Cloud Native Java</a> (O'Reilly)</p>
+        <p>📗 <a href="https://www.oreilly.com/library/view/sre-with-java/9781492073918/" target="_blank" rel="noopener">SRE with Java Microservices</a> (O'Reilly)</p>
+      </div>
+      <div>
+        <h4>Links</h4>
+        <ul>
+          <li><a href="https://github.com/patterncatalyst/quarkus-optimization" target="_blank">GitHub Repository</a></li>
+          <li><a href="/quarkus-optimization/presentation/">Reveal.js Slides</a></li>
+          <li><a href="/quarkus-optimization/demos/">All Demos</a></li>
+          <li><a href="/quarkus-optimization/docs/">Reference Docs</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="footer-copy">Open source · <a href="https://github.com/patterncatalyst/quarkus-optimization" target="_blank">patterncatalyst/quarkus-optimization</a></p>
+  </div>
+</footer>
+
+<script src="/quarkus-optimization/assets/js/main.js"></script>
+</body>
+</html>

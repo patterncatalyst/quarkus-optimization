@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JVM Optimization Cheat Sheet | Taming the JVM</title>
+  <meta name="description" content="Quick-reference card for JVM tuning on container platforms.">
+  <link rel="stylesheet" href="/quarkus-optimization/assets/css/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container hflex">
+    <a class="site-title" href="/quarkus-optimization/">
+      <span class="logo-icon">⚡</span>
+      <span class="logo-text">Taming the JVM</span>
+    </a>
+    <nav class="site-nav">
+      <a href="/quarkus-optimization/demos/"        >Demos</a>
+      <a href="/quarkus-optimization/presentation/" >Slides</a>
+      <a href="/quarkus-optimization/diagrams/"     >Diagrams</a>
+      <a href="/quarkus-optimization/docs/"         class="active">Docs</a>
+      <a href="https://github.com/patterncatalyst/quarkus-optimization" class="gh-btn" target="_blank" rel="noopener">
+        <svg height="16" viewBox="0 0 16 16" width="16"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+    </nav>
+  </div>
+</header>
+
+<main><div class="container">
+  <nav class="breadcrumb">
+    <a href="/quarkus-optimization/">Home</a> /
+    <a href="/quarkus-optimization/docs/">Docs</a> /
+    <span>JVM Optimization Cheat Sheet</span>
+  </nav>
+
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin:1.5rem 0;flex-wrap:wrap;gap:1rem;">
+    <div>
+      <h1>JVM Optimization Cheat Sheet</h1>
+      <p style="color:var(--muted);margin-top:.4rem;">Quick-reference card for JVM tuning on OpenShift &amp; Kubernetes. All flags verified on Red Hat UBI9 with Podman.</p>
+    </div>
+    <a href="https://github.com/patterncatalyst/quarkus-optimization/blob/main/java-optimization-demos/JVM-OPTIMIZATION-CHEATSHEET.md" target="_blank" class="btn btn-outline btn-sm">View on GitHub ↗</a>
+  </div>
+
+  <div class="grid grid-2" style="margin-bottom:2rem;">
+    
+    
+    <a href="https://github.com/patterncatalyst/quarkus-optimization/blob/main/java-optimization-demos/JVM-OPTIMIZATION-CHEATSHEET.md#container-heap-sizing" target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
+      Container Heap Sizing
+    </a>
+    
+    <a href="https://github.com/patterncatalyst/quarkus-optimization/blob/main/java-optimization-demos/JVM-OPTIMIZATION-CHEATSHEET.md#gc-quick-select" target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
+      GC Quick-Select
+    </a>
+    
+    <a href="https://github.com/patterncatalyst/quarkus-optimization/blob/main/java-optimization-demos/JVM-OPTIMIZATION-CHEATSHEET.md#gc-defaults-by-image" target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
+      GC Defaults by Image
+    </a>
+    
+    <a href="https://github.com/patterncatalyst/quarkus-optimization/blob/main/java-optimization-demos/JVM-OPTIMIZATION-CHEATSHEET.md#thread-count-tuning" target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
+      Thread Count Tuning
+    </a>
+    
+    <a href="https://github.com/patterncatalyst/quarkus-optimization/blob/main/java-optimization-demos/JVM-OPTIMIZATION-CHEATSHEET.md#startup-optimization" target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
+      Startup Optimization
+    </a>
+    
+    <a href="https://github.com/patterncatalyst/quarkus-optimization/blob/main/java-optimization-demos/JVM-OPTIMIZATION-CHEATSHEET.md#right-sizing-quick-reference" target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
+      Right-Sizing Quick Reference
+    </a>
+    
+    <a href="https://github.com/patterncatalyst/quarkus-optimization/blob/main/java-optimization-demos/JVM-OPTIMIZATION-CHEATSHEET.md#hpa-configuration" target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
+      HPA Configuration
+    </a>
+    
+    <a href="https://github.com/patterncatalyst/quarkus-optimization/blob/main/java-optimization-demos/JVM-OPTIMIZATION-CHEATSHEET.md#prometheus-metrics" target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
+      Prometheus Metrics
+    </a>
+    
+    <a href="https://github.com/patterncatalyst/quarkus-optimization/blob/main/java-optimization-demos/JVM-OPTIMIZATION-CHEATSHEET.md#low-latency-ladder" target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
+      Low-Latency Ladder
+    </a>
+    
+    <a href="https://github.com/patterncatalyst/quarkus-optimization/blob/main/java-optimization-demos/JVM-OPTIMIZATION-CHEATSHEET.md#panama-ffm" target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
+      Panama FFM
+    </a>
+    
+    <a href="https://github.com/patterncatalyst/quarkus-optimization/blob/main/java-optimization-demos/JVM-OPTIMIZATION-CHEATSHEET.md#grpc-vs-rest" target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
+      gRPC vs REST
+    </a>
+    
+    <a href="https://github.com/patterncatalyst/quarkus-optimization/blob/main/java-optimization-demos/JVM-OPTIMIZATION-CHEATSHEET.md#podman-gotchas" target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
+      Podman Gotchas
+    </a>
+    
+    <a href="https://github.com/patterncatalyst/quarkus-optimization/blob/main/java-optimization-demos/JVM-OPTIMIZATION-CHEATSHEET.md#jvm-flags-cookbook" target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
+      JVM Flags Cookbook
+    </a>
+    
+    <a href="https://github.com/patterncatalyst/quarkus-optimization/blob/main/java-optimization-demos/JVM-OPTIMIZATION-CHEATSHEET.md#key-flags-reference" target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
+      Key Flags Reference
+    </a>
+    
+    <a href="https://github.com/patterncatalyst/quarkus-optimization/blob/main/java-optimization-demos/JVM-OPTIMIZATION-CHEATSHEET.md#appcds-vs-leyden-vs-native" target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
+      AppCDS vs Leyden vs Native
+    </a>
+    
+    <a href="https://github.com/patterncatalyst/quarkus-optimization/blob/main/java-optimization-demos/JVM-OPTIMIZATION-CHEATSHEET.md#health-check-endpoints" target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
+      Health Check Endpoints
+    </a>
+    
+  </div>
+
+  <div class="run-box">
+    <div class="run-box-header">File location in repo</div>
+    <pre><code>java-optimization-demos/JVM-OPTIMIZATION-CHEATSHEET.md</code></pre>
+  </div>
+
+  <div class="callout" style="margin-top:1.5rem;">
+    <strong>Quick start:</strong> The most impactful flags for any container deployment —
+    <code>-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:ParallelGCThreads=N</code>
+    where N equals your CPU request. That's 80% of the value in three flags.
+  </div>
+</div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <h4>Talk</h4>
+        <p>Taming the JVM: Optimizing Java Workloads on OpenShift &amp; Kubernetes</p>
+        <p>Quarkus 3.33.1 LTS &nbsp;·&nbsp; Java 21 &amp; 25</p>
+      </div>
+      <div>
+        <h4>Based On</h4>
+        <p>📗 <a href="https://www.oreilly.com/library/view/optimizing-cloud-native/9781098149338/" target="_blank" rel="noopener">Optimizing Cloud Native Java</a> (O'Reilly)</p>
+        <p>📗 <a href="https://www.oreilly.com/library/view/sre-with-java/9781492073918/" target="_blank" rel="noopener">SRE with Java Microservices</a> (O'Reilly)</p>
+      </div>
+      <div>
+        <h4>Links</h4>
+        <ul>
+          <li><a href="https://github.com/patterncatalyst/quarkus-optimization" target="_blank">GitHub Repository</a></li>
+          <li><a href="/quarkus-optimization/presentation/">Reveal.js Slides</a></li>
+          <li><a href="/quarkus-optimization/demos/">All Demos</a></li>
+          <li><a href="/quarkus-optimization/docs/">Reference Docs</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="footer-copy">Open source · <a href="https://github.com/patterncatalyst/quarkus-optimization" target="_blank">patterncatalyst/quarkus-optimization</a></p>
+  </div>
+</footer>
+
+<script src="/quarkus-optimization/assets/js/main.js"></script>
+</body>
+</html>

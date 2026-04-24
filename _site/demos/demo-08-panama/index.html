@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demo 08 — Project Panama: C++20 via FFM | Taming the JVM</title>
+  <meta name="description" content="Optimizing Java Workloads on OpenShift & Kubernetes">
+  <link rel="stylesheet" href="/quarkus-optimization/assets/css/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container hflex">
+    <a class="site-title" href="/quarkus-optimization/">
+      <span class="logo-icon">⚡</span>
+      <span class="logo-text">Taming the JVM</span>
+    </a>
+    <nav class="site-nav">
+      <a href="/quarkus-optimization/demos/"        class="active">Demos</a>
+      <a href="/quarkus-optimization/presentation/" >Slides</a>
+      <a href="/quarkus-optimization/diagrams/"     >Diagrams</a>
+      <a href="/quarkus-optimization/docs/"         >Docs</a>
+      <a href="https://github.com/patterncatalyst/quarkus-optimization" class="gh-btn" target="_blank" rel="noopener">
+        <svg height="16" viewBox="0 0 16 16" width="16"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+    </nav>
+  </div>
+</header>
+
+<main><div class="container demo-page">
+
+  <nav class="breadcrumb">
+    <a href="/quarkus-optimization/">Home</a> /
+    <a href="/quarkus-optimization/demos/">Demos</a> /
+    <span>Demo 08 — Project Panama: C++20 via FFM</span>
+  </nav>
+
+  <div class="demo-header">
+    <div class="demo-badge">08</div>
+    <div>
+      <h1>Demo 08 — Project Panama: C++20 via FFM</h1>
+      <div class="tag-row">
+        <span class="tag">Quarkus 3.33.1 / JDK 25 LTS</span>
+        <span class="tag tag-muted">⏱ ~8 min</span>
+        
+        <span class="tag tag-purple">JDK 25</span>
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="run-box">
+    <div class="run-box-header">
+      <span>Run this demo</span>
+      <a href="https://github.com/patterncatalyst/quarkus-optimization/tree/main/java-optimization-demos/quarkus-demo-08-panama"
+         target="_blank" class="btn btn-sm btn-outline">View source on GitHub ↗</a>
+    </div>
+    <pre><code>cd quarkus-demo-08-panama
+chmod +x demo.sh
+./demo.sh</code></pre>
+  </div>
+  
+
+  <div class="markdown-body"><p>The Foreign Function &amp; Memory API (JEP 454, finalized JDK 22) calls a native C++20 shared library from pure Java. No JNI wrapper code, no platform-specific compilation pipeline.</p>
+
+<h2 id="what-the-native-library-does">What the native library does</h2>
+
+<p>Three C++20 functions using <code class="language-plaintext highlighter-rouge">std::span</code>, <code class="language-plaintext highlighter-rouge">std::ranges</code>, and structured bindings:</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">jvmstats_recommend_gc()</code> — analyse GC pause times, recommend G1/Shenandoah/ZGC</li>
+  <li><code class="language-plaintext highlighter-rouge">jvmstats_cpu_profile()</code> — detect GC-dominated CPU spike patterns</li>
+  <li><code class="language-plaintext highlighter-rouge">jvmstats_recommend_memory_mb()</code> — compute right-sized memory request from RSS samples</li>
+</ul>
+
+<h2 id="the-panama-pattern">The Panama pattern</h2>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">try</span> <span class="o">(</span><span class="nc">Arena</span> <span class="n">arena</span> <span class="o">=</span> <span class="nc">Arena</span><span class="o">.</span><span class="na">ofConfined</span><span class="o">())</span> <span class="o">{</span>
+    <span class="c1">// allocateFrom() — JDK 22+ final API (not allocateArray())</span>
+    <span class="nc">MemorySegment</span> <span class="n">data</span>  <span class="o">=</span> <span class="n">arena</span><span class="o">.</span><span class="na">allocateFrom</span><span class="o">(</span><span class="no">JAVA_DOUBLE</span><span class="o">,</span> <span class="n">myArray</span><span class="o">);</span>
+    <span class="nc">MemorySegment</span> <span class="n">outP99</span> <span class="o">=</span> <span class="n">arena</span><span class="o">.</span><span class="na">allocate</span><span class="o">(</span><span class="no">JAVA_DOUBLE</span><span class="o">);</span>
+
+    <span class="kt">int</span> <span class="n">gcCode</span> <span class="o">=</span> <span class="o">(</span><span class="kt">int</span><span class="o">)</span> <span class="n">recommendGc</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">data</span><span class="o">,</span> <span class="n">myArray</span><span class="o">.</span><span class="na">length</span><span class="o">,</span> <span class="n">outP99</span><span class="o">);</span>
+    <span class="kt">double</span> <span class="n">p99</span> <span class="o">=</span> <span class="n">outP99</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="no">JAVA_DOUBLE</span><span class="o">,</span> <span class="mi">0</span><span class="o">);</span>
+<span class="o">}</span> <span class="c1">// all native memory freed here — zero leaks possible</span>
+</code></pre></div></div>
+
+<h2 id="three-stage-dockerfile">Three-stage Dockerfile</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Stage</th>
+      <th>Image</th>
+      <th>Purpose</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>cpp-builder</td>
+      <td><code class="language-plaintext highlighter-rouge">ubi9</code></td>
+      <td><code class="language-plaintext highlighter-rouge">dnf install gcc-c++ cmake make</code> → compile <code class="language-plaintext highlighter-rouge">.so</code></td>
+    </tr>
+    <tr>
+      <td>java-builder</td>
+      <td><code class="language-plaintext highlighter-rouge">maven:3.9-eclipse-temurin-25</code></td>
+      <td>Build Quarkus JAR</td>
+    </tr>
+    <tr>
+      <td>runtime</td>
+      <td><code class="language-plaintext highlighter-rouge">ubi9/openjdk-25-runtime</code></td>
+      <td>Copy <code class="language-plaintext highlighter-rouge">.so</code> + JAR, <code class="language-plaintext highlighter-rouge">ldconfig</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>No subscription required — <code class="language-plaintext highlighter-rouge">gcc-c++</code> is in UBI9’s freely accessible appstream repo.</p>
+
+<h2 id="try-the-endpoints">Try the endpoints</h2>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl <span class="nt">-s</span> http://localhost:8080/demo | python3 <span class="nt">-m</span> json.tool
+
+<span class="c"># Analyse custom GC pause data</span>
+curl <span class="nt">-s</span> <span class="nt">-X</span> POST http://localhost:8080/gc-recommend <span class="se">\</span>
+  <span class="nt">-H</span> <span class="s2">"Content-Type: application/json"</span> <span class="se">\</span>
+  <span class="nt">-d</span> <span class="s1">'[10,12,180,11,175,14]'</span> | python3 <span class="nt">-m</span> json.tool
+</code></pre></div></div>
+
+<h2 id="reference">Reference</h2>
+
+<ul>
+  <li><a href="https://github.com/patterncatalyst/quarkus-optimization/tree/main/java-optimization-demos/quarkus-demo-08-panama">Demo source</a></li>
+  <li><a href="https://openjdk.org/jeps/454">JEP 454 — Foreign Function &amp; Memory API</a></li>
+  <li><a href="https://openjdk.org/projects/panama/">Project Panama</a></li>
+</ul>
+</div>
+
+  <div class="demo-nav">
+    
+      <a href="/quarkus-optimization/demos/demo-07-rightsizing/" class="nav-btn">← Demo 07 — Right-Sizing</a>
+    
+    <a href="/quarkus-optimization/demos/" class="nav-btn">All Demos</a>
+    
+      <a href="/quarkus-optimization/demos/demo-09-onnx/" class="nav-btn">Demo 09 — ONNX →</a>
+    
+  </div>
+
+</div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <h4>Talk</h4>
+        <p>Taming the JVM: Optimizing Java Workloads on OpenShift &amp; Kubernetes</p>
+        <p>Quarkus 3.33.1 LTS &nbsp;·&nbsp; Java 21 &amp; 25</p>
+      </div>
+      <div>
+        <h4>Based On</h4>
+        <p>📗 <a href="https://www.oreilly.com/library/view/optimizing-cloud-native/9781098149338/" target="_blank" rel="noopener">Optimizing Cloud Native Java</a> (O'Reilly)</p>
+        <p>📗 <a href="https://www.oreilly.com/library/view/sre-with-java/9781492073918/" target="_blank" rel="noopener">SRE with Java Microservices</a> (O'Reilly)</p>
+      </div>
+      <div>
+        <h4>Links</h4>
+        <ul>
+          <li><a href="https://github.com/patterncatalyst/quarkus-optimization" target="_blank">GitHub Repository</a></li>
+          <li><a href="/quarkus-optimization/presentation/">Reveal.js Slides</a></li>
+          <li><a href="/quarkus-optimization/demos/">All Demos</a></li>
+          <li><a href="/quarkus-optimization/docs/">Reference Docs</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="footer-copy">Open source · <a href="https://github.com/patterncatalyst/quarkus-optimization" target="_blank">patterncatalyst/quarkus-optimization</a></p>
+  </div>
+</footer>
+
+<script src="/quarkus-optimization/assets/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demo 06 — Low-Latency JVM: G1GC vs ZGC | Taming the JVM</title>
+  <meta name="description" content="Optimizing Java Workloads on OpenShift & Kubernetes">
+  <link rel="stylesheet" href="/quarkus-optimization/assets/css/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container hflex">
+    <a class="site-title" href="/quarkus-optimization/">
+      <span class="logo-icon">⚡</span>
+      <span class="logo-text">Taming the JVM</span>
+    </a>
+    <nav class="site-nav">
+      <a href="/quarkus-optimization/demos/"        class="active">Demos</a>
+      <a href="/quarkus-optimization/presentation/" >Slides</a>
+      <a href="/quarkus-optimization/diagrams/"     >Diagrams</a>
+      <a href="/quarkus-optimization/docs/"         >Docs</a>
+      <a href="https://github.com/patterncatalyst/quarkus-optimization" class="gh-btn" target="_blank" rel="noopener">
+        <svg height="16" viewBox="0 0 16 16" width="16"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+    </nav>
+  </div>
+</header>
+
+<main><div class="container demo-page">
+
+  <nav class="breadcrumb">
+    <a href="/quarkus-optimization/">Home</a> /
+    <a href="/quarkus-optimization/demos/">Demos</a> /
+    <span>Demo 06 — Low-Latency JVM: G1GC vs ZGC</span>
+  </nav>
+
+  <div class="demo-header">
+    <div class="demo-badge">06</div>
+    <div>
+      <h1>Demo 06 — Low-Latency JVM: G1GC vs ZGC</h1>
+      <div class="tag-row">
+        <span class="tag">Quarkus 3.33.1 / Java 21</span>
+        <span class="tag tag-muted">⏱ ~10 min</span>
+        
+        
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="run-box">
+    <div class="run-box-header">
+      <span>Run this demo</span>
+      <a href="https://github.com/patterncatalyst/quarkus-optimization/tree/main/java-optimization-demos/quarkus-demo-06-latency"
+         target="_blank" class="btn btn-sm btn-outline">View source on GitHub ↗</a>
+    </div>
+    <pre><code>cd quarkus-demo-06-latency
+chmod +x demo.sh
+./demo.sh</code></pre>
+  </div>
+  
+
+  <div class="markdown-body"><p>Two identical Quarkus apps, same heap, same load. One G1GC, one ZGC. The <strong>GC pause delta</strong> (not throughput) is the metric that matters for SLAs.</p>
+
+<h2 id="ubi9-default-gc">UBI9 default GC</h2>
+
+<p><code class="language-plaintext highlighter-rouge">ubi9/openjdk-21-runtime</code> ships <strong>Shenandoah</strong> by default. This demo overrides it explicitly:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">JAVA_OPTS</span><span class="pi">:</span> <span class="s2">"</span><span class="s">-XX:+UseG1GC"</span>        <span class="c1"># container 1</span>
+<span class="na">JAVA_OPTS</span><span class="pi">:</span> <span class="s2">"</span><span class="s">-XX:+UseZGC</span><span class="nv"> </span><span class="s">-XX:+ZGenerational"</span>  <span class="c1"># container 2</span>
+</code></pre></div></div>
+
+<h2 id="zgc-throughput-caveat">ZGC throughput caveat</h2>
+
+<p>ZGC uses a load barrier — fires on every object read — adding ~5-15% constant overhead. In the <code class="language-plaintext highlighter-rouge">hey</code> load test, ZGC shows lower throughput than G1GC. This is <strong>expected and correct</strong>. The meaningful metric is the GC pause delta in Steps 4-5.</p>
+
+<h2 id="gc-decision-guide">GC decision guide</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Collector</th>
+      <th>Pause</th>
+      <th>Choose when</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Shenandoah</td>
+      <td>1–20ms</td>
+      <td>UBI9 default — already this without any config</td>
+    </tr>
+    <tr>
+      <td>ZGC</td>
+      <td>&lt; 1ms</td>
+      <td>p99 SLA tighter than 10ms, or heap &gt; 32GB</td>
+    </tr>
+    <tr>
+      <td>G1GC</td>
+      <td>50–300ms</td>
+      <td>Throughput-oriented, non-latency-sensitive</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="reference">Reference</h2>
+
+<ul>
+  <li><a href="https://github.com/patterncatalyst/quarkus-optimization/tree/main/java-optimization-demos/quarkus-demo-06-latency">Demo source</a></li>
+  <li><a href="/quarkus-optimization/docs/shenandoah-guide/">Shenandoah GC Guide</a></li>
+  <li><a href="https://wiki.openjdk.org/display/zgc">ZGC wiki</a></li>
+</ul>
+</div>
+
+  <div class="demo-nav">
+    
+      <a href="/quarkus-optimization/demos/demo-05-grpc/" class="nav-btn">← Demo 05 — gRPC</a>
+    
+    <a href="/quarkus-optimization/demos/" class="nav-btn">All Demos</a>
+    
+      <a href="/quarkus-optimization/demos/demo-07-rightsizing/" class="nav-btn">Demo 07 — Right-Sizing →</a>
+    
+  </div>
+
+</div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <h4>Talk</h4>
+        <p>Taming the JVM: Optimizing Java Workloads on OpenShift &amp; Kubernetes</p>
+        <p>Quarkus 3.33.1 LTS &nbsp;·&nbsp; Java 21 &amp; 25</p>
+      </div>
+      <div>
+        <h4>Based On</h4>
+        <p>📗 <a href="https://www.oreilly.com/library/view/optimizing-cloud-native/9781098149338/" target="_blank" rel="noopener">Optimizing Cloud Native Java</a> (O'Reilly)</p>
+        <p>📗 <a href="https://www.oreilly.com/library/view/sre-with-java/9781492073918/" target="_blank" rel="noopener">SRE with Java Microservices</a> (O'Reilly)</p>
+      </div>
+      <div>
+        <h4>Links</h4>
+        <ul>
+          <li><a href="https://github.com/patterncatalyst/quarkus-optimization" target="_blank">GitHub Repository</a></li>
+          <li><a href="/quarkus-optimization/presentation/">Reveal.js Slides</a></li>
+          <li><a href="/quarkus-optimization/demos/">All Demos</a></li>
+          <li><a href="/quarkus-optimization/docs/">Reference Docs</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="footer-copy">Open source · <a href="https://github.com/patterncatalyst/quarkus-optimization" target="_blank">patterncatalyst/quarkus-optimization</a></p>
+  </div>
+</footer>
+
+<script src="/quarkus-optimization/assets/js/main.js"></script>
+</body>
+</html>

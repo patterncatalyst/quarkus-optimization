@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demos | Taming the JVM</title>
+  <meta name="description" content="Optimizing Java Workloads on OpenShift & Kubernetes">
+  <link rel="stylesheet" href="/quarkus-optimization/assets/css/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container hflex">
+    <a class="site-title" href="/quarkus-optimization/">
+      <span class="logo-icon">⚡</span>
+      <span class="logo-text">Taming the JVM</span>
+    </a>
+    <nav class="site-nav">
+      <a href="/quarkus-optimization/demos/"        class="active">Demos</a>
+      <a href="/quarkus-optimization/presentation/" >Slides</a>
+      <a href="/quarkus-optimization/diagrams/"     >Diagrams</a>
+      <a href="/quarkus-optimization/docs/"         >Docs</a>
+      <a href="https://github.com/patterncatalyst/quarkus-optimization" class="gh-btn" target="_blank" rel="noopener">
+        <svg height="16" viewBox="0 0 16 16" width="16"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+    </nav>
+  </div>
+</header>
+
+<main><div class="container">
+  <div style="margin-top:2rem">
+    <h1>Demos</h1>
+    <p class="sub">All demos run with <code>chmod +x demo.sh &amp;&amp; ./demo.sh</code> using Podman and Red Hat UBI images.</p>
+  </div>
+
+  <div class="callout">
+    <strong>Note on GC defaults:</strong> <code>ubi9/openjdk-21-runtime</code> ships <strong>Shenandoah</strong> as the default GC — Red Hat's concurrent collector giving 1–20ms pauses. Demos that compare GC algorithms explicitly override it with <code>-XX:+UseG1GC</code> or <code>-XX:+UseZGC</code>.
+  </div>
+
+  <h2 style="color:var(--teal);margin:2rem 0 1rem">Core Session — 60 min</h2>
+  <div class="grid grid-2">
+    
+    
+    <a href="/quarkus-optimization/demos/demo-01-heap-sizing/" class="card">
+      <div class="card-num">Demo 01</div>
+      <h3>Container-Aware Heap Sizing</h3>
+      <p>Without UseContainerSupport, the JVM reads host RAM from /proc/meminfo and claims 25% of the node’s full memory — ins...</p>
+      <div class="card-foot">
+        <span class="tag">Java 21</span>
+        <span class="tag tag-muted">⏱ ~5 min</span>
+      </div>
+    </a>
+    
+    <a href="/quarkus-optimization/demos/demo-02-gc-monitoring/" class="card">
+      <div class="card-num">Demo 02</div>
+      <h3>GC Monitoring with Prometheus</h3>
+      <p>Two Quarkus apps (G1GC on :8080, ZGC on :8081) + Grafana LGTM + standalone Prometheus scraping /q/metrics. Live GC pa...</p>
+      <div class="card-foot">
+        <span class="tag">Quarkus 3.33.1 / Java 21</span>
+        <span class="tag tag-muted">⏱ ~10 min</span>
+      </div>
+    </a>
+    
+    <a href="/quarkus-optimization/demos/demo-03-appcds/" class="card">
+      <div class="card-num">Demo 03</div>
+      <h3>AppCDS Startup Acceleration</h3>
+      <p>AppCDS caches parsed + verified bytecode. Quarkus gets ~5% improvement. Spring Boot gets ~40%. The small Quarkus numb...</p>
+      <div class="card-foot">
+        <span class="tag">Quarkus 3.33.1 + Spring Boot 4.0.5 / Java 21</span>
+        <span class="tag tag-muted">⏱ ~8 min</span>
+      </div>
+    </a>
+    
+  </div>
+
+  <h2 style="color:var(--teal);margin:2.5rem 0 1rem">Extended / Bonus — 90 min</h2>
+  <div class="grid grid-2">
+    
+    
+    <a href="/quarkus-optimization/demos/demo-04-leyden/" class="card">
+      <div class="card-num">Demo 04 · Bonus</div>
+      <h3>Project Leyden AOT Cache</h3>
+      <p>Verified result: 609ms → 148ms (−75%) startup on JDK 25 LTS. Caches parsed + linked classes AND JIT method profiles. ...</p>
+      <div class="card-foot">
+        <span class="tag tag-purple">JDK 25</span>
+        
+        
+        <span class="tag tag-muted">⏱ ~12 min</span>
+      </div>
+    </a>
+    
+    <a href="/quarkus-optimization/demos/demo-05-grpc/" class="card">
+      <div class="card-num">Demo 05 · Bonus</div>
+      <h3>REST vs gRPC: Two Protocols</h3>
+      <p>One Quarkus app simultaneously serves REST on :8080 and gRPC on :9000. Same service, two protocols, honest comparison...</p>
+      <div class="card-foot">
+        
+        
+        
+          <span class="tag">Quarkus 3.33.1 / Java 21</span>
+        
+        <span class="tag tag-muted">⏱ ~10 min</span>
+      </div>
+    </a>
+    
+    <a href="/quarkus-optimization/demos/demo-06-latency/" class="card">
+      <div class="card-num">Demo 06 · Bonus</div>
+      <h3>Low-Latency JVM: G1GC vs ZGC</h3>
+      <p>Two identical Quarkus apps, same heap, same load. One G1GC, one ZGC. The GC pause delta (not throughput) is the metri...</p>
+      <div class="card-foot">
+        
+        
+        
+          <span class="tag">Quarkus 3.33.1 / Java 21</span>
+        
+        <span class="tag tag-muted">⏱ ~10 min</span>
+      </div>
+    </a>
+    
+    <a href="/quarkus-optimization/demos/demo-07-rightsizing/" class="card">
+      <div class="card-num">Demo 07 · Bonus</div>
+      <h3>Right-Sizing &amp; Cost Impact Analysis</h3>
+      <p>Pure Python analysis — no containers, no cluster needed. 14 days of bundled Prometheus sample data from a 7-service c...</p>
+      <div class="card-foot">
+        
+        <span class="tag tag-green">No cluster</span>
+        
+        <span class="tag tag-muted">⏱ ~3 min</span>
+      </div>
+    </a>
+    
+    <a href="/quarkus-optimization/demos/demo-08-panama/" class="card">
+      <div class="card-num">Demo 08 · Bonus</div>
+      <h3>Project Panama: C++20 via FFM</h3>
+      <p>The Foreign Function &amp; Memory API (JEP 454, finalized JDK 22) calls a native C++20 shared library from pure Java....</p>
+      <div class="card-foot">
+        <span class="tag tag-purple">JDK 25</span>
+        
+        
+        <span class="tag tag-muted">⏱ ~8 min</span>
+      </div>
+    </a>
+    
+    <a href="/quarkus-optimization/demos/demo-09-onnx/" class="card">
+      <div class="card-num">Demo 09 · Bonus</div>
+      <h3>AI Inference: LangChain4j + ONNX + Panama</h3>
+      <p>In-process AI inference via LangChain4j → ONNX Runtime → Panama FFM → native .so. The all-MiniLM-L6-v2 sentence embed...</p>
+      <div class="card-foot">
+        <span class="tag tag-purple">JDK 25</span>
+        
+        
+        <span class="tag tag-muted">⏱ ~10 min</span>
+      </div>
+    </a>
+    
+  </div>
+</div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <h4>Talk</h4>
+        <p>Taming the JVM: Optimizing Java Workloads on OpenShift &amp; Kubernetes</p>
+        <p>Quarkus 3.33.1 LTS &nbsp;·&nbsp; Java 21 &amp; 25</p>
+      </div>
+      <div>
+        <h4>Based On</h4>
+        <p>📗 <a href="https://www.oreilly.com/library/view/optimizing-cloud-native/9781098149338/" target="_blank" rel="noopener">Optimizing Cloud Native Java</a> (O'Reilly)</p>
+        <p>📗 <a href="https://www.oreilly.com/library/view/sre-with-java/9781492073918/" target="_blank" rel="noopener">SRE with Java Microservices</a> (O'Reilly)</p>
+      </div>
+      <div>
+        <h4>Links</h4>
+        <ul>
+          <li><a href="https://github.com/patterncatalyst/quarkus-optimization" target="_blank">GitHub Repository</a></li>
+          <li><a href="/quarkus-optimization/presentation/">Reveal.js Slides</a></li>
+          <li><a href="/quarkus-optimization/demos/">All Demos</a></li>
+          <li><a href="/quarkus-optimization/docs/">Reference Docs</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="footer-copy">Open source · <a href="https://github.com/patterncatalyst/quarkus-optimization" target="_blank">patterncatalyst/quarkus-optimization</a></p>
+  </div>
+</footer>
+
+<script src="/quarkus-optimization/assets/js/main.js"></script>
+</body>
+</html>

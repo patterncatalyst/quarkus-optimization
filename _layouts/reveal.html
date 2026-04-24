@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ page.title | default: "Slides" }} | {{ site.title }}</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/theme/black.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <link rel="stylesheet" href="{{ '/assets/css/reveal-custom.css' | relative_url }}">
+</head>
+<body class="reveal-body">
+
+<div class="reveal-bar">
+  <a href="{{ '/' | relative_url }}" class="reveal-back">← Site</a>
+  <span class="reveal-title-bar">Taming the JVM</span>
+  <span id="slide-counter" class="reveal-counter"></span>
+</div>
+
+<div class="reveal" style="margin-top:38px">
+  <div class="slides">{{ content }}</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/notes/notes.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/zoom/zoom.min.js"></script>
+<script>
+  Reveal.initialize({
+    hash: true, slideNumber: 'c/t', transition: 'fade',
+    transitionSpeed: 'fast', center: false, width: 1280, height: 720,
+    margin: 0.04,
+    plugins: [RevealHighlight, RevealNotes, RevealZoom]
+  });
+  Reveal.on('slidechanged', () => {
+    const i = Reveal.getIndices();
+    const t = document.querySelectorAll('.slides > section').length;
+    document.getElementById('slide-counter').textContent = (i.h+1) + ' / ' + t;
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demo 05 — REST vs gRPC: Two Protocols | Taming the JVM</title>
+  <meta name="description" content="Optimizing Java Workloads on OpenShift & Kubernetes">
+  <link rel="stylesheet" href="/quarkus-optimization/assets/css/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container hflex">
+    <a class="site-title" href="/quarkus-optimization/">
+      <span class="logo-icon">⚡</span>
+      <span class="logo-text">Taming the JVM</span>
+    </a>
+    <nav class="site-nav">
+      <a href="/quarkus-optimization/demos/"        class="active">Demos</a>
+      <a href="/quarkus-optimization/presentation/" >Slides</a>
+      <a href="/quarkus-optimization/diagrams/"     >Diagrams</a>
+      <a href="/quarkus-optimization/docs/"         >Docs</a>
+      <a href="https://github.com/patterncatalyst/quarkus-optimization" class="gh-btn" target="_blank" rel="noopener">
+        <svg height="16" viewBox="0 0 16 16" width="16"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+    </nav>
+  </div>
+</header>
+
+<main><div class="container demo-page">
+
+  <nav class="breadcrumb">
+    <a href="/quarkus-optimization/">Home</a> /
+    <a href="/quarkus-optimization/demos/">Demos</a> /
+    <span>Demo 05 — REST vs gRPC: Two Protocols</span>
+  </nav>
+
+  <div class="demo-header">
+    <div class="demo-badge">05</div>
+    <div>
+      <h1>Demo 05 — REST vs gRPC: Two Protocols</h1>
+      <div class="tag-row">
+        <span class="tag">Quarkus 3.33.1 / Java 21</span>
+        <span class="tag tag-muted">⏱ ~10 min</span>
+        
+        
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="run-box">
+    <div class="run-box-header">
+      <span>Run this demo</span>
+      <a href="https://github.com/patterncatalyst/quarkus-optimization/tree/main/java-optimization-demos/quarkus-demo-05-grpc"
+         target="_blank" class="btn btn-sm btn-outline">View source on GitHub ↗</a>
+    </div>
+    <pre><code>cd quarkus-demo-05-grpc
+chmod +x demo.sh
+./demo.sh</code></pre>
+  </div>
+  
+
+  <div class="markdown-body"><p>One Quarkus app simultaneously serves REST on <code class="language-plaintext highlighter-rouge">:8080</code> and gRPC on <code class="language-plaintext highlighter-rouge">:9000</code>. Same service, two protocols, honest comparison including the localhost caveat.</p>
+
+<h2 id="the-honest-localhost-caveat">The honest localhost caveat</h2>
+
+<blockquote>
+  <p>⚠️ <strong>gRPC unary is slower than REST on localhost.</strong> Network cost is zero on loopback. gRPC’s advantages only materialise with real pod-to-pod network latency.</p>
+</blockquote>
+
+<p><strong>What gRPC wins even on localhost:</strong></p>
+<ul>
+  <li>Server streaming: 1 connection vs 1,000 REST requests</li>
+  <li>High concurrency (c=500): HTTP/2 multiplexing vs 500 TCP connections</li>
+</ul>
+
+<p><strong>In production (pod-to-pod):</strong> gRPC wins ~3-4× throughput, ~73% p50 latency.</p>
+
+<h2 id="streaming-modes">Streaming modes</h2>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Live stream — one push per second (count=0)</span>
+grpcurl <span class="nt">-plaintext</span> <span class="nt">-d</span> <span class="s1">'{"host":"localhost","count":0}'</span> <span class="se">\</span>
+  localhost:9000 MetricsService/StreamMetrics
+
+<span class="c"># Benchmark — 1000 messages as fast as possible</span>
+grpcurl <span class="nt">-plaintext</span> <span class="nt">-d</span> <span class="s1">'{"host":"localhost","count":1000}'</span> <span class="se">\</span>
+  localhost:9000 MetricsService/StreamMetrics
+</code></pre></div></div>
+
+<h2 id="prerequisites">Prerequisites</h2>
+
+<p><code class="language-plaintext highlighter-rouge">hey</code>, <code class="language-plaintext highlighter-rouge">grpcurl</code>, <code class="language-plaintext highlighter-rouge">ghz</code> — see <a href="/quarkus-optimization/docs/prerequisites/">Prerequisites guide</a>.</p>
+
+<h2 id="reference">Reference</h2>
+
+<ul>
+  <li><a href="https://github.com/patterncatalyst/quarkus-optimization/tree/main/java-optimization-demos/quarkus-demo-05-grpc">Demo source</a></li>
+  <li><a href="https://quarkus.io/guides/grpc-getting-started">Quarkus gRPC guide</a></li>
+</ul>
+</div>
+
+  <div class="demo-nav">
+    
+      <a href="/quarkus-optimization/demos/demo-04-leyden/" class="nav-btn">← Demo 04 — Leyden</a>
+    
+    <a href="/quarkus-optimization/demos/" class="nav-btn">All Demos</a>
+    
+      <a href="/quarkus-optimization/demos/demo-06-latency/" class="nav-btn">Demo 06 — Low Latency →</a>
+    
+  </div>
+
+</div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <h4>Talk</h4>
+        <p>Taming the JVM: Optimizing Java Workloads on OpenShift &amp; Kubernetes</p>
+        <p>Quarkus 3.33.1 LTS &nbsp;·&nbsp; Java 21 &amp; 25</p>
+      </div>
+      <div>
+        <h4>Based On</h4>
+        <p>📗 <a href="https://www.oreilly.com/library/view/optimizing-cloud-native/9781098149338/" target="_blank" rel="noopener">Optimizing Cloud Native Java</a> (O'Reilly)</p>
+        <p>📗 <a href="https://www.oreilly.com/library/view/sre-with-java/9781492073918/" target="_blank" rel="noopener">SRE with Java Microservices</a> (O'Reilly)</p>
+      </div>
+      <div>
+        <h4>Links</h4>
+        <ul>
+          <li><a href="https://github.com/patterncatalyst/quarkus-optimization" target="_blank">GitHub Repository</a></li>
+          <li><a href="/quarkus-optimization/presentation/">Reveal.js Slides</a></li>
+          <li><a href="/quarkus-optimization/demos/">All Demos</a></li>
+          <li><a href="/quarkus-optimization/docs/">Reference Docs</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="footer-copy">Open source · <a href="https://github.com/patterncatalyst/quarkus-optimization" target="_blank">patterncatalyst/quarkus-optimization</a></p>
+  </div>
+</footer>
+
+<script src="/quarkus-optimization/assets/js/main.js"></script>
+</body>
+</html>

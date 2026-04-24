@@ -1,0 +1,44 @@
+title: "Taming the JVM"
+description: "Optimizing Java Workloads on OpenShift & Kubernetes"
+baseurl: "/quarkus-optimization"
+url: "https://patterncatalyst.github.io"
+
+repo:     "https://github.com/patterncatalyst/quarkus-optimization"
+repo_raw: "https://raw.githubusercontent.com/patterncatalyst/quarkus-optimization/main"
+
+markdown:    kramdown
+highlighter: rouge
+
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+  syntax_highlighter_opts:
+    css_class: "highlight"
+
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+
+collections:
+  demos:
+    output: true
+    permalink: /demos/:name/
+  diagrams:
+    output: true
+    permalink: /diagrams/:name/
+
+defaults:
+  - scope: { path: "", type: "demos" }
+    values:  { layout: "demo" }
+  - scope: { path: "", type: "diagrams" }
+    values:  { layout: "diagram" }
+  - scope: { path: "" }
+    values:  { layout: "default" }
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - vendor/
+  - java-optimization-demos/
+  - "*.zip"
+  - "*.pptx"

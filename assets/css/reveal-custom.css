@@ -1,0 +1,56 @@
+:root {
+  --r-background-color: #0A1628;
+  --r-main-font: 'Inter', system-ui, sans-serif;
+  --r-main-color: #ECF0F1;
+  --r-heading-color: #FFFFFF;
+  --r-link-color: #00BCD4;
+}
+.reveal-body body{margin:0}
+.reveal-bar{position:fixed;top:0;left:0;right:0;height:38px;background:#08111F;
+  border-bottom:1px solid #1E3A5F;display:flex;align-items:center;
+  justify-content:space-between;padding:0 1rem;font-size:.78rem;
+  z-index:1000;font-family:'Inter',sans-serif}
+.reveal-back{color:#90A4AE;text-decoration:none}
+.reveal-back:hover{color:#00BCD4}
+.reveal-title-bar{color:#00BCD4;font-weight:600}
+.reveal-counter{color:#90A4AE;font-family:'JetBrains Mono',monospace}
+
+/* Slide tag badges */
+.reveal .stag{display:inline-block;background:#1E6FC8;color:#fff;
+  padding:.15em .65em;border-radius:4px;font-size:.5em;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;vertical-align:middle;margin-bottom:.4em}
+.reveal .stag-green {background:#27AE60}
+.reveal .stag-teal  {background:#00BCD4;color:#0A1628}
+.reveal .stag-coral {background:#E84855}
+.reveal .stag-orange{background:#F5A623;color:#0A1628}
+.reveal .stag-purple{background:#9B59B6}
+
+/* Two-column layout */
+.reveal .cols  {display:grid;grid-template-columns:1fr 1fr;gap:.8em;text-align:left}
+.reveal .cols3 {display:grid;grid-template-columns:repeat(3,1fr);gap:.8em;text-align:left}
+
+/* Card grid for lists */
+.reveal .cgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:.5em;font-size:.65em}
+.reveal .rc{background:#122040;border:1px solid #1E3A5F;border-radius:6px;
+  padding:.7em .9em;text-align:left}
+.reveal .rc h4{color:#00BCD4;margin-bottom:.3em;font-size:.9em}
+.reveal .rc p{color:#90A4AE;font-size:.85em;margin:0;line-height:1.4}
+
+/* Stat row */
+.reveal .stats{display:flex;justify-content:space-around;margin:.6em 0}
+.reveal .sv{font-size:1.9em;font-weight:700;color:#00BCD4;display:block}
+.reveal .sl{font-size:.45em;color:#90A4AE;display:block}
+
+/* Callout box */
+.reveal .callout{background:rgba(0,188,212,.1);border-left:3px solid #00BCD4;
+  padding:.5em .9em;border-radius:0 5px 5px 0;font-size:.65em;
+  color:#ECF0F1;text-align:left;margin:.5em 0}
+
+/* Code */
+.reveal pre{box-shadow:none;border:1px solid #1E3A5F;border-radius:6px;width:100%}
+.reveal code{font-family:'JetBrains Mono',monospace}
+
+/* Table */
+.reveal table{font-size:.58em;width:100%}
+.reveal table thead th{background:#122040;color:#00BCD4;padding:.45em .7em}
+.reveal table td{padding:.38em .7em;border-bottom:1px solid #1E3A5F;color:#90A4AE}
