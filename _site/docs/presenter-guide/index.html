@@ -19,9 +19,9 @@
     </a>
     <nav class="site-nav">
       <a href="/quarkus-optimization/demos/"        >Demos</a>
-      <a href="/quarkus-optimization/presentation/" class="active">Slides</a>
+      <a href="/quarkus-optimization/presentation/" >Slides</a>
       <a href="/quarkus-optimization/diagrams/"     >Diagrams</a>
-      <a href="/quarkus-optimization/docs/"         >Docs</a>
+      <a href="/quarkus-optimization/docs/"         class="active">Docs</a>
       <a href="https://github.com/patterncatalyst/quarkus-optimization" class="gh-btn" target="_blank" rel="noopener">
         <svg height="16" viewBox="0 0 16 16" width="16"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
         GitHub
@@ -51,20 +51,14 @@
     </div>
   </div>
 
-  <div class="callout">
-    <strong>Talk structure:</strong>
-    30 core slides for a 60-minute session · 24 bonus slides for a 90-minute extended session ·
-    3 live demos in the core · 6 additional demos in the bonus content.
-  </div>
-
-  <div class="grid grid-2" style="margin:1.5rem 0;">
+  <div class="grid grid-2" style="margin-bottom:1.5rem;">
     <div class="card" style="pointer-events:none;">
       <h3 style="color:var(--teal);">Before You Present</h3>
       <ul style="color:var(--muted);font-size:.875rem;line-height:1.8;margin-left:1.2rem;">
         <li>Pull latest demo images (Grafana LGTM, Prometheus)</li>
         <li>Run Demo 01, 02, 03 end-to-end</li>
         <li>Verify Grafana loads at localhost:3000</li>
-        <li>Confirm histogram config in Demo 02</li>
+        <li>Confirm histogram config in Demo 02 application.properties</li>
         <li>Set terminal font to 18pt minimum</li>
         <li>Disable notifications, close non-essential apps</li>
       </ul>
@@ -80,6 +74,13 @@
         <tr><td style="color:var(--muted);">§05–07 + Takeaways + Q&amp;A</td><td style="color:var(--teal);text-align:right;">22 min</td></tr>
       </table>
     </div>
+  </div>
+
+  <div class="callout">
+    <strong>Talk structure:</strong>
+    30 core slides for a 60-minute session · 24 bonus slides for a 90-minute extended session ·
+    3 live demos in the core · 6 additional demos in the bonus content.
+    Press <strong>S</strong> in the Reveal.js slides to open speaker notes.
   </div>
 
   <h2 style="color:var(--teal);margin:1.5rem 0 .75rem;">Section Navigation</h2>
@@ -104,7 +105,7 @@
       Demo 03 — AppCDS
     </a>
     <a href="https://github.com/patterncatalyst/quarkus-optimization/blob/main/presentation/PRESENTER-GUIDE.md#bonus-slides-extended-session-90-minutes" target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
-      Bonus Slides (90 min)
+      Bonus Slides — 90 min
     </a>
     <a href="https://github.com/patterncatalyst/quarkus-optimization/blob/main/presentation/PRESENTER-GUIDE.md#slides-31-33-project-leyden-demo-04" target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
       Demo 04 — Project Leyden

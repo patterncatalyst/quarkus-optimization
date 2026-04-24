@@ -116,7 +116,7 @@ title: Home
         <h3>Shenandoah GC Guide</h3>
         <p>Why UBI9 defaults to Shenandoah, how Brooks pointers work, three-way comparison with G1GC and ZGC.</p>
       </a>
-      <a href="{{ '/presentation/PRESENTER-GUIDE/' | relative_url }}" class="doc-card">
+      <a href="{{ '/docs/presenter-guide/' | relative_url }}" class="doc-card">
         <div class="doc-card-icon">🎤</div>
         <h3>Presenter Guide</h3>
         <p>Slide-by-slide notes for all 54 slides, timing reference, demo troubleshooting, prep checklist.</p>

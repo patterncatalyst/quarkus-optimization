@@ -10,8 +10,7 @@ title: Documentation
 
   <div class="grid grid-3">
 
-    <a href="{{ site.repo }}/blob/main/java-optimization-demos/QUARKUS-README.md"
-       target="_blank" class="doc-card">
+    <a href="{{ '/docs/quarkus-reference/' | relative_url }}" class="doc-card">
       <div class="doc-card-icon">📋</div>
       <h3>Quarkus Configuration Reference</h3>
       <p>Container images, GC selection, AppCDS, Leyden, Micrometer, gRPC, Panama FFM, LangChain4j ONNX, common pitfalls.</p>
@@ -32,7 +31,7 @@ title: Documentation
       <span class="tag tag-teal">SHENANDOAH-GC-GUIDE.md</span>
     </a>
 
-    <a href="{{ '/presentation/PRESENTER-GUIDE/' | relative_url }}" class="doc-card">
+    <a href="{{ '/docs/presenter-guide/' | relative_url }}" class="doc-card">
       <div class="doc-card-icon">🎤</div>
       <h3>Presenter Guide</h3>
       <p>Slide-by-slide speaker notes for all 54 slides, timing reference, day-before checklist, demo troubleshooting.</p>
