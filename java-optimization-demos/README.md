@@ -46,6 +46,11 @@ the same toolchain and base images used in production OpenShift environments.
 └── quarkus-demo-06-latency/           ← Demo 06: Low-Latency JVM — G1GC vs ZGC
     ├── demo.sh
     └── app/
+
+└── quarkus-demo-07-rightsizing/       ← Demo 07: Right-Sizing & Cost Impact Analysis
+    ├── demo.sh
+    ├── analyze.py
+    └── sample-data/
 │       ├── src/main/proto/metrics.proto   ← service contract, stubs generated at build
 │       ├── MetricsServiceImpl.java        ← @GrpcService, unary + streaming
 │       └── Dockerfile                     ← exposes :8080 (REST) and :9000 (gRPC)
@@ -97,6 +102,9 @@ cd quarkus-demo-05-grpc && chmod +x demo.sh && ./demo.sh
 
 # Demo 06 — Low-latency JVM: G1GC vs ZGC pause delta (~10 min)
 cd quarkus-demo-06-latency && chmod +x demo.sh && ./demo.sh
+
+# Demo 07 — Right-sizing & cost impact analysis (~8 min, no cluster needed)
+cd quarkus-demo-07-rightsizing && chmod +x demo.sh && ./demo.sh
 ```
 
 > **Demo 04 first run:** `mvn verify` runs inside the container and downloads
@@ -466,6 +474,45 @@ pod → false scale-in → repeat. ZGC's smooth CPU profile eliminates this.
 huge pages, CPU Manager static policy, Topology Manager single-numa-node,
 `isolcpus`/`nohz_full` kernel isolation, OpenShift PerformanceProfile.
 
+---
+
+### Demo 07 — Right-Sizing & Cost Impact Analysis
+
+**The infrastructure waste question.** Most Java teams set resource requests
+once at deployment and never revisit them. After 6-12 months, 40-60% of
+requested memory is unused and CPU requests are 3-5× actual steady-state
+load (set to GC spike peaks that last milliseconds).
+
+**No cluster needed — runs on sample data:**
+```bash
+python3 analyze.py                               # bundled 7-workload dataset
+python3 analyze.py --data my-cluster.json        # your own Prometheus export
+python3 analyze.py --cost-per-node-hour 0.768    # override node cost
+./demo.sh --live                                 # try kubectl, fall back to sample
+```
+
+**What the analysis produces:**
+- Right-sizing recommendations per workload: `p99 observed × 1.30` for CPU,
+  `p99 × 1.25` for memory — evidenced headroom, not guesswork
+- **GC spike detection:** if CPU p99/p50 ratio > 3× and GC pause p99 > 100ms,
+  the tool uses p95 as the CPU basis to avoid provisioning for millisecond events
+- QoS improvement flags: workloads where `requests != limits` are Burstable —
+  setting them equal gives Guaranteed QoS and enables static CPU allocation
+- Bin-packing: pods per node before/after, nodes required before/after
+- Cost calculation: monthly and annual saving with ROI business case
+- GC algorithm recommendations: which workloads need ZGC based on pause p99
+- Machine-readable JSON report for CI/CD integration
+
+**Typical results (7-workload sample cluster):**
+- CPU requests cut by 50-75% across most services
+- Memory requests cut by 40-56%
+- 4 nodes → 2 nodes (+67% pod density)
+- $6,720/month saving for ~4 hours of engineering work (17× ROI)
+
+**OpenShift Cost Management** provides this analysis automatically at cluster
+scale via Console → Cost Management → **Optimizations tab**, with cloud
+billing integration and per-namespace chargeback.
+
 ## Reference Links
 
 | Resource | URL |
@@ -489,3 +536,7 @@ huge pages, CPU Manager static policy, Topology Manager single-numa-node,
 | Generational ZGC (JEP 439) | https://openjdk.org/jeps/439 |
 | OpenShift low-latency tuning | https://docs.openshift.com/container-platform/latest/scalability_and_performance/cnf-low-latency-tuning.html |
 | Kubernetes CPU Manager | https://kubernetes.io/docs/tasks/administer-cluster/cpu-management-policies/ |
+| VPA (Vertical Pod Autoscaler) | https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler |
+| OpenShift Cost Management | https://docs.redhat.com/en/documentation/cost_management_service |
+| Kubernetes resource management | https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/ |
+| Koku (Cost Management backend) | https://github.com/project-koku/koku |
