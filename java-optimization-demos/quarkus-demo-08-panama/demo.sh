@@ -17,6 +17,10 @@
 # ============================================================
 set -e
 
+# Always run from the demo directory regardless of where it's invoked from
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR"
+
 CYAN='\033[0;36m'; GREEN='\033[0;32m'; RED='\033[0;31m'
 YELLOW='\033[1;33m'; BOLD='\033[1m'; RESET='\033[0m'
 

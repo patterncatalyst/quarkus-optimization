@@ -1,19 +1,20 @@
 # Demo 08 — Panama FFM: C++20 native library + Quarkus on JDK 25
 #
 # Three stages:
-#   1. cpp-builder   — compile the C++20 shared library with cmake + g++
+#   1. cpp-builder   — compile the C++20 shared library on UBI9
 #   2. java-builder  — build the Quarkus app with maven + JDK 25
 #   3. runtime       — UBI9 OpenJDK 25 runtime with both artifacts
 
 # ── Stage 1: C++20 shared library ─────────────────────────────────────────────
-FROM docker.io/library/debian:bookworm-slim AS cpp-builder
+# ubi9 base image — gcc-c++ and cmake are in the freely accessible UBI repos
+# (ubi-9-appstream, ubi-9-baseos) — no subscription required
+FROM registry.access.redhat.com/ubi9 AS cpp-builder
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    g++ cmake make \
-    && rm -rf /var/lib/apt/lists/*
+RUN dnf install -y gcc-c++ cmake make && \
+    dnf clean all
 
 WORKDIR /build
-COPY native/ .
+COPY native .
 RUN cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && \
     cmake --build build --parallel && \
     cmake --install build --prefix /install
