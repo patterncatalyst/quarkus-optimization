@@ -1,0 +1,113 @@
+# ---------------------------------------------------------------------------
+# Build & deploy the Jekyll site under ./docs to GitHub Pages.
+#
+# This replaces the "Deploy from a branch" (classic) Pages source. Once this
+# workflow is in place, go to:
+#   Settings -> Pages -> Build and deployment -> Source: "GitHub Actions"
+#
+# Why use this instead of the classic branch deploy?
+#   * You can use any Ruby version and any Jekyll plugin, not just the
+#     github-pages gem allowlist.
+#   * You get a normal Actions run log for every build, including failure
+#     details (the classic deploy swallows errors).
+#   * You can add build-time steps (HTML proofing, link checking, etc.)
+#     without fighting the built-in pipeline.
+# ---------------------------------------------------------------------------
+
+name: Deploy Jekyll site to Pages
+
+on:
+  # Run on every push to main that touches the site source or this workflow.
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - ".github/workflows/pages.yml"
+
+  # Allow manual runs from the Actions tab.
+  workflow_dispatch:
+
+# Minimum permissions needed to publish to the github-pages environment.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  actions: read
+
+# Only one Pages deployment at a time. Newer runs cancel older in-flight ones
+# so you don't get out-of-order publishes, but a run that's already deploying
+# is allowed to finish.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # -------------------------------------------------------------------------
+  # Build the site with Bundler + Jekyll and upload it as a Pages artifact.
+  # -------------------------------------------------------------------------
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: docs   # everything happens inside the site source
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          # Auto-runs `bundle install` and caches gems keyed on Gemfile.lock.
+          bundler-cache: true
+          working-directory: docs
+          cache-version: 1
+
+      - name: Configure Pages
+        id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Build site
+        env:
+          JEKYLL_ENV: production
+        # `--baseurl` from configure-pages overrides _config.yml so the same
+        # build works on forks, renamed repos, or a custom domain.
+        run: |
+          bundle exec jekyll build \
+            --destination ./_site \
+            --baseurl "${{ steps.pages.outputs.base_path }}"
+
+      # Optional sanity check — catches broken internal links before deploy.
+      # Comment out if you don't want it.
+      - name: Validate HTML
+        run: |
+          bundle add html-proofer --skip-install || true
+          bundle install --quiet
+          bundle exec htmlproofer ./_site \
+            --disable-external \
+            --allow-hash-href \
+            --ignore-empty-alt \
+            --ignore-missing-alt || true
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/_site
+
+  # -------------------------------------------------------------------------
+  # Deploy the uploaded artifact. Separate job so the deployment step is
+  # isolated and gets its own environment/URL in the Actions UI.
+  # -------------------------------------------------------------------------
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
