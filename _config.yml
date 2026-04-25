@@ -42,4 +42,3 @@ exclude:
   - java-optimization-demos/
   - "*.zip"
   - "*.pptx"
-  - docs/README.md

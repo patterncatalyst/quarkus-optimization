@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Shenandoah GC Guide
-description: Red Hat's default GC for UBI9 OpenJDK images — comparison with G1GC and ZGC.
+description: "Red Hat default GC for UBI9 OpenJDK images - comparison with G1GC and ZGC"
 ---
 
 <div class="container">
