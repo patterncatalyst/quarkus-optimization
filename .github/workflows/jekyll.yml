@@ -25,10 +25,7 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.2'
-          bundler-cache: false   # we run bundle install explicitly below
-
-      - name: Install gems
-        run: bundle install
+          bundler-cache: true
 
       - name: Setup Pages
         id: pages
