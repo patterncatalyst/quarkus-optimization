@@ -1,5 +1,6 @@
 ---
 layout: default
+permalink: /docs/jvm-cheatsheet/
 title: JVM Optimization Cheat Sheet
 description: Quick-reference card for JVM tuning on container platforms.
 ---

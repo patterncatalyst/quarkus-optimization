@@ -1,5 +1,6 @@
 ---
 layout: default
+permalink: /docs/quarkus-reference/
 title: Quarkus Configuration Reference
 description: "Full configuration reference for Quarkus 3.33.1 LTS on OpenShift and Kubernetes"
 ---

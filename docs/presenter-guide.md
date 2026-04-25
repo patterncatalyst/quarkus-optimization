@@ -1,5 +1,6 @@
 ---
 layout: default
+permalink: /docs/presenter-guide/
 title: Presenter Guide
 description: Slide-by-slide speaker notes, demo timing, troubleshooting, and day-before checklist for all 54 slides.
 permalink: /docs/presenter-guide/

@@ -1,5 +1,6 @@
 ---
 layout: default
+permalink: /docs/prerequisites/
 title: "Prerequisites - Fedora and macOS"
 description: Complete install guide for all tools required to run the demos.
 ---
