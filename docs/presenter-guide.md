@@ -2,8 +2,7 @@
 layout: default
 permalink: /docs/presenter-guide/
 title: Presenter Guide
-description: Slide-by-slide speaker notes, demo timing, troubleshooting, and day-before checklist for all 54 slides.
-permalink: /docs/presenter-guide/
+description: Slide-by-slide speaker notes, timing, troubleshooting, and day-before checklist for all 54 slides.
 ---
 
 <div class="container">
@@ -55,78 +54,46 @@ permalink: /docs/presenter-guide/
 
   <div class="callout">
     <strong>Talk structure:</strong>
-    30 core slides for a 60-minute session · 24 bonus slides for a 90-minute extended session ·
-    3 live demos in the core · 6 additional demos in the bonus content.
-    Press <strong>S</strong> in the Reveal.js slides to open speaker notes.
+    30 core slides (60 min) · 24 bonus slides (90 min) ·
+    3 live demos in the core · 6 additional bonus demos.
+    Press <strong>S</strong> in Reveal.js to open speaker notes.
   </div>
 
   <h2 style="color:var(--teal);margin:1.5rem 0 .75rem;">Section Navigation</h2>
   <div class="grid grid-2" style="margin-bottom:1.5rem;">
 
     <a href="{{ site.repo }}/blob/main/presentation/PRESENTER-GUIDE.md#before-you-present"
-       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
-      Before You Present
-    </a>
-    <a href="{{ site.repo }}/blob/main/presentation/PRESENTER-GUIDE.md#talk-structure-60-minute-core"
-       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
-      Talk Structure — 60-Minute Core
-    </a>
+       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">Before You Present</a>
+    <a href="{{ site.repo }}/blob/main/presentation/PRESENTER-GUIDE.md#talk-structure--60-minute-core"
+       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">Talk Structure — 60-Minute Core</a>
     <a href="{{ site.repo }}/blob/main/presentation/PRESENTER-GUIDE.md#slide-by-slide-presenter-notes"
-       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
-      Slide-by-Slide Notes
-    </a>
-    <a href="{{ site.repo }}/blob/main/presentation/PRESENTER-GUIDE.md#demo-01-container-aware-heap-sizing-slide-26"
-       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
-      Demo 01 — Heap Sizing
-    </a>
-    <a href="{{ site.repo }}/blob/main/presentation/PRESENTER-GUIDE.md#demo-02-gc-monitoring-with-prometheus-slide-27"
-       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
-      Demo 02 — GC Monitoring
-    </a>
-    <a href="{{ site.repo }}/blob/main/presentation/PRESENTER-GUIDE.md#demo-03-appcds-startup-acceleration-slide-28"
-       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
-      Demo 03 — AppCDS
-    </a>
-    <a href="{{ site.repo }}/blob/main/presentation/PRESENTER-GUIDE.md#bonus-slides-extended-session-90-minutes"
-       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
-      Bonus Slides — 90 min
-    </a>
-    <a href="{{ site.repo }}/blob/main/presentation/PRESENTER-GUIDE.md#slides-31-33-project-leyden-demo-04"
-       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
-      Demo 04 — Project Leyden
-    </a>
-    <a href="{{ site.repo }}/blob/main/presentation/PRESENTER-GUIDE.md#slides-34-37-rest-vs-grpc-demo-05"
-       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
-      Demo 05 — gRPC
-    </a>
-    <a href="{{ site.repo }}/blob/main/presentation/PRESENTER-GUIDE.md#slides-38-42-low-latency-jvm-demo-06"
-       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
-      Demo 06 — Low Latency
-    </a>
-    <a href="{{ site.repo }}/blob/main/presentation/PRESENTER-GUIDE.md#slides-43-47-right-sizing-demo-07"
-       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
-      Demo 07 — Right-Sizing
-    </a>
-    <a href="{{ site.repo }}/blob/main/presentation/PRESENTER-GUIDE.md#slides-48-50-panama-demo-0809"
-       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
-      Demo 08/09 — Panama &amp; ONNX
-    </a>
+       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">Slide-by-Slide Notes</a>
+    <a href="{{ site.repo }}/blob/main/presentation/PRESENTER-GUIDE.md#demo-01--container-aware-heap-sizing-slide-26"
+       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">Demo 01 — Heap Sizing</a>
+    <a href="{{ site.repo }}/blob/main/presentation/PRESENTER-GUIDE.md#demo-02--gc-monitoring-with-prometheus-slide-27"
+       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">Demo 02 — GC Monitoring</a>
+    <a href="{{ site.repo }}/blob/main/presentation/PRESENTER-GUIDE.md#demo-03--appcds-startup-acceleration-slide-28"
+       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">Demo 03 — AppCDS</a>
+    <a href="{{ site.repo }}/blob/main/presentation/PRESENTER-GUIDE.md#bonus-slides-extended-session--90-minutes"
+       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">Bonus Slides — 90 min</a>
+    <a href="{{ site.repo }}/blob/main/presentation/PRESENTER-GUIDE.md#slides-31-33--project-leyden--demo-04"
+       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">Demo 04 — Project Leyden</a>
+    <a href="{{ site.repo }}/blob/main/presentation/PRESENTER-GUIDE.md#slides-34-37--rest-vs-grpc--demo-05"
+       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">Demo 05 — gRPC</a>
+    <a href="{{ site.repo }}/blob/main/presentation/PRESENTER-GUIDE.md#slides-38-42--low-latency-jvm--demo-06"
+       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">Demo 06 — Low Latency</a>
+    <a href="{{ site.repo }}/blob/main/presentation/PRESENTER-GUIDE.md#slides-43-47--right-sizing--demo-07"
+       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">Demo 07 — Right-Sizing</a>
+    <a href="{{ site.repo }}/blob/main/presentation/PRESENTER-GUIDE.md#slides-48-50--panama--demo-0809"
+       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">Demo 08/09 — Panama &amp; ONNX</a>
     <a href="{{ site.repo }}/blob/main/presentation/PRESENTER-GUIDE.md#slides-51-52-project-valhalla"
-       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
-      Project Valhalla
-    </a>
-    <a href="{{ site.repo }}/blob/main/presentation/PRESENTER-GUIDE.md#slides-53-54-jvm-anti-patterns-remediation"
-       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
-      Anti-Patterns
-    </a>
+       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">Project Valhalla</a>
+    <a href="{{ site.repo }}/blob/main/presentation/PRESENTER-GUIDE.md#slides-53-54-jvm-anti-patterns--remediation"
+       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">Anti-Patterns</a>
     <a href="{{ site.repo }}/blob/main/presentation/PRESENTER-GUIDE.md#timing-reference-card"
-       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
-      Timing Reference Card
-    </a>
+       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">Timing Reference Card</a>
     <a href="{{ site.repo }}/blob/main/presentation/PRESENTER-GUIDE.md#demo-troubleshooting"
-       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
-      Demo Troubleshooting
-    </a>
+       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">Demo Troubleshooting</a>
 
   </div>
 

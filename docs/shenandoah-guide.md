@@ -34,45 +34,27 @@ description: "Red Hat default GC for UBI9 OpenJDK images - comparison with G1GC 
   <div class="grid grid-2" style="margin-bottom:1.5rem;">
 
     <a href="{{ site.repo }}/blob/main/java-optimization-demos/SHENANDOAH-GC-GUIDE.md#what-is-shenandoah"
-       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
-      What Is Shenandoah?
-    </a>
+       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">What Is Shenandoah?</a>
     <a href="{{ site.repo }}/blob/main/java-optimization-demos/SHENANDOAH-GC-GUIDE.md#gc-defaults-by-container-image"
-       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
-      GC Defaults by Container Image
-    </a>
+       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">GC Defaults by Container Image</a>
     <a href="{{ site.repo }}/blob/main/java-optimization-demos/SHENANDOAH-GC-GUIDE.md#how-shenandoah-works"
-       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
-      How Shenandoah Works
-    </a>
-    <a href="{{ site.repo }}/blob/main/java-optimization-demos/SHENANDOAH-GC-GUIDE.md#shenandoah-vs-g1gc-vs-zgc-full-comparison"
-       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
-      Shenandoah vs G1GC vs ZGC
-    </a>
-    <a href="{{ site.repo }}/blob/main/java-optimization-demos/SHENANDOAH-GC-GUIDE.md#shenandoah-vs-g1gc-when-each-wins"
-       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
-      When Each GC Wins
-    </a>
-    <a href="{{ site.repo }}/blob/main/java-optimization-demos/SHENANDOAH-GC-GUIDE.md#the-barrier-type-distinction-why-it-matters"
-       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
-      The Barrier Type Distinction
-    </a>
+       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">How Shenandoah Works</a>
+    <a href="{{ site.repo }}/blob/main/java-optimization-demos/SHENANDOAH-GC-GUIDE.md#shenandoah-vs-g1gc-vs-zgc--full-comparison"
+       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">Shenandoah vs G1GC vs ZGC</a>
+    <a href="{{ site.repo }}/blob/main/java-optimization-demos/SHENANDOAH-GC-GUIDE.md#shenandoah-vs-g1gc--when-each-wins"
+       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">When Each GC Wins</a>
+    <a href="{{ site.repo }}/blob/main/java-optimization-demos/SHENANDOAH-GC-GUIDE.md#the-barrier-type-distinction--why-it-matters"
+       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">The Barrier Type Distinction</a>
     <a href="{{ site.repo }}/blob/main/java-optimization-demos/SHENANDOAH-GC-GUIDE.md#configuration-reference"
-       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
-      Configuration Reference
-    </a>
+       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">Configuration Reference</a>
     <a href="{{ site.repo }}/blob/main/java-optimization-demos/SHENANDOAH-GC-GUIDE.md#monitoring-shenandoah"
-       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
-      Monitoring Shenandoah
-    </a>
-    <a href="{{ site.repo }}/blob/main/java-optimization-demos/SHENANDOAH-GC-GUIDE.md#degeneratedgc-what-it-means"
-       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
-      DegeneratedGC — What It Means
-    </a>
+       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">Monitoring Shenandoah</a>
+    <a href="{{ site.repo }}/blob/main/java-optimization-demos/SHENANDOAH-GC-GUIDE.md#degeneratedgc--what-it-means"
+       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">DegeneratedGC — What It Means</a>
     <a href="{{ site.repo }}/blob/main/java-optimization-demos/SHENANDOAH-GC-GUIDE.md#the-on-stage-framing"
-       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">
-      The On-Stage Framing
-    </a>
+       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">The On-Stage Framing</a>
+    <a href="{{ site.repo }}/blob/main/java-optimization-demos/SHENANDOAH-GC-GUIDE.md#reference-links"
+       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">Reference Links</a>
 
   </div>
 
