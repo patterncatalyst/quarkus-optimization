@@ -59,8 +59,7 @@ Workload type?
 ### ZGC Generational (JDK 21+)
 
 ```bash
--XX:+UseZGC
--XX:+ZGenerational              # generational mode — lower CPU overhead
+-XX:+UseZGC                     # generational mode is default since JDK 23
 -XX:+AlwaysPreTouch             # pre-fault heap; eliminates page fault jitter
 ```
 
@@ -304,7 +303,7 @@ Items 4-6 require cluster configuration changes.
 ### 1. Switch to ZGC (biggest single impact)
 
 ```bash
--XX:+UseZGC -XX:+ZGenerational
+-XX:+UseZGC
 ```
 
 ### 2. Match thread counts to CPU request
@@ -461,7 +460,6 @@ kubectl set resources deployment/<n> \
 -XX:MaxRAMPercentage=75.0
 -XX:InitialRAMPercentage=50.0
 -XX:+UseZGC
--XX:+ZGenerational
 -XX:ActiveProcessorCount=<N>
 -XX:ParallelGCThreads=<N>
 -XX:ConcGCThreads=<N/2>
@@ -501,7 +499,7 @@ kubectl set resources deployment/<n> \
 | `+UseG1GC` | yes (Temurin/Corretto) | G1GC — general purpose |
 | `+UseShenandoahGC` | yes (UBI9) | Shenandoah — 1-20ms pauses |
 | `+UseZGC` | no | ZGC — sub-ms pauses |
-| `+ZGenerational` | no | Generational ZGC (JDK 21+) |
+| `+UseZGC` | no | ZGC — sub-ms pauses (generational default since JDK 23) |
 | `ActiveProcessorCount=N` | auto | Override CPU count for JVM |
 | `ParallelGCThreads=N` | auto | Stop-the-world GC threads |
 | `ConcGCThreads=N` | auto | Background GC threads |

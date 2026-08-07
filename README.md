@@ -127,7 +127,7 @@ Covers Demo 07's territory:
 2. The over-provisioning problem — how teams set requests (and why they're wrong)
 3. Right-sizing analysis results — 7-workload table with GC spike detection
 4. Bin-packing improvement — before/after node density
-5. Cost impact & business case — $80,640/year headline, ROI calculation, OpenShift Cost Management
+5. Cost impact & business case — $80,640/year enterprise headline, ROI calculation, OpenShift Cost Management
 
 ### [Panama Slides](./presentation/panama-slides.pptx) — 3 slides
 

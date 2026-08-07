@@ -10,7 +10,7 @@ COPY app/pom.xml .
 COPY app/src ./src
 RUN mvn package -Dmaven.test.skip=true --no-transfer-progress
 
-FROM registry.access.redhat.com/ubi9/openjdk-25-runtime
+FROM registry.access.redhat.com/ubi10/openjdk-25-runtime
 WORKDIR /deployments
 
 COPY --from=builder /build/target/quarkus-app/lib/     ./lib/

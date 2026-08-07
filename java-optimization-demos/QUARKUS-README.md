@@ -47,7 +47,7 @@ FROM registry.access.redhat.com/ubi9/openjdk-25-runtime
 > the default GC — Red Hat's concurrent low-latency collector. This differs from
 > Eclipse Temurin, Amazon Corretto, and Microsoft OpenJDK which default to G1GC.
 > To reproduce a G1GC vs ZGC comparison, override explicitly:
-> `JAVA_OPTS="-XX:+UseG1GC"` / `JAVA_OPTS="-XX:+UseZGC -XX:+ZGenerational"`
+> `JAVA_OPTS="-XX:+UseG1GC"` / `JAVA_OPTS="-XX:+UseZGC"`
 
 ### GC Default by Image
 
@@ -173,8 +173,7 @@ podman exec <container> jcmd 1 VM.flags | grep RAM
 ### ZGC Generational (sub-millisecond — JDK 21+)
 
 ```bash
--XX:+UseZGC
--XX:+ZGenerational              # required for generational mode (JDK 21+)
+-XX:+UseZGC                     # generational mode is default since JDK 23
 -XX:+AlwaysPreTouch             # pre-fault heap pages at startup
 ```
 
@@ -194,7 +193,6 @@ podman exec <container> jcmd 1 VM.flags | grep RAM
 
 ```properties
 quarkus.jvm.additional-jvm-args=-XX:+UseZGC
-quarkus.jvm.additional-jvm-args=-XX:+ZGenerational
 quarkus.jvm.additional-jvm-args=-XX:ActiveProcessorCount=2
 ```
 

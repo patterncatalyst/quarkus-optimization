@@ -14,7 +14,7 @@ import java.util.Map;
  *
  * Two instances of this same app run side-by-side:
  *   G1GC  → port 8080  (-XX:+UseG1GC)
- *   ZGC   → port 8081  (-XX:+UseZGC -XX:+ZGenerational)
+ *   ZGC   → port 8081  (-XX:+UseZGC)
  *
  * Same code. Same heap. Same load. Different GC algorithm.
  * The p99 latency difference under /pressure load is the demo.

@@ -29,7 +29,7 @@ COPY app/src ./src
 RUN mvn package -Dmaven.test.skip=true --no-transfer-progress
 
 # ── Stage 3: Runtime ───────────────────────────────────────────────────────────
-FROM registry.access.redhat.com/ubi9/openjdk-25-runtime
+FROM registry.access.redhat.com/ubi10/openjdk-25-runtime
 WORKDIR /deployments
 
 # Copy native library into a standard path

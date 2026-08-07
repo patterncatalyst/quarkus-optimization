@@ -14,7 +14,7 @@ services:
 
   # ── Grafana LGTM — starts first ───────────────────────────
   grafana-lgtm:
-    image: docker.io/grafana/otel-lgtm:0.8.1
+    image: docker.io/grafana/otel-lgtm:0.29.0
     container_name: grafana-lgtm
     ports:
       - "3000:3000"
@@ -69,7 +69,7 @@ services:
   # ── Prometheus — scrapes /q/metrics from both apps ────────
   # Starts immediately — retries scraping until apps come up
   prometheus:
-    image: docker.io/prom/prometheus:v3.2.1
+    image: docker.io/prom/prometheus:v3.13.2
     container_name: prometheus
     user: root
     ports:

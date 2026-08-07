@@ -39,11 +39,10 @@ services:
     ports:
       - "8081:8080"
     environment:
-      # ZGC Generational — JDK 21+
+      # ZGC Generational — JDK 25 (generational is now default)
       # No pause target needed — ZGC always targets < 1ms
       JAVA_OPTS: >-
         -XX:+UseZGC
-        -XX:+ZGenerational
     mem_limit: 512m
     labels:
       demo: "zgc"

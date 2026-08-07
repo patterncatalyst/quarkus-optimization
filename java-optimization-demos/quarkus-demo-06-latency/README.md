@@ -33,7 +33,7 @@ brew install hey       # macOS
 │  Stop-the-world: 50–300ms pauses       │
 ├────────────────────────────────────────┤
 │  ZGC app    → http://localhost:8081    │
-│  -XX:+UseZGC -XX:+ZGenerational       │
+│  -XX:+UseZGC                          │
 │  Concurrent: < 1ms pauses always      │
 ├────────────────────────────────────────┤
 │  Prometheus → http://localhost:9090    │
@@ -168,7 +168,6 @@ each — demonstrate via configuration examples, not live:
 ```bash
 # Minimum viable: switch GC (biggest impact, zero infrastructure change)
 -XX:+UseZGC
--XX:+ZGenerational
 
 # Add: match thread counts to your CPU request
 -XX:ActiveProcessorCount=<N>

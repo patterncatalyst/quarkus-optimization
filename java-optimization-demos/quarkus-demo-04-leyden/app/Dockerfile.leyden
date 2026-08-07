@@ -19,7 +19,7 @@ RUN mvn package -Dmaven.test.skip=true --no-transfer-progress
 
 # ── Stage 2: Train with UBI JDK 25 ───────────────────────────────
 # Copy Maven from compiler stage so we can run mvn verify here
-FROM registry.access.redhat.com/ubi9/openjdk-25 AS trainer
+FROM registry.access.redhat.com/ubi10/openjdk-25 AS trainer
 USER root
 WORKDIR /build
 
@@ -38,7 +38,7 @@ RUN mvn verify --no-transfer-progress \
     echo "✅ app.aot: $(ls -lh target/quarkus-app/app.aot | awk '{print $5}')"
 
 # ── Stage 3: Runtime ─────────────────────────────────────────────
-FROM registry.access.redhat.com/ubi9/openjdk-25
+FROM registry.access.redhat.com/ubi10/openjdk-25
 USER root
 WORKDIR /deployments
 

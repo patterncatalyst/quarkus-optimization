@@ -99,7 +99,7 @@ not stable in JDK 21.
 | **Barrier type** | Write barrier | **Write barrier** | Load barrier |
 | **Constant throughput overhead** | Lowest | ~5–10% | ~5–15% (reads) |
 | **Memory overhead** | Low (~remembered sets) | ~8% (Brooks pointer per object) | ~10–20% (colored pointers + metadata) |
-| **Generational** | Yes | No (JDK 21) | Yes (`-XX:+ZGenerational`, JDK 21+) |
+| **Generational** | Yes | No (JDK 21) | Yes (default since JDK 23) |
 | **JDK availability** | JDK 9+ (default) | **JDK 8+ (Red Hat), JDK 12+ (upstream)** | JDK 11+ (production from JDK 15) |
 | **Large heap (> 32GB)** | Pauses grow | Good | Excellent (pauses don't scale) |
 | **HPA interaction** | CPU spikes from STW → false scale-out | Smoother than G1GC | Smoothest (flat CPU profile) |

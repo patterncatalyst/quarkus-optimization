@@ -13,7 +13,7 @@ COPY pom.xml .
 COPY src ./src
 RUN mvn package -Dmaven.test.skip=true --no-transfer-progress
 
-FROM registry.access.redhat.com/ubi9/openjdk-25-runtime
+FROM registry.access.redhat.com/ubi10/openjdk-25-runtime
 WORKDIR /deployments
 
 COPY --from=builder /build/target/quarkus-app/lib/     ./lib/
@@ -23,7 +23,7 @@ COPY --from=builder /build/target/quarkus-app/quarkus/ ./quarkus/
 
 ENV JAVA_OPTS="-XX:+UseContainerSupport \
                -XX:MaxRAMPercentage=75.0 \
-               -XX:+UseZGC -XX:+ZGenerational"
+               -XX:+UseZGC"
 
 # ❌ NO -XX:AOTCache flag — baseline measurement
 EXPOSE 8080

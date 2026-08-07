@@ -78,7 +78,7 @@ title: Home
       <a href="{{ '/demos/demo-07-rightsizing/' | relative_url }}" class="card">
         <div class="card-num">Demo 07 · Bonus</div>
         <h3>Right-Sizing &amp; Cost Analysis</h3>
-        <p>Pure Python. 4 nodes → 2 nodes, $6,720/month saving, 17× ROI. No cluster needed.</p>
+        <p>Pure Python. 4 nodes → 2 nodes, $560/month saving, 17× ROI. No cluster needed.</p>
         <div class="card-foot"><span class="tag tag-green">No cluster needed</span><span class="tag tag-muted">⏱ ~3 min</span></div>
       </a>
       <a href="{{ '/demos/demo-08-panama/' | relative_url }}" class="card">

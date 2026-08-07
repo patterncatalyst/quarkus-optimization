@@ -9,13 +9,13 @@
   <artifactId>quarkus-startup-demo</artifactId>
   <version>1.0.0</version>
   <name>quarkus-startup-demo</name>
-  <description>Demo 03: AppCDS Startup Acceleration — Quarkus 3.33.1 LTS / Java 21</description>
+  <description>Demo 03: AppCDS Startup Acceleration — Quarkus 3.33.1 LTS / Java 25</description>
 
   <properties>
     <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
     <quarkus.platform.version>3.33.1</quarkus.platform.version>
-    <maven.compiler.release>21</maven.compiler.release>
+    <maven.compiler.release>25</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
@@ -87,7 +87,7 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
-          <release>21</release>
+          <release>25</release>
         </configuration>
       </plugin>
       <plugin>

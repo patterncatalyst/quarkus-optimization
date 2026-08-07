@@ -246,7 +246,7 @@ Two identical Quarkus apps, same heap, same load. One runs G1GC, one runs ZGC.
 JAVA_OPTS: "-XX:+UseG1GC"
 
 # ZGC container
-JAVA_OPTS: "-XX:+UseZGC -XX:+ZGenerational"
+JAVA_OPTS: "-XX:+UseZGC"
 ```
 
 ---
@@ -261,7 +261,7 @@ Pure Python analysis tool — no containers, no network access. Uses bundled sam
 - CPU requests cut 50-75% on most services
 - Memory requests cut 40-56%
 - 4 nodes → 2 nodes (+67% pod density)
-- $6,720/month saving, 17× ROI on engineering effort
+- $560/month saving ($6,720/year), 17× ROI on engineering effort
 
 **Output:** `rightsizing-report.json` — machine-readable for CI/CD integration. kubectl commands generated and ready to apply.
 

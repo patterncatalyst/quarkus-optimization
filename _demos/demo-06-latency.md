@@ -20,7 +20,7 @@ Two identical Quarkus apps, same heap, same load. One G1GC, one ZGC. The **GC pa
 
 ```yaml
 JAVA_OPTS: "-XX:+UseG1GC"        # container 1
-JAVA_OPTS: "-XX:+UseZGC -XX:+ZGenerational"  # container 2
+JAVA_OPTS: "-XX:+UseZGC"                     # container 2
 ```
 
 ## ZGC throughput caveat

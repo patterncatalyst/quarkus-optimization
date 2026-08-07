@@ -9,7 +9,7 @@
 # ============================================================
 
 # ── Stage 1: Build ─────────────────────────────────────────
-FROM docker.io/library/maven:3.9-eclipse-temurin-21 AS builder
+FROM docker.io/library/maven:3.9-eclipse-temurin-25 AS builder
 WORKDIR /build
 
 COPY pom.xml .
@@ -18,7 +18,7 @@ COPY src ./src
 RUN     mvn package -Dmaven.test.skip=true --no-transfer-progress
 
 # ── Stage 2: Runtime ───────────────────────────────────────
-FROM registry.access.redhat.com/ubi9/openjdk-21-runtime
+FROM registry.access.redhat.com/ubi10/openjdk-25-runtime
 WORKDIR /deployments
 
 # Quarkus layered structure — copy each layer separately for optimal
@@ -42,7 +42,7 @@ EXPOSE 8080
 
 ENTRYPOINT ["sh", "-c", "\
   if [ \"$GC_TYPE\" = 'zgc' ]; then \
-    GC_FLAG='-XX:+UseZGC -XX:+ZGenerational'; \
+    GC_FLAG='-XX:+UseZGC'; \
   elif [ \"$GC_TYPE\" = 'shenandoah' ]; then \
     GC_FLAG='-XX:+UseShenandoahGC -XX:ShenandoahGCMode=adaptive'; \
   else \

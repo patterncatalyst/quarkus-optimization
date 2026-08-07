@@ -124,7 +124,7 @@ public class HeapInfo {
             System.out.println("  (none set — using JVM defaults)");
             System.out.println("  Recommended for containers:");
             System.out.println("    -XX:MaxRAMPercentage=75.0");
-            System.out.println("    -XX:+UseZGC -XX:+ZGenerational");
+            System.out.println("    -XX:+UseZGC");
         } else {
             flags.forEach(f -> System.out.println("  " + f));
         }

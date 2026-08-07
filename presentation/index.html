@@ -152,7 +152,7 @@ title: "Taming the JVM: Optimizing Java Workloads on OpenShift & Kubernetes"
     </div>
   </div>
   <div class="callout" style="font-size:0.58em;margin-top:0.75em;">
-    <strong>Demo 07:</strong> 7-workload analysis · 4 nodes → 2 nodes · +67% pod density · $6,720/month saving · 17× ROI
+    <strong>Demo 07:</strong> 7-workload analysis · 4 nodes → 2 nodes · +67% pod density · $560/month saving · 17× ROI
   </div>
   <aside class="notes">
     The key insight: requests and limits serve different purposes. Requests are for the scheduler. Limits are for safety.
@@ -174,7 +174,7 @@ title: "Taming the JVM: Optimizing Java Workloads on OpenShift & Kubernetes"
     </div>
     <div class="r-card">
       <h4>ParallelGCThreads Default</h4>
-      <p>JVM defaults to host CPU count. 64-core node + 4 CPU limit = 64 threads competing for 4 CPUs.</p>
+      <p>JVM defaults to host CPU count when no CPU limit is set. 64-core node + CPU request only = 64 GC threads competing for 4 CPUs.</p>
     </div>
     <div class="r-card">
       <h4>GC-Induced HPA Thrash</h4>
@@ -188,6 +188,7 @@ title: "Taming the JVM: Optimizing Java Workloads on OpenShift & Kubernetes"
   <aside class="notes">
     Row 4 of the ParallelGCThreads problem is the most surprising to most people. Write this down:
     -XX:ParallelGCThreads=N where N equals whatever is in your resources.requests.cpu.
+    With UseContainerSupport ON (Java 10+), the JVM reads cgroup CPU limits — but only if a CPU limit is set. Pods with only CPU requests (Burstable QoS, no limit) still see all host CPUs.
     This costs nothing and immediately improves GC pause duration on any shared-node cluster.
   </aside>
 </section>
@@ -214,7 +215,7 @@ title: "Taming the JVM: Optimizing Java Workloads on OpenShift & Kubernetes"
         <td><strong style="color:#00BCD4;">ZGC (Gen)</strong></td>
         <td>&lt;1ms</td>
         <td>Low-latency APIs, any heap size, HPA stability</td>
-        <td><code>-XX:+UseZGC -XX:+ZGenerational</code></td>
+        <td><code>-XX:+UseZGC</code></td>
       </tr>
       <tr>
         <td>Serial GC</td>
@@ -599,8 +600,7 @@ public class GcResource {
         <li>Load barrier overhead: ~5-15%</li>
         <li>Smooth CPU profile → no HPA thrash</li>
       </ul>
-      <pre style="font-size:0.9em;"><code>-XX:+UseZGC
--XX:+ZGenerational</code></pre>
+      <pre style="font-size:0.9em;"><code>-XX:+UseZGC</code></pre>
     </div>
   </div>
   <aside class="notes">
@@ -617,16 +617,16 @@ public class GcResource {
   <h2>Cost Impact Analysis &amp; Business Case</h2>
   <div style="text-align:center;margin:0.5em 0;">
     <span style="font-size:3em;font-weight:800;color:#27AE60;">$80,640</span>
-    <p style="color:#90A4AE;font-size:0.65em;margin-top:0.2em;">annual saving · 2 nodes × $0.384/hr × 8,760 hrs · this cluster alone</p>
+    <p style="color:#90A4AE;font-size:0.65em;margin-top:0.2em;">annual saving · 12 nodes × $0.768/hr × 8,760 hrs · enterprise cluster</p>
   </div>
   <div class="card-grid" style="font-size:0.58em;margin-top:0.5em;">
     <div class="r-card">
       <h4>💰 Direct savings</h4>
-      <p>2 nodes eliminated · $1,120 → $560/month</p>
+      <p>12 nodes eliminated · $6,720/month saved</p>
     </div>
     <div class="r-card">
       <h4>⏱ Engineering cost</h4>
-      <p>~4 hours · rolling restarts · 17× ROI</p>
+      <p>~4 hours · rolling restarts · 17× first-month ROI</p>
     </div>
     <div class="r-card">
       <h4>📈 Indirect benefits</h4>
@@ -634,12 +634,13 @@ public class GcResource {
     </div>
     <div class="r-card">
       <h4>🏢 At scale</h4>
-      <p>10 clusters = $67,200/year · OpenShift Cost Management</p>
+      <p>10 clusters = $806,400/year · OpenShift Cost Management</p>
     </div>
   </div>
   <aside class="notes">
-    $80,640/year from one cluster, one afternoon of analysis. That's not a rounding error.
-    The ROI argument: $6,720 saving for ~$400 engineering time = 17x return.
+    $80,640/year from one enterprise cluster — extrapolated from the Demo 07 right-sizing analysis applied at scale.
+    12 m5.4xlarge nodes eliminated at $0.768/hr each = $6,720/month = $80,640/year.
+    The ROI argument: $6,720 first-month saving for ~$400 engineering time = 17x return.
   </aside>
 </section>
 
@@ -692,7 +693,7 @@ public class GcResource {
 record Point(double x, double y) {}</code></pre>
     </div>
     <div>
-      <h4 style="color:#00BCD4;">Valhalla (preview JDK 25+)</h4>
+      <h4 style="color:#00BCD4;">Valhalla (targeting JDK 28)</h4>
       <pre><code class="language-java">// Stored inline — no header
 // x0,y0,x1,y1 densely packed
 // GC never sees it
@@ -705,7 +706,7 @@ value class Point {
     <div class="r-card"><h4>📉 Memory</h4><p>List&lt;double&gt;: 1× vs List&lt;Double&gt;: 3×. Pod requests cut up to 50%.</p></div>
     <div class="r-card"><h4>♻️ GC Pressure</h4><p>Value types: zero heap allocation, zero GC tracking. HPA stays quiet.</p></div>
     <div class="r-card"><h4>⚡ Cache Performance</h4><p>Sequential memory access. L1/L2 cache-friendly. SIMD-friendly layout.</p></div>
-    <div class="r-card"><h4>📅 Timeline</h4><p>Preview JDK 25+. Universal generics (List&lt;int&gt;) after primitive classes. Stable ~JDK 27-29.</p></div>
+    <div class="r-card"><h4>📅 Timeline</h4><p>JDK 28 preview (March 2027). Universal generics (List&lt;int&gt;) after primitive classes. Stable ~JDK 29-30.</p></div>
   </div>
   <aside class="notes">
     Valhalla doesn't change how you write code — it changes what the JVM does with your code.

@@ -275,7 +275,7 @@ Live demo: quarkus-demo-04-leyden/demo.sh
 #### Memory section (rows 1–3)
 
 **Row 1 — Hardcoded -Xmx:**
-> "Every single production OOMKill investigation I've been involved in eventually traces back to this. Someone hardcoded -Xmx2g in 2018. The container limit was changed to 1.5g in 2021. Nobody noticed until a Friday at 5pm. The fix is two flags: UseContainerSupport — which ships ON by default since Java 15 — and MaxRAMPercentage=75. You never touch it again when the limit changes."
+> "Every single production OOMKill investigation I've been involved in eventually traces back to this. Someone hardcoded -Xmx2g in 2018. The container limit was changed to 1.5g in 2021. Nobody noticed until a Friday at 5pm. The fix is two flags: UseContainerSupport — which ships ON by default since Java 10 — and MaxRAMPercentage=75. You never touch it again when the limit changes."
 
 **Row 2 — MaxRAMPercentage=90:**
 > "This leaves 10% for everything else. A Quarkus app with Vert.x, Netty, and a few framework extensions routinely needs 300-400 MB off-heap. At 90% in a 1 GB container, that's 100 MB remaining — not enough. 75 percent is the safe default. Go to 80 percent only after measuring."

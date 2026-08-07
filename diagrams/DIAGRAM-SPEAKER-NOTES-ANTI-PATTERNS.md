@@ -140,7 +140,7 @@ Walk box by box:
 > "Kubernetes enforces that 512 MB limit at the cgroup level. The moment the JVM tries to allocate beyond 512 MB — which it does almost immediately trying to claim 64 GB — the kernel OOMKills the process. Exit code 137. Your pod restarts. It happens again. You're in a CrashLoopBackOff. And the error message tells you nothing about JVM heap sizing."
 
 **Now move to the right side:**
-> "Java 21 — and actually Java 15 onward — ships with `UseContainerSupport` turned on by default. When this is active, the JVM reads the cgroup files instead of `/proc/meminfo`. On RHEL 9 and OpenShift 4.14 and later, that's the cgroup v2 path at `/sys/fs/cgroup/memory.max`. On older systems, the v1 path. Either way, the JVM correctly reads 512 MB."
+> "Java 21 — and actually Java 10 onward — ships with `UseContainerSupport` turned on by default. When this is active, the JVM reads the cgroup files instead of `/proc/meminfo`. On RHEL 9 and OpenShift 4.14 and later, that's the cgroup v2 path at `/sys/fs/cgroup/memory.max`. On older systems, the v1 path. Either way, the JVM correctly reads 512 MB."
 
 > "Then you set `MaxRAMPercentage=75`. The JVM claims 75 percent of 512 MB — 384 MB for heap. The remaining 128 MB covers Metaspace, thread stacks, JIT cache, and Netty buffers. The pod runs. No OOMKill."
 
@@ -305,7 +305,7 @@ The diagram bridges the "what is it" slide and the "watch it run" demo. After wa
 #### Memory row (top 3 — walk these carefully)
 
 **Row 1 — Hardcoded -Xmx/-Xms:**
-> "Every single production OOMKill investigation I've been involved in eventually traces back to this. Someone hardcoded -Xmx2g in 2018. The container limit was changed to 1.5g in 2021. Nobody noticed until a Friday at 5pm. The fix is two flags: UseContainerSupport — which ships ON by default since Java 15 — and MaxRAMPercentage=75. You never touch it again when the limit changes."
+> "Every single production OOMKill investigation I've been involved in eventually traces back to this. Someone hardcoded -Xmx2g in 2018. The container limit was changed to 1.5g in 2021. Nobody noticed until a Friday at 5pm. The fix is two flags: UseContainerSupport — which ships ON by default since Java 10 — and MaxRAMPercentage=75. You never touch it again when the limit changes."
 
 **Row 2 — MaxRAMPercentage=90:**
 > "People Google 'how to give Java more heap' and find MaxRAMPercentage. They set it to 90. This leaves 10% for everything else. A Quarkus app with Vert.x, Netty, and a few framework extensions routinely needs 300-400 MB off-heap. At 90% in a 1 GB container, that's 100 MB remaining for off-heap — not enough. 75 percent is the safe default. Go to 80 percent only after measuring."

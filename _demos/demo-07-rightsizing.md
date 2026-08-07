@@ -36,7 +36,7 @@ python3 analyze.py --cost-per-node-hour 0.768  # custom node cost
 ## Business case output
 
 ```
-4 nodes → 2 nodes  ·  +67% pod density  ·  $6,720/month saving  ·  17× ROI
+4 nodes → 2 nodes  ·  +67% pod density  ·  $560/month saving  ·  17× ROI
 ```
 
 ## OpenShift Cost Management

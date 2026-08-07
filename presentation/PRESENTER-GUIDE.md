@@ -275,7 +275,7 @@ Without this, the Grafana GC pause panels show no data.
 | Collector | When to use |
 |-----------|-------------|
 | G1GC | General-purpose microservices; `-XX:+UseG1GC -XX:MaxGCPauseMillis=200` |
-| ZGC (Gen) | Low-latency APIs, any heap size; `-XX:+UseZGC -XX:+ZGenerational` |
+| ZGC (Gen) | Low-latency APIs, any heap size; `-XX:+UseZGC` (generational default since JDK 23) |
 | Shenandoah | Alternative to ZGC; OpenJDK/RHEL default; excellent for all heap sizes |
 | Serial GC | CLI tools, batch, < 256MB heap only |
 
@@ -645,9 +645,9 @@ Right-sizing analysis results (Slide 44): 7-workload table. Key callouts:
 - `fraud-detection`: 1500m → 280m (−81%) — Quarkus requests copied from Spring Boot, never revisited
 - `report-generator`: almost no change — honest exception, batch workload with real CPU
 
-Bin-packing (Slide 45): 4 nodes → 2 nodes, +67% pod density, $6,720/month saving.
+Bin-packing (Slide 45): 4 nodes → 2 nodes, +67% pod density, $560/month saving ($6,720/year).
 
-Cost case (Slide 46): $80,640 annual saving from 2 nodes eliminated. ROI: $6,720 saving for ~$400 engineering time = 17×.
+Cost case (Slide 46): $80,640 annual saving at enterprise scale — 12 m5.4xlarge nodes eliminated at $0.768/hr each. ROI: $6,720 first-month saving for ~$400 engineering time = 17×.
 
 **Slide 47 — DEMO 07**
 
@@ -674,7 +674,7 @@ Arena types — the key safety feature: `try (Arena arena = Arena.ofConfined())`
 
 Five-step workflow. The code on the slide shows the jextract-generated calling pattern.
 
-> **Note:** The slide shows `arena.allocateArray()` — this is the **preview API name** which was renamed to `arena.allocateFrom()` in the JDK 22 GA release. The actual demo code uses `allocateFrom()`.
+> **Note:** The slide and demo code both use `allocateFrom()` — the finalized API name (JDK 22 GA). The preview name was `allocateArray()`.
 
 ```
 Demo directory: quarkus-demo-08-panama/
@@ -718,7 +718,7 @@ The cost: `List<Double>` uses 3× memory of `double[]`, destroys cache locality.
 
 Valhalla bridges both: `value class Point { double x; double y; }` — stored inline, no header, no GC tracking. `List<int>`, `Map<long,double>` — no boxing.
 
-Status: value classes in preview JDK 25+; stable ~JDK 27-29 (2026-2027).
+Status: value classes targeting JDK 28 (March 2027) as preview; stable ~JDK 29-30.
 
 **Slide 52 — Why It Matters for Kubernetes**
 

@@ -241,7 +241,7 @@ public class PanamaResource {
 
     private static String gcFlag(int code) {
         return switch (code) {
-            case 2 -> "-XX:+UseZGC -XX:+ZGenerational";
+            case 2 -> "-XX:+UseZGC";
             case 1 -> "-XX:+UseShenandoahGC -XX:ShenandoahGCHeuristics=adaptive";
             default -> "-XX:+UseG1GC -XX:MaxGCPauseMillis=200";
         };

@@ -45,7 +45,7 @@ RUN     mvn verify --no-transfer-progress -q && \
     echo "ℹ️  app.aot not found — JDK 25 required for AOT cache generation"
 
 # ── Stage 2: Runtime image ────────────────────────────────────
-FROM registry.access.redhat.com/ubi9/openjdk-25-runtime
+FROM registry.access.redhat.com/ubi10/openjdk-25-runtime
 WORKDIR /deployments
 
 # Quarkus layered output — Docker layer-cache-friendly
@@ -63,8 +63,8 @@ ENV JAVA_OPTS="-XX:+UseContainerSupport \
                -XX:+UseG1GC \
                -XX:MaxGCPauseMillis=200"
 
-# Note: On JDK 26, add -XX:+UseZGC -XX:+ZGenerational (JEP 516)
-# for low-latency GC AND full AOT cache support simultaneously.
+# Note: On JDK 26+, use -XX:+UseZGC for low-latency GC AND full
+# AOT cache support simultaneously (JEP 516).
 
 EXPOSE 8080
 # Quarkus detects app.aot alongside quarkus-run.jar and activates
