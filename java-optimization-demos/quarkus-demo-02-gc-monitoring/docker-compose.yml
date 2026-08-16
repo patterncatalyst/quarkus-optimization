@@ -2,7 +2,7 @@ version: "3.9"
 
 # ============================================================
 # Demo 02 (Quarkus): GC Monitoring — Grafana LGTM Stack
-#   Framework: Quarkus 3.33.1 LTS / Java 21
+#   Framework: Quarkus 3.33.1 LTS / Java 25
 #
 #   • Quarkus G1GC app  (port 8080) — OTLP traces + /q/metrics
 #   • Quarkus ZGC app   (port 8081) — same app, different GC
@@ -26,8 +26,11 @@ services:
       - GF_AUTH_ANONYMOUS_ENABLED=true
     volumes:
       # Add external Prometheus datasource alongside otel-lgtm's built-in ones
-      # Mounting a single file is additive — does NOT affect Tempo/Loki datasources
-      - ./grafana/provisioning/datasources/external-prometheus.yml:/etc/grafana/provisioning/datasources/external-prometheus.yml:Z
+      # otel-lgtm 0.29.0 uses /otel-lgtm/grafana/conf/provisioning/ as its base
+      - ./grafana/provisioning/datasources/external-prometheus.yml:/otel-lgtm/grafana/conf/provisioning/datasources/external-prometheus.yml:Z
+      # Custom JVM GC dashboard — provisioning config + JSON
+      - ./grafana/provisioning/dashboards/dashboards.yml:/otel-lgtm/grafana/conf/provisioning/dashboards/dashboards.yml:Z
+      - ./grafana/dashboards/jvm-gc-dashboard.json:/var/lib/grafana/dashboards/jvm-gc-dashboard.json:Z
     networks:
       - observability
 
