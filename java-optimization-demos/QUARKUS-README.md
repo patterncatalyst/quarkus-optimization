@@ -3,7 +3,7 @@
 Comprehensive configuration reference for Quarkus 3.33.1 LTS workloads running
 on OpenShift and Kubernetes. Covers container-aware JVM tuning, GC selection,
 startup optimization, observability, and gRPC — with accurate defaults for the
-Red Hat UBI9 container images used throughout these demos.
+Red Hat UBI10 container images used throughout these demos.
 
 ---
 
@@ -29,21 +29,17 @@ Red Hat UBI9 container images used throughout these demos.
 
 ## Container Images
 
-### UBI9 Images (used throughout these demos)
+### UBI10 Images (used throughout these demos)
 
 ```dockerfile
 # Builder — includes Maven + full JDK
-FROM docker.io/library/maven:3.9-eclipse-temurin-21 AS builder
+FROM docker.io/library/maven:3.9-eclipse-temurin-25 AS builder
 
 # Runtime — lean, no compiler, no Maven
-FROM registry.access.redhat.com/ubi9/openjdk-21-runtime
-
-# JDK 25 variants (Demo 04, 08, 09)
-FROM docker.io/library/maven:3.9-eclipse-temurin-25 AS builder
-FROM registry.access.redhat.com/ubi9/openjdk-25-runtime
+FROM registry.access.redhat.com/ubi10/openjdk-25-runtime
 ```
 
-> **⚠️ Default GC on UBI9:** `ubi9/openjdk-21-runtime` ships **Shenandoah** as
+> **⚠️ Default GC on UBI10:** `ubi10/openjdk-25-runtime` ships **Shenandoah** as
 > the default GC — Red Hat's concurrent low-latency collector. This differs from
 > Eclipse Temurin, Amazon Corretto, and Microsoft OpenJDK which default to G1GC.
 > To reproduce a G1GC vs ZGC comparison, override explicitly:
@@ -53,7 +49,7 @@ FROM registry.access.redhat.com/ubi9/openjdk-25-runtime
 
 | Image | Default GC | Pause Target |
 |-------|-----------|--------------|
-| `ubi9/openjdk-21-runtime` (Red Hat) | **Shenandoah** | 1–20ms |
+| `ubi10/openjdk-25-runtime` (Red Hat) | **Shenandoah** | 1–20ms |
 | `eclipse-temurin:21` | G1GC | 10–300ms |
 | `amazoncorretto:21` | G1GC | 10–300ms |
 | `mcr.microsoft.com/openjdk/jdk:21` | G1GC | 10–300ms |
@@ -63,14 +59,14 @@ FROM registry.access.redhat.com/ubi9/openjdk-25-runtime
 ### Multi-Stage Dockerfile Pattern (all demos)
 
 ```dockerfile
-FROM docker.io/library/maven:3.9-eclipse-temurin-21 AS builder
+FROM docker.io/library/maven:3.9-eclipse-temurin-25 AS builder
 WORKDIR /build
 USER root                                    # required for UBI build stage
 COPY pom.xml .
 COPY src ./src
 RUN mvn package -Dmaven.test.skip=true --no-transfer-progress
 
-FROM registry.access.redhat.com/ubi9/openjdk-21-runtime
+FROM registry.access.redhat.com/ubi10/openjdk-25-runtime
 WORKDIR /deployments
 
 COPY --from=builder /build/target/quarkus-app/lib/     ./lib/
@@ -79,7 +75,7 @@ COPY --from=builder /build/target/quarkus-app/app/     ./app/
 COPY --from=builder /build/target/quarkus-app/quarkus/ ./quarkus/
 
 EXPOSE 8080
-USER 185                                     # UBI9 runtime default user
+USER 185                                     # UBI10 runtime default user
 ENTRYPOINT ["java", \
   "-XX:+UseContainerSupport", \
   "-XX:MaxRAMPercentage=75.0", \
@@ -147,7 +143,7 @@ podman exec <container> jcmd 1 VM.flags | grep RAM
 
 ## Garbage Collector Selection
 
-### G1GC (general purpose — not UBI9 default)
+### G1GC (general purpose — not UBI10 default)
 
 ```bash
 -XX:+UseG1GC
@@ -159,7 +155,7 @@ podman exec <container> jcmd 1 VM.flags | grep RAM
 
 **Best for:** General-purpose workloads, throughput-oriented services, heaps under 32GB.
 
-### Shenandoah (UBI9 default — Red Hat's concurrent GC)
+### Shenandoah (UBI10 default — Red Hat's concurrent GC)
 
 ```bash
 -XX:+UseShenandoahGC
@@ -275,7 +271,7 @@ RUN mvn package -Dmaven.test.skip=true --no-transfer-progress
 
 # Stage 2: Training run — creates the AOT cache
 # JVM fingerprint MUST match between trainer and runtime
-FROM registry.access.redhat.com/ubi9/openjdk-25 AS trainer
+FROM registry.access.redhat.com/ubi10/openjdk-25 AS trainer
 WORKDIR /deployments
 COPY --from=compiler /build/target/quarkus-app/ .
 RUN java -XX:AOTMode=record -XX:AOTCache=app.aot -jar quarkus-run.jar \
@@ -284,7 +280,7 @@ RUN java -XX:AOTMode=record -XX:AOTCache=app.aot -jar quarkus-run.jar \
     pkill -f quarkus-run.jar || true
 
 # Stage 3: Runtime
-FROM registry.access.redhat.com/ubi9/openjdk-25-runtime
+FROM registry.access.redhat.com/ubi10/openjdk-25-runtime
 WORKDIR /deployments
 COPY --from=compiler /deployments/ .
 COPY --from=trainer  /deployments/app.aot .
@@ -671,12 +667,12 @@ No Python sidecar. No gRPC. Same JVM.
 <dependency>
     <groupId>dev.langchain4j</groupId>
     <artifactId>langchain4j-embeddings-all-minilm-l6-v2</artifactId>
-    <version>0.36.2</version>
+    <version>1.18.1</version>
 </dependency>
 <dependency>
     <groupId>dev.langchain4j</groupId>
     <artifactId>langchain4j-core</artifactId>
-    <version>0.36.2</version>
+    <version>1.18.1</version>
 </dependency>
 ```
 
@@ -869,8 +865,8 @@ build flags all invalidate the cache silently — no error, just no improvement.
 ```dockerfile
 # ✅ All stages must use the same JVM vendor and version
 FROM docker.io/library/maven:3.9-eclipse-temurin-25 AS compiler
-FROM registry.access.redhat.com/ubi9/openjdk-25 AS trainer      # same vendor
-FROM registry.access.redhat.com/ubi9/openjdk-25-runtime          # same vendor
+FROM registry.access.redhat.com/ubi10/openjdk-25 AS trainer      # same vendor
+FROM registry.access.redhat.com/ubi10/openjdk-25-runtime          # same vendor
 ```
 
 ### fast-jar vs aot-jar for Leyden

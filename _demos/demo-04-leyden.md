@@ -32,8 +32,8 @@ mvn verify   # runs @QuarkusIntegrationTest → writes app.aot
 | Stage | Image | Purpose |
 |-------|-------|---------|
 | compiler | `maven:3.9-eclipse-temurin-25` | Build JAR |
-| trainer | `ubi9/openjdk-25` | Run integration tests → create app.aot |
-| runtime | `ubi9/openjdk-25-runtime` | Copy JAR + app.aot |
+| trainer | `ubi10/openjdk-25` | Run integration tests → create app.aot |
+| runtime | `ubi10/openjdk-25` | Copy JAR + app.aot |
 
 JVM fingerprint must match between trainer and runtime.
 

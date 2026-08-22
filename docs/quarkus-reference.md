@@ -26,18 +26,18 @@ description: "Full configuration reference for Quarkus 3.33.1 LTS on OpenShift a
 
   <div class="grid grid-2" style="margin-bottom:1.5rem;">
     <div class="card" style="pointer-events:none;">
-      <h3 style="color:var(--teal);">UBI9 Default GC — Shenandoah</h3>
+      <h3 style="color:var(--teal);">UBI10 Default GC — Shenandoah</h3>
       <p style="color:var(--muted);font-size:.875rem;line-height:1.6;">
-        <code>ubi9/openjdk-21-runtime</code> ships <strong style="color:var(--text);">Shenandoah</strong>
+        <code>ubi10/openjdk-25-runtime</code> ships <strong style="color:var(--text);">Shenandoah</strong>
         as the default GC — not G1GC. Temurin, Corretto, and Microsoft all default to G1GC.
         Demos that compare GC algorithms override explicitly.
       </p>
     </div>
     <div class="card" style="pointer-events:none;">
       <h3 style="color:var(--teal);">Multi-Stage Dockerfile Pattern</h3>
-      <pre style="font-size:.75rem;margin-top:.5rem;"><code>FROM maven:3.9-eclipse-temurin-21 AS builder
+      <pre style="font-size:.75rem;margin-top:.5rem;"><code>FROM maven:3.9-eclipse-temurin-25 AS builder
 # USER root required in builder stage
-FROM ubi9/openjdk-21-runtime
+FROM ubi10/openjdk-25-runtime
 # USER 185 before ENTRYPOINT
 ENTRYPOINT ["java",
   "-XX:+UseContainerSupport",

@@ -1,7 +1,7 @@
 # Quarkus Demo 02 — GC Monitoring with Prometheus & Grafana
 
 ## Framework
-**Quarkus 3.33.1 LTS** / Java 21 (released March 25, 2026)
+**Quarkus 3.33.1 LTS** / Java 25 (released March 25, 2026)
 
 ## What This Demo Shows
 
@@ -34,6 +34,7 @@ to know for real-world adoption.
 
 - **Podman** 4.x+ (`dnf install podman` / `brew install podman`)
 - **podman-compose** (`pip install podman-compose` / `dnf install podman-compose`)
+- **python3** and **curl** on PATH (used by `demo.sh` for load generation and JSON parsing)
 - At least 4 GB RAM available
 - Ports 3000, 4317, 4318, 8080, 8081, 9090 free
 
@@ -83,7 +84,7 @@ podman-compose down -v
     <artifactId>quarkus-micrometer-registry-prometheus</artifactId>
 </dependency>
 
-<!-- OpenTelemetry — auto-instruments REST, OTLP to Jaeger -->
+<!-- OpenTelemetry — auto-instruments REST, OTLP to Grafana Tempo -->
 <dependency>
     <groupId>io.quarkus</groupId>
     <artifactId>quarkus-opentelemetry</artifactId>

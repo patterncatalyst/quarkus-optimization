@@ -2,7 +2,7 @@
 title: "Demo 06 — Low-Latency JVM: G1GC vs ZGC"
 demo_number: "06"
 session: bonus
-runtime: "Quarkus 3.33.1 / Java 21"
+runtime: "Quarkus 3.33.1 / Java 25"
 time: "~10 min"
 demo_dir: "quarkus-demo-06-latency"
 run_command: "./demo.sh"
@@ -14,9 +14,9 @@ next_title: "Demo 07 — Right-Sizing"
 
 Two identical Quarkus apps, same heap, same load. One G1GC, one ZGC. The **GC pause delta** (not throughput) is the metric that matters for SLAs.
 
-## UBI9 default GC
+## UBI10 default GC
 
-`ubi9/openjdk-21-runtime` ships **Shenandoah** by default. This demo overrides it explicitly:
+`ubi10/openjdk-25-runtime` ships **Shenandoah** by default. This demo overrides it explicitly:
 
 ```yaml
 JAVA_OPTS: "-XX:+UseG1GC"        # container 1
@@ -31,7 +31,7 @@ ZGC uses a load barrier — fires on every object read — adding ~5-15% constan
 
 | Collector | Pause | Choose when |
 |-----------|-------|-------------|
-| Shenandoah | 1–20ms | UBI9 default — already this without any config |
+| Shenandoah | 1–20ms | UBI10 default — already this without any config |
 | ZGC | < 1ms | p99 SLA tighter than 10ms, or heap > 32GB |
 | G1GC | 50–300ms | Throughput-oriented, non-latency-sensitive |
 

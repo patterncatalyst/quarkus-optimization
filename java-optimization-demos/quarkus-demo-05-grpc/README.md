@@ -1,6 +1,6 @@
 # Demo 05 — REST vs gRPC: Same Service, Two Protocols
 
-**Quarkus 3.33.1 LTS / Java 21**
+**Quarkus 3.33.1 LTS / Java 25**
 
 The same JVM metrics exposed over REST (JSON/HTTP 1.1) and gRPC (Protobuf/HTTP 2)
 simultaneously from a single Quarkus application. Demonstrates throughput,
@@ -15,10 +15,11 @@ chmod +x demo.sh
 ./demo.sh
 ```
 
-**Tools required for the full load-test comparison:**
+**Prerequisites:** `podman`, `grpcurl`, `hey`, `ghz`, and `python3` on PATH.
+
 ```bash
-brew install hey grpcurl ghz      # macOS
-# Linux: download binaries from github.com/rakyll/hey, fullstory/grpcurl, bojand/ghz
+brew install hey grpcurl ghz      # macOS (podman + python3 via brew too)
+# Linux: download binaries from github.com/rakyll/hey, fullstorydev/grpcurl, bojand/ghz
 ```
 
 If `hey`/`ghz` are not installed, the demo runs in observe mode — still shows
@@ -66,15 +67,34 @@ grpcurl -plaintext -d '{"host":"localhost"}' \
 
 ## Typical Results
 
-| Metric | REST (JSON) | gRPC (Protobuf) | Delta |
-|--------|-------------|-----------------|-------|
-| Throughput | ~2,200 rps | ~8,500 rps | +3.9× |
-| p50 latency | ~45 ms | ~12 ms | −73% |
-| p99 latency | ~120 ms | ~25 ms | −79% |
-| CPU usage | ~65% | ~40% | −38% |
-| Wire payload | ~220 bytes | ~40 bytes | −82% |
+> **Honest result — localhost skews *against* gRPC.** The numbers below were
+> measured on a single machine over loopback, where there is effectively no
+> network latency. That flatters REST's simpler per-call stack and hides
+> gRPC's real advantages. Do not extrapolate localhost numbers to production.
 
-*Results vary by hardware. The ratios are consistent.*
+| Scenario | REST (JSON/HTTP1.1) | gRPC (Protobuf/HTTP2) | Winner |
+|----------|---------------------|------------------------|--------|
+| Unary, low concurrency (c=50, localhost) | ~31,000 rps | ~12,500 rps | **REST** |
+| Unary, high concurrency (c=500, localhost) | ~parity | ~parity | tie |
+| Server streaming (1 conn, 1000 msgs) | no equivalent | decisive | **gRPC** |
+| Wire payload | ~220 bytes | ~40 bytes | **gRPC** (−82%) |
+
+**What this actually shows:**
+
+- **REST is faster for localhost unary calls.** Over loopback there is no
+  network latency to amortize, so REST's lighter per-call machinery wins
+  outright (~31k vs ~12.5k rps at c=50).
+- **gRPC is decisively faster for streaming.** One persistent HTTP/2
+  connection pushes a continuous stream of snapshots; REST has no equivalent
+  (you would need SSE/WebSocket plus hand-rolled framing).
+- **They reach ~parity at high concurrency** on localhost, as HTTP/2
+  multiplexing over a single connection starts to pay off (c=500).
+- **gRPC pulls ahead over a real network** (pod-to-pod, cross-AZ) where
+  connection reuse, HTTP/2 multiplexing, and the ~82% smaller Protobuf
+  payload matter — exactly the conditions a loopback benchmark hides.
+
+*Results vary by hardware and network. The localhost unary win for REST is
+real but is not the production story — pick the protocol for your topology.*
 
 ---
 
@@ -151,4 +171,4 @@ public class MetricsServiceImpl extends MutinyMetricsServiceGrpc.MetricsServiceI
 - Quarkus gRPC guide: https://quarkus.io/guides/grpc-getting-started
 - Protocol Buffers: https://protobuf.dev
 - `ghz` gRPC load tester: https://ghz.sh
-- `grpcurl` CLI: https://github.com/fullstory/grpcurl
+- `grpcurl` CLI: https://github.com/fullstorydev/grpcurl

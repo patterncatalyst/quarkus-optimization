@@ -30,7 +30,7 @@ Quarkus REST → LangChain4j EmbeddingModel
 <dependency>
     <groupId>dev.langchain4j</groupId>
     <artifactId>langchain4j-embeddings-all-minilm-l6-v2</artifactId>
-    <version>0.36.2</version>
+    <version>1.18.1</version>
 </dependency>
 ```
 

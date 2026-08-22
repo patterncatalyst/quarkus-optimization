@@ -15,7 +15,7 @@ description: Quick-reference card for JVM tuning on container platforms.
   <div style="display:flex;justify-content:space-between;align-items:flex-start;margin:1.5rem 0;flex-wrap:wrap;gap:1rem;">
     <div>
       <h1>JVM Optimization Cheat Sheet</h1>
-      <p style="color:var(--muted);margin-top:.4rem;">Quick-reference card for JVM tuning on OpenShift &amp; Kubernetes. All flags verified on Red Hat UBI9 with Podman.</p>
+      <p style="color:var(--muted);margin-top:.4rem;">Quick-reference card for JVM tuning on OpenShift &amp; Kubernetes. All flags verified on Red Hat UBI10 (openjdk-25) with Podman.</p>
     </div>
     <a href="{{ site.repo }}/blob/main/java-optimization-demos/JVM-OPTIMIZATION-CHEATSHEET.md"
        target="_blank" class="btn btn-outline btn-sm">View on GitHub ↗</a>

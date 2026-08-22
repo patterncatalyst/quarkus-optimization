@@ -10,19 +10,21 @@ recommendations, model bin-packing improvements, and build a business case.
 ## Run the Demo
 
 ```bash
-chmod +x demo.sh cost-calculator.sh
-./demo.sh
+chmod +x demo.sh
+./demo.sh            # analyze bundled 14-day sample data (7 workloads)
+./demo.sh --live     # optional: pull live usage from the current cluster via kubectl
 ```
 
-## What's Running
+## What it does
 
-```
-app-over       :8080  cpu: 2000m  mem: 2048Mi  (over-provisioned)
-app-rightsized :8081  cpu:  250m  mem:  512Mi  (right-sized)
-Prometheus     :9090  scrapes both every 5s
-```
+This demo is a **pure analysis tool — no containers, no ports, no network required.**
+`demo.sh` runs `analyze.py` over a bundled 14-day Prometheus export
+(`sample-data/workloads.json`, 7 representative workloads). It computes actual
+p95/p99 usage, generates right-sizing recommendations (GC-aware), models
+bin-packing improvement, and prints the fleet-level cost impact.
 
-Same Quarkus app. Same load. Identical actual usage. The gap = waste = money.
+`--live` mode reads real usage from the current cluster via `kubectl` instead of
+the sample data.
 
 ---
 
@@ -71,30 +73,26 @@ resources:
 
 ---
 
-## Tools
+## Tool
 
-### rightsizing-analysis.py
+### analyze.py
 
-```bash
-python3 rightsizing-analysis.py
-python3 rightsizing-analysis.py --node-type m5.4xlarge --node-count 50 --pod-count 400
-```
-
-Queries Prometheus, computes waste, generates YAML recommendations, models
-bin-packing improvement, calculates infrastructure and engineering time savings.
-
-Node types: `m5.xlarge`, `m5.2xlarge`, `m5.4xlarge`, `m5.8xlarge`, `n2-standard-8`,
-`n2-standard-16`, `Standard_D8s_v3`, `custom`.
-
-### cost-calculator.sh
+`demo.sh` invokes this; you can also run it directly:
 
 ```bash
-bash cost-calculator.sh
+python3 analyze.py                              # bundled sample data
+python3 analyze.py --live                        # pull usage from the live cluster (kubectl)
+python3 analyze.py --data sample-data/workloads.json --output rightsizing-report.json
+python3 analyze.py --cost-per-node-hour 0.384    # override node price for savings math
 ```
 
-Interactive — enter your cluster node count, instance type, actual usage,
-and OOMKill rate. Outputs infrastructure savings, engineering savings,
-payback period, and 5-year NPV.
+Flags: `--live`, `--data <file>` (default `sample-data/workloads.json`),
+`--output <file>` (default `rightsizing-report.json`), `--cost-per-node-hour <float>`.
+Node type and cost come from the data file (or `--cost-per-node-hour`), not CLI flags.
+
+Computes p95/p99 waste, generates YAML recommendations, models bin-packing
+improvement, and calculates infrastructure + engineering-time savings. Python 3
+stdlib only — no pip installs.
 
 ---
 
@@ -120,17 +118,6 @@ Typical results: $150K–$500K/year infra savings, payback < 10 days.
 - **Showback reports**: monthly exports for budget conversations
 
 Without OpenShift: Kubecost, OpenCost (CNCF), AWS Cost Explorer for EKS.
-
----
-
-## Endpoints
-
-| Endpoint | Description |
-|----------|-------------|
-| `GET /process?items=N` | Simulate N business transactions |
-| `GET /metrics-snapshot` | JVM heap, GC, threads snapshot |
-| `GET /q/health/live` | Liveness probe |
-| `GET /q/metrics` | Prometheus metrics |
 
 ---
 

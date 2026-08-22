@@ -2,7 +2,7 @@
 title: "Demo 01 — Container-Aware Heap Sizing"
 demo_number: "01"
 session: core
-runtime: "Java 21"
+runtime: "Java 25"
 time: "~5 min"
 demo_dir: "demo-01-heap-sizing"
 run_command: "./demo.sh"

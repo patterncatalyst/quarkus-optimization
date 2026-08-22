@@ -41,7 +41,7 @@ try (Arena arena = Arena.ofConfined()) {
 |-------|-------|---------|
 | cpp-builder | `ubi9` | `dnf install gcc-c++ cmake make` → compile `.so` |
 | java-builder | `maven:3.9-eclipse-temurin-25` | Build Quarkus JAR |
-| runtime | `ubi9/openjdk-25-runtime` | Copy `.so` + JAR, `ldconfig` |
+| runtime | `ubi10/openjdk-25-runtime` | Copy `.so` + JAR, `ldconfig` |
 
 No subscription required — `gcc-c++` is in UBI9's freely accessible appstream repo.
 

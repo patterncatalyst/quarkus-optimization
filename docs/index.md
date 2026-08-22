@@ -27,7 +27,7 @@ title: Documentation
     <a href="{{ '/docs/shenandoah-guide/' | relative_url }}" class="doc-card">
       <div class="doc-card-icon">♻️</div>
       <h3>Shenandoah GC Guide</h3>
-      <p>Why UBI9 defaults to Shenandoah, Brooks pointers, three-way comparison with G1GC and ZGC, DegeneratedGC explained.</p>
+      <p>Why UBI10 defaults to Shenandoah, Brooks pointers, three-way comparison with G1GC and ZGC, DegeneratedGC explained.</p>
       <span class="tag tag-teal">SHENANDOAH-GC-GUIDE.md</span>
     </a>
 

@@ -2,7 +2,7 @@
 title: "Demo 03 — AppCDS Startup Acceleration"
 demo_number: "03"
 session: core
-runtime: "Quarkus 3.33.1 + Spring Boot 4.0.5 / Java 21"
+runtime: "Quarkus 3.33.1 + Spring Boot 4.1.0 / Java 25"
 time: "~8 min"
 demo_dir: "quarkus-demo-03-appcds"
 run_command: "./demo.sh"
@@ -25,7 +25,7 @@ quarkus.package.jar.aot.enabled=true
 
 | Framework | Baseline | + AppCDS | Delta |
 |-----------|----------|----------|-------|
-| Spring Boot 4.0.5 | ~4–8s | ~2.4s | −40% |
+| Spring Boot 4.1.0 | ~4–8s | ~2.4s | −40% |
 | Quarkus 3.33.1 | ~0.6s | ~0.57s | −5% |
 
 Quarkus + AppCDS is **14× faster** than Spring Boot baseline even with only 5% improvement.

@@ -10,7 +10,7 @@ Based on:
 
 All demos use **Podman** and **UBI (Universal Base Image)** runtime containers — the same toolchain and base images used in production OpenShift environments.
 
-> **Note on GC defaults:** The UBI9 OpenJDK 21 runtime image ships **Shenandoah** as the default GC — Red Hat's concurrent low-latency collector, supported since JDK 8. This is different from Eclipse Temurin, Amazon Corretto, and Microsoft OpenJDK which all default to G1GC. Demos that compare GC algorithms explicitly override the default with `-XX:+UseG1GC` or `-XX:+UseZGC` to ensure a clean comparison.
+> **Note on GC defaults:** The UBI10 OpenJDK 25 runtime image ships **Shenandoah** as the default GC — Red Hat's concurrent low-latency collector, supported since JDK 8. This is different from Eclipse Temurin, Amazon Corretto, and Microsoft OpenJDK which all default to G1GC. Demos that compare GC algorithms explicitly override the default with `-XX:+UseG1GC` or `-XX:+UseZGC` to ensure a clean comparison.
 
 ---
 
@@ -73,15 +73,14 @@ java-optimization-demos/
 |------|---------|-------|
 | **podman** | 4.x+ | `dnf install podman` / `brew install podman` |
 | **podman-compose** | 1.x+ | `pip install podman-compose` — required for Demo 02 only |
-| **JDK 21** | Eclipse Temurin 21 | For local dev; containers bring their own JDK |
-| **JDK 25** | Eclipse Temurin 25 | Demo 04 + Demo 08 + Demo 09 only |
+| **JDK 25** | Eclipse Temurin 25 | For local dev; containers bring their own JDK |
 | **Python 3** | stdlib only | Demo 07 analysis engine — no pip installs |
 | **g++ / cmake** | g++ 10+, cmake 3.20+ | Demo 08 native library compilation (inside container) |
 | **hey** | latest | `brew install hey` — REST load tester, Demos 05/06 |
 | **ghz** | latest | `brew install ghz` — gRPC load tester, Demo 05 |
 | **grpcurl** | latest | `brew install grpcurl` — gRPC CLI, Demo 05 |
 
-> **SDKMAN users:** A `.sdkmanrc` file at the repo root pins Java 21.0.10-tem. Run `sdk env` from the repo root to activate it.
+> **SDKMAN users:** A `.sdkmanrc` file at the repo root pins Java 25.0.1-tem. Run `sdk env` from the repo root to activate it.
 
 ---
 
@@ -202,7 +201,7 @@ Training workload is `@QuarkusIntegrationTest`:
 mvn verify -DskipITs=false
 ```
 
-**Three-stage Dockerfile:** `temurin-25` compiler → `ubi9/openjdk-25` trainer → `ubi9/openjdk-25` runtime. JVM fingerprint must match between trainer and runtime — same reason.
+**Three-stage Dockerfile:** `temurin-25` compiler → `ubi10/openjdk-25` trainer → `ubi10/openjdk-25` runtime. JVM fingerprint must match between trainer and runtime — same reason.
 
 ---
 
@@ -240,7 +239,7 @@ Two identical Quarkus apps, same heap, same load. One runs G1GC, one runs ZGC.
 **On-stage framing:**
 > "ZGC is slower in throughput here — that's the load barrier cost. But G1GC froze the application for [N]ms. ZGC froze it for less than 1ms. If your p99 SLA is 50ms and G1GC pauses for 150ms, you breach it on schedule."
 
-**UBI9 default:** `ubi9/openjdk-21-runtime` ships **Shenandoah** as the default GC. Demo 06 overrides it explicitly for the clean comparison:
+**UBI10 default:** `ubi10/openjdk-25-runtime` ships **Shenandoah** as the default GC. Demo 06 overrides it explicitly for the clean comparison:
 ```yaml
 # G1GC container
 JAVA_OPTS: "-XX:+UseG1GC"
@@ -291,7 +290,7 @@ try (Arena arena = Arena.ofConfined()) {
 } // native memory freed here — zero leaks possible
 ```
 
-**Three-stage Dockerfile:** `debian` for g++/cmake → `temurin-25` for Maven → `ubi9/openjdk-25-runtime` with `ldconfig`.
+**Three-stage Dockerfile:** `debian` for g++/cmake → `temurin-25` for Maven → `ubi10/openjdk-25-runtime` with `ldconfig`.
 
 **API note:** `Arena.allocateFrom()` (JDK 22+ final API) — not `allocateArray()` (preview API, removed).
 
@@ -340,16 +339,15 @@ No Python sidecar. No gRPC. No subprocess. The model runs in the JVM.
 | Component | Version | Notes |
 |-----------|---------|-------|
 | Quarkus | 3.33.1 LTS | All Quarkus demos |
-| Spring Boot | 4.0.5 | Demo 03 comparison only |
-| Java (demos 01-06) | 21 LTS (Eclipse Temurin) | UBI9 openjdk-21-runtime |
-| Java (demos 04, 08, 09) | 25 LTS (Eclipse Temurin) | UBI9 openjdk-25-runtime |
-| GC default (UBI9) | **Shenandoah** | Red Hat's concurrent GC |
+| Spring Boot | 4.1.0 | Demo 03 comparison only |
+| Java (all demos) | 25 LTS (Eclipse Temurin) | UBI10 openjdk-25-runtime |
+| GC default (UBI10) | **Shenandoah** | Red Hat's concurrent GC |
 | Container runtime | Podman 4.x+ | Rootless, SELinux-aware |
-| Base image (builder) | `docker.io/library/maven:3.9-eclipse-temurin-21/25` | |
-| Base image (runtime) | `registry.access.redhat.com/ubi9/openjdk-21-runtime` | |
+| Base image (builder) | `docker.io/library/maven:3.9-eclipse-temurin-25` | |
+| Base image (runtime) | `registry.access.redhat.com/ubi10/openjdk-25-runtime` | |
 | Observability | Grafana LGTM (`docker.io/grafana/otel-lgtm:0.8.1`) | |
 | Metrics scraping | `docker.io/prom/prometheus:v3.2.1` | |
-| LangChain4j | 0.36.2 | Demo 09 |
+| LangChain4j | 1.18.1 | Demo 09 |
 | ONNX model | all-MiniLM-L6-v2 | Bundled in Maven dep |
 
 ---
@@ -358,7 +356,7 @@ No Python sidecar. No gRPC. No subprocess. The model runs in the JVM.
 
 All demos are developed and tested on Fedora with rootless Podman. Key gotchas:
 
-**Unqualified image names** prompt a registry selection dialog in non-interactive mode. All image names in `docker-compose.yml` and `Dockerfile` must be fully qualified (`docker.io/library/maven:...`, `registry.access.redhat.com/ubi9/...`).
+**Unqualified image names** prompt a registry selection dialog in non-interactive mode. All image names in `docker-compose.yml` and `Dockerfile` must be fully qualified (`docker.io/library/maven:...`, `registry.access.redhat.com/ubi10/...`).
 
 **SELinux bind mounts** require `:Z` label. Without it, SELinux silently blocks container access to mounted files (no error in application logs). All bind mounts in Demo 02 use `:Z`.
 

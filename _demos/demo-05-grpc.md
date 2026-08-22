@@ -2,7 +2,7 @@
 title: "Demo 05 — REST vs gRPC: Two Protocols"
 demo_number: "05"
 session: bonus
-runtime: "Quarkus 3.33.1 / Java 21"
+runtime: "Quarkus 3.33.1 / Java 25"
 time: "~10 min"
 demo_dir: "quarkus-demo-05-grpc"
 run_command: "./demo.sh"

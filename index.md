@@ -31,7 +31,7 @@ title: Home
     <div class="stat"><div class="stat-val">9</div><div class="stat-lbl">Live Demos</div></div>
     <div class="stat"><div class="stat-val">54</div><div class="stat-lbl">Slides</div></div>
     <div class="stat"><div class="stat-val">−75%</div><div class="stat-lbl">Startup (Leyden)</div></div>
-    <div class="stat"><div class="stat-val">$80k+</div><div class="stat-lbl">Annual Savings Shown</div></div>
+    <div class="stat"><div class="stat-val">−67%</div><div class="stat-lbl">Fleet CPU Cut (Demo 07)</div></div>
     <div class="stat"><div class="stat-val">&lt;1ms</div><div class="stat-lbl">ZGC Pause Target</div></div>
   </div>
 
@@ -42,8 +42,8 @@ title: Home
       <a href="{{ '/demos/demo-01-heap-sizing/' | relative_url }}" class="card">
         <div class="card-num">Demo 01 · Core</div>
         <h3>Container-Aware Heap Sizing</h3>
-        <p>UseContainerSupport + MaxRAMPercentage vs hardcoded -Xmx. Live jcmd output and OOMKill simulation.</p>
-        <div class="card-foot"><span class="tag">Java 21</span><span class="tag tag-muted">⏱ ~5 min</span></div>
+        <p>UseContainerSupport + MaxRAMPercentage vs hardcoded -Xmx. Live heap report and OOMKill simulation.</p>
+        <div class="card-foot"><span class="tag">Java 25</span><span class="tag tag-muted">⏱ ~5 min</span></div>
       </a>
       <a href="{{ '/demos/demo-02-gc-monitoring/' | relative_url }}" class="card">
         <div class="card-num">Demo 02 · Core</div>

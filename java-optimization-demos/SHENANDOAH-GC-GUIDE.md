@@ -14,8 +14,8 @@ the running application — including compaction — so that pause times are no
 longer proportional to heap size. A 1GB heap and a 200GB heap pause for
 roughly the same duration.
 
-**It is the default GC in every Red Hat UBI9 OpenJDK container image.**
-If you deploy on OpenShift using `registry.access.redhat.com/ubi9/openjdk-21-runtime`
+**It is the default GC in every Red Hat UBI10 OpenJDK container image.**
+If you deploy on OpenShift using `registry.access.redhat.com/ubi10/openjdk-25-runtime`
 without setting any GC flags, you are already running Shenandoah.
 
 ---
@@ -26,8 +26,7 @@ The GC you get depends entirely on who built your container image.
 
 | Image | Vendor | Default GC | Typical Pause |
 |-------|--------|-----------|---------------|
-| `registry.access.redhat.com/ubi9/openjdk-21-runtime` | Red Hat | **Shenandoah** | 1–20ms |
-| `registry.access.redhat.com/ubi9/openjdk-25-runtime` | Red Hat | **Shenandoah** | 1–20ms |
+| `registry.access.redhat.com/ubi10/openjdk-25-runtime` | Red Hat | **Shenandoah** | 1–20ms |
 | `eclipse-temurin:21` | Eclipse Adoptium | G1GC | 10–300ms |
 | `amazoncorretto:21` | Amazon | G1GC | 10–300ms |
 | `mcr.microsoft.com/openjdk/jdk:21-ubuntu` | Microsoft | G1GC | 10–300ms |
@@ -317,7 +316,7 @@ collector cannot keep up with the allocation rate. This is logged as
 
 When presenting the GC comparison in the context of OpenShift demos:
 
-> "If you're deploying on OpenShift using the standard UBI9 OpenJDK 21 runtime
+> "If you're deploying on OpenShift using the standard UBI10 OpenJDK 25 runtime
 > image, you're already getting Shenandoah out of the box — without any
 > configuration. That gets you to 1-20ms pauses before you've changed a single
 > flag. The question is whether you need to go further."

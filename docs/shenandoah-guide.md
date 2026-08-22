@@ -2,7 +2,7 @@
 layout: default
 permalink: /docs/shenandoah-guide/
 title: Shenandoah GC Guide
-description: "Red Hat default GC for UBI9 OpenJDK images - comparison with G1GC and ZGC"
+description: "Red Hat default GC for UBI10 OpenJDK images - comparison with G1GC and ZGC"
 ---
 
 <div class="container">
@@ -17,7 +17,7 @@ description: "Red Hat default GC for UBI9 OpenJDK images - comparison with G1GC 
       <h1>Shenandoah GC Guide</h1>
       <p style="color:var(--muted);margin-top:.4rem;">
         Red Hat's concurrent low-latency GC — the default on every
-        <code>ubi9/openjdk-21-runtime</code> and <code>ubi9/openjdk-25-runtime</code> image.
+        <code>ubi10/openjdk-25-runtime</code> image.
       </p>
     </div>
     <a href="{{ site.repo }}/blob/main/java-optimization-demos/SHENANDOAH-GC-GUIDE.md"

@@ -109,17 +109,18 @@ ONNX Runtime Java ship a single JAR that calls the native library directly.
 ```xml
 <!-- Bundles: MiniLM model + ONNX Runtime Java + Panama bindings -->
 <!-- Single dependency — no separate model download -->
+<!-- In-process embedding models use a separate <core>-beta<N> version -->
 <dependency>
     <groupId>dev.langchain4j</groupId>
     <artifactId>langchain4j-embeddings-all-minilm-l6-v2</artifactId>
-    <version>0.36.2</version>
+    <version>1.18.1-beta28</version>
 </dependency>
 
 <!-- LangChain4j core (Embedding, CosineSimilarity types) -->
 <dependency>
     <groupId>dev.langchain4j</groupId>
     <artifactId>langchain4j-core</artifactId>
-    <version>0.36.2</version>
+    <version>1.18.1</version>
 </dependency>
 ```
 
@@ -295,7 +296,7 @@ The ONNX Runtime native library and MiniLM model load into the JVM process:
 | Total ONNX overhead | ~225MB |
 
 **Recommended container memory limit:** 1GB minimum.
-- 512MB heap (`MaxRAMPercentage=75.0` × 768MB container) → too tight
+- ~576MB heap (`MaxRAMPercentage=75.0` × 768MB container) → too tight
 - 1GB container, 75% → ~768MB heap, leaving ~256MB for ONNX overhead ✅
 
 ```yaml
@@ -333,12 +334,14 @@ LangChain4j ONNX + Quarkus builds to a native binary:
 ```bash
 mvn package -Dnative \
   -Dquarkus.native.container-build=true \
-  -Dquarkus.native.builder-image=quay.io/quarkus/ubi-quarkus-mandrel-builder-image:jdk-21
+  -Dquarkus.native.builder-image=quay.io/quarkus/ubi-quarkus-mandrel-builder-image:jdk-25
 ```
 
 Native binary characteristics:
 - Startup: ~17ms
-- RSS: ~60MB
+- RSS: ~200MB (unverified estimate — the ONNX Runtime native library alone is
+  ~150MB and loads into the process regardless of native vs JVM mode; see
+  Memory Sizing below)
 - Full inference capability — model + ONNX Runtime bundled
 
 ---

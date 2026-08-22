@@ -17,10 +17,9 @@ sudo dnf install -y podman git python3
 # podman-compose (Demo 02 only)
 pip install podman-compose --user
 
-# SDKMAN + JDK 21 and JDK 25 (local dev / Demo 04, 08, 09)
+# SDKMAN + JDK 25 (local dev / all demos)
 curl -s "https://get.sdkman.io" | bash
 source "$HOME/.sdkman/bin/sdkman-init.sh"
-sdk install java 21.0.10-tem
 sdk install java 25.0.1-tem
 
 # Load testing (Demo 05, 06)
@@ -54,10 +53,9 @@ podman machine start
 # podman-compose (Demo 02 only)
 pip3 install podman-compose
 
-# SDKMAN + JDK 21 and JDK 25
+# SDKMAN + JDK 25
 curl -s "https://get.sdkman.io" | bash
 source "$HOME/.sdkman/bin/sdkman-init.sh"
-sdk install java 21.0.10-tem
 sdk install java 25.0.1-tem
 
 # Load testing + gRPC (Demo 05, 06)
@@ -72,8 +70,7 @@ brew install hey grpcurl ghz
 |------|---------|---------|---------|---------|---------|---------|---------|---------|---------|
 | podman | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ |
 | podman-compose | — | ✅ | — | — | — | ✅ | — | — | — |
-| JDK 21 | local dev | local dev | local dev | — | local dev | local dev | — | — | — |
-| JDK 25 | — | — | — | ✅ | — | — | — | ✅ | ✅ |
+| JDK 25 | local dev | local dev | local dev | ✅ | local dev | local dev | — | ✅ | ✅ |
 | python3 | — | — | — | — | — | — | ✅ | — | — |
 | hey | — | — | — | — | ✅ | ✅ | — | — | — |
 | grpcurl | — | — | — | — | ✅ | — | — | — | — |
@@ -225,10 +222,10 @@ podman-compose --version
 
 ### SDKMAN (JDK version manager)
 
-**Required for:** Local JDK 21 (dev mode) + JDK 25 (Demos 04, 08, 09)
+**Required for:** Local JDK 25 (dev mode) — all demos
 
 SDKMAN manages multiple JDK versions and switches between them seamlessly.
-The repo includes a `.sdkmanrc` file that pins `java=21.0.10-tem` automatically.
+The repo includes a `.sdkmanrc` file that pins `java=25.0.1-tem` automatically.
 
 #### Fedora
 
@@ -243,15 +240,12 @@ source "$HOME/.sdkman/bin/sdkman-init.sh"
 echo 'source "$HOME/.sdkman/bin/sdkman-init.sh"' >> ~/.bashrc    # bash
 echo 'source "$HOME/.sdkman/bin/sdkman-init.sh"' >> ~/.zshrc     # zsh
 
-# Install JDK 21 (Eclipse Temurin — matches .sdkmanrc)
-sdk install java 21.0.10-tem
-sdk default java 21.0.10-tem
-
-# Install JDK 25 (for Demos 04, 08, 09)
+# Install JDK 25 (Eclipse Temurin — matches .sdkmanrc)
 sdk install java 25.0.1-tem
+sdk default java 25.0.1-tem
 
 # Verify
-java -version          # should show 21.x.x with Temurin
+java -version          # should show 25.x.x with Temurin
 sdk list java | grep installed
 ```
 
@@ -262,10 +256,9 @@ sdk list java | grep installed
 curl -s "https://get.sdkman.io" | bash
 source "$HOME/.sdkman/bin/sdkman-init.sh"
 
-# Install JDKs
-sdk install java 21.0.10-tem
-sdk default java 21.0.10-tem
+# Install JDK
 sdk install java 25.0.1-tem
+sdk default java 25.0.1-tem
 
 # Verify
 java -version
@@ -275,16 +268,12 @@ java -version
 ```bash
 # From the repo root — activates the pinned JDK automatically
 cd quarkus-optimization
-sdk env          # reads .sdkmanrc, switches to java=21.0.10-tem
-
-# For demos requiring JDK 25
-sdk use java 25.0.1-tem
+sdk env          # reads .sdkmanrc, switches to java=25.0.1-tem
 ```
 
 **Switch between versions:**
 ```bash
-sdk use java 21.0.10-tem     # switch to JDK 21 for current shell
-sdk use java 25.0.1-tem      # switch to JDK 25
+sdk use java 25.0.1-tem      # switch to JDK 25 for current shell
 sdk current java              # show active version
 ```
 
@@ -503,10 +492,8 @@ Pre-pulling large images before the demo avoids network delays on stage:
 
 ```bash
 # Core images used across all demos
-podman pull docker.io/library/maven:3.9-eclipse-temurin-21
 podman pull docker.io/library/maven:3.9-eclipse-temurin-25
-podman pull registry.access.redhat.com/ubi9/openjdk-21-runtime
-podman pull registry.access.redhat.com/ubi9/openjdk-25-runtime
+podman pull registry.access.redhat.com/ubi10/openjdk-25-runtime
 
 # Demo 02 observability stack
 podman pull docker.io/grafana/otel-lgtm:0.8.1
@@ -558,7 +545,7 @@ check "curl"          "curl --version | head -1"
 echo
 echo "=== JDK Versions (SDKMAN) ==="
 if command -v sdk &>/dev/null; then
-  sdk list java | grep " installed" | grep -E "21|25"
+  sdk list java | grep " installed" | grep 25
 else
   echo "SDKMAN not found — install from https://sdkman.io"
 fi
@@ -664,10 +651,8 @@ export DOCKER_HOST=$(podman machine inspect --format '{{.ConnectionInfo.PodmanSo
 
 ```bash
 # Remove pulled images (Fedora and macOS)
-podman rmi docker.io/library/maven:3.9-eclipse-temurin-21
 podman rmi docker.io/library/maven:3.9-eclipse-temurin-25
-podman rmi registry.access.redhat.com/ubi9/openjdk-21-runtime
-podman rmi registry.access.redhat.com/ubi9/openjdk-25-runtime
+podman rmi registry.access.redhat.com/ubi10/openjdk-25-runtime
 podman rmi docker.io/grafana/otel-lgtm:0.8.1
 podman rmi docker.io/prom/prometheus:v3.2.1
 
@@ -682,7 +667,6 @@ podman machine rm
 podman volume prune
 
 # Uninstall SDKMAN JDK versions
-sdk uninstall java 21.0.10-tem
 sdk uninstall java 25.0.1-tem
 ```
 
@@ -696,13 +680,13 @@ sdk uninstall java 25.0.1-tem
 # Fedora
 sudo dnf install -y podman git python3
 pip install podman-compose --user
-sdk install java 21.0.10-tem   # optional — containers bring their own JDK
+sdk install java 25.0.1-tem   # optional — containers bring their own JDK
 
 # macOS
 brew install podman && podman machine init --memory 6144 --cpus 2 && podman machine start
 brew install git python3
 pip3 install podman-compose
-sdk install java 21.0.10-tem   # optional
+sdk install java 25.0.1-tem   # optional
 ```
 
 ### Full (All 9 demos — extended / 90-minute session)
@@ -711,7 +695,6 @@ sdk install java 21.0.10-tem   # optional
 # Fedora
 sudo dnf install -y podman git python3
 pip install podman-compose --user
-sdk install java 21.0.10-tem
 sdk install java 25.0.1-tem
 curl -fsSL https://hey-release.s3.us-east-2.amazonaws.com/hey_linux_amd64 \
   -o /usr/local/bin/hey && chmod +x /usr/local/bin/hey
@@ -725,7 +708,6 @@ brew install podman git python3 hey grpcurl ghz
 podman machine init --memory 8192 --cpus 4 --disk-size 60
 podman machine start
 pip3 install podman-compose
-sdk install java 21.0.10-tem
 sdk install java 25.0.1-tem
 ```
 

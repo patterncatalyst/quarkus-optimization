@@ -2,7 +2,7 @@
 ## Quarkus 3.33.1 LTS / Java 21 & 25 / OpenShift & Kubernetes
 
 Quick-reference card for JVM tuning on container platforms. All flags
-verified on Red Hat UBI9 with Podman and OpenShift.
+verified on Red Hat UBI10 with Podman and OpenShift.
 
 ---
 
@@ -32,7 +32,7 @@ the heap scales automatically when you resize the pod.
 ```
 Workload type?
 ├─ General purpose, throughput-oriented, loose SLA → G1GC (default on Temurin/Corretto)
-├─ Deployed on OpenShift / UBI9 → Shenandoah (already the default)
+├─ Deployed on OpenShift / UBI10 → Shenandoah (already the default)
 ├─ p99 SLA < 20ms, heap < 32GB → Shenandoah
 ├─ p99 SLA < 1ms, or heap > 32GB → ZGC + Generational
 └─ Batch/analytics, GC pauses acceptable → G1GC or Parallel GC
@@ -48,7 +48,7 @@ Workload type?
 -XX:ConcGCThreads=<N/2>
 ```
 
-### Shenandoah (Red Hat UBI9 default, JDK 8+)
+### Shenandoah (Red Hat UBI10 default, JDK 8+)
 
 ```bash
 -XX:+UseShenandoahGC
@@ -74,14 +74,14 @@ pause times and smooth CPU profile (no HPA false triggers).
 
 | Image | Default GC | Pauses |
 |-------|-----------|--------|
-| `ubi9/openjdk-21-runtime` | **Shenandoah** | 1–20ms |
+| `ubi10/openjdk-25-runtime` | **Shenandoah** | 1–20ms |
 | `eclipse-temurin:21` | G1GC | 10–300ms |
 | `amazoncorretto:21` | G1GC | 10–300ms |
 | `mcr.microsoft.com/openjdk/jdk:21` | G1GC | 10–300ms |
 | `azul/zulu-openjdk:21` | G1GC | 10–300ms |
 | `ibm-semeru-runtime-open-21` | OpenJ9 Balanced | Different JVM |
 
-> Demos 02 and 06 explicitly override UBI9's Shenandoah default with
+> Demos 02 and 06 explicitly override UBI10's Shenandoah default with
 > `-XX:+UseG1GC` and `-XX:+UseZGC` for clean comparison.
 
 ---
@@ -153,7 +153,7 @@ and runtime. Use the same UBI image in both stages of your multi-stage Dockerfil
 
 ```
 Cold JVM (no optimisation):
-  Spring Boot 4.0.5:  ~2,700ms
+  Spring Boot 4.1.0:  ~2,700ms
   Quarkus 3.33.1:     ~600ms
 
 + AppCDS:
@@ -497,7 +497,7 @@ kubectl set resources deployment/<n> \
 | `MaxRAMPercentage=75.0` | 25.0 | Heap as % of container limit |
 | `InitialRAMPercentage=50.0` | varies | Initial heap |
 | `+UseG1GC` | yes (Temurin/Corretto) | G1GC — general purpose |
-| `+UseShenandoahGC` | yes (UBI9) | Shenandoah — 1-20ms pauses |
+| `+UseShenandoahGC` | yes (UBI10) | Shenandoah — 1-20ms pauses |
 | `+UseZGC` | no | ZGC — sub-ms pauses |
 | `+UseZGC` | no | ZGC — sub-ms pauses (generational default since JDK 23) |
 | `ActiveProcessorCount=N` | auto | Override CPU count for JVM |
@@ -567,13 +567,13 @@ kube_pod_container_resource_requests{resource="memory"}
 
 | Component | Demo 01-06 | Demo 04, 08, 09 | Notes |
 |-----------|-----------|-----------------|-------|
-| Java | 21 LTS | 25 LTS | |
+| Java | 25 LTS | 25 LTS | |
 | Quarkus | 3.33.1 LTS | 3.33.1 LTS | |
-| Spring Boot | 4.0.5 | — | Demo 03 comparison |
-| UBI runtime | openjdk-21-runtime | openjdk-25-runtime | |
+| Spring Boot | 4.1.0 | — | Demo 03 comparison |
+| UBI runtime | openjdk-25-runtime | openjdk-25-runtime | |
 | Default GC (UBI) | **Shenandoah** | **Shenandoah** | |
 | Podman | 4.x+ | 4.x+ | |
 | podman-compose | 1.x+ | — | Demo 02 only |
-| LangChain4j | — | 0.36.2 | Demo 09 |
+| LangChain4j | — | 1.18.1 | Demo 09 |
 | ONNX Runtime | — | bundled | Demo 09 |
 | g++ / cmake | — | 10+ / 3.20+ | Demo 08 (inside container) |

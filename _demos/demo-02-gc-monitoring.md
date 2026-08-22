@@ -2,7 +2,7 @@
 title: "Demo 02 — GC Monitoring with Prometheus"
 demo_number: "02"
 session: core
-runtime: "Quarkus 3.33.1 / Java 21"
+runtime: "Quarkus 3.33.1 / Java 25"
 time: "~10 min"
 demo_dir: "quarkus-demo-02-gc-monitoring"
 run_command: "./demo.sh"
