@@ -94,9 +94,9 @@ public class OnnxResource {
      * Compute cosine similarity between two sentences.
      * Values: 1.0 = identical meaning, 0.0 = unrelated, -1.0 = opposite
      *
-     * Try:
-     *   a="OutOfMemoryError in heap"  b="JVM ran out of memory"    → ~0.85
-     *   a="OutOfMemoryError in heap"  b="database connection timeout" → ~0.15
+     * Try (all-MiniLM-L6-v2 produces moderate cosine values for short texts):
+     *   a="OutOfMemoryError in heap"  b="JVM ran out of memory"    → ~0.48 (related)
+     *   a="OutOfMemoryError in heap"  b="database connection timeout" → ~0.27 (unrelated)
      */
     @GET
     @Path("/similarity")
@@ -178,10 +178,12 @@ public class OnnxResource {
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private static String interpret(double sim) {
-        if (sim > 0.9)  return "very high — nearly identical meaning";
-        if (sim > 0.75) return "high — strongly related";
-        if (sim > 0.5)  return "moderate — somewhat related";
-        if (sim > 0.25) return "low — loosely related";
+        // Thresholds calibrated for all-MiniLM-L6-v2 cosine ranges on short texts
+        // (related pairs land ~0.4-0.6, unrelated ~0.1-0.3 — not 0.8+).
+        if (sim > 0.65) return "very high — nearly identical meaning";
+        if (sim > 0.5)  return "high — strongly related";
+        if (sim > 0.4)  return "moderate — related";
+        if (sim > 0.3)  return "low — loosely related";
         return "very low — unrelated";
     }
 }

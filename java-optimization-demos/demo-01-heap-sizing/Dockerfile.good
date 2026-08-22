@@ -8,7 +8,10 @@ RUN javac HeapInfo.java
 
 FROM eclipse-temurin:25-jre
 WORKDIR /app
-COPY --from=builder /build/HeapInfo.class .
+# Copy ALL compiled classes, including the record's nested class
+# (HeapInfo$MemoryRegion.class) — copying only HeapInfo.class causes
+# NoClassDefFoundError at runtime.
+COPY --from=builder /build/*.class .
 
 # ✅ UseContainerSupport: JVM reads cgroup memory limits, not host RAM
 # ✅ MaxRAMPercentage=75: heap = 75% of container limit (leaves room for off-heap)
@@ -21,7 +24,8 @@ ENV JAVA_OPTS="-XX:+UseContainerSupport \
                -XX:InitialRAMPercentage=50.0 \
                -XX:MinRAMPercentage=25.0 \
                -XX:NativeMemoryTracking=summary \
-               -XX:ParallelGCThreads=2 \
-               -XX:+PrintFlagsFinal"
+               -XX:ParallelGCThreads=2"
+# NOTE: -XX:+PrintFlagsFinal was removed — it dumped ~500 lines of flags ahead
+# of the report on stage. HeapInfo already prints the active -XX flags itself.
 
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS HeapInfo"]

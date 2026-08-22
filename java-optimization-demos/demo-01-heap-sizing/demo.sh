@@ -35,8 +35,8 @@ echo
 
 hr
 echo -e "${BOLD}${RED}SCENARIO A — JVM without container awareness${RESET}"
-echo -e "${RED}Container limit: 512m | JVM flags: NONE${RESET}"
-echo -e "Expected: JVM reads HOST memory and claims a huge heap"
+echo -e "${RED}Container limit: 512m | JVM flags: -XX:-UseContainerSupport (awareness OFF)${RESET}"
+echo -e "Expected: JVM ignores the cgroup limit, reads HOST memory, claims a huge heap"
 hr
 echo
 
@@ -70,7 +70,7 @@ echo
 for mem in 256m 512m 1g; do
     echo -e "${CYAN}  -- Container limit: ${mem} --${RESET}"
     docker run --rm --memory=$mem jvm-demo:good 2>/dev/null \
-        | grep -E "Max Heap|Heap \/ OS|⚠|✅" | sed 's/^/  /' || true
+        | grep -E "Max \(Xmx\)|Heap / container|Verdict" | sed 's/^/  /' || true
     echo
 done
 

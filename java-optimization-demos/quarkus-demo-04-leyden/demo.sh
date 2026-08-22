@@ -39,7 +39,7 @@ fi
 
 echo
 echo -e "  Building ${GREEN}LEYDEN${RESET} (JDK 25 + AOT cache)..."
-echo -e "  ${YELLOW}Training run included — generates quarkus.aot (~30s)${RESET}"
+echo -e "  ${YELLOW}Training run included — generates app.aot (~30s)${RESET}"
 if ! podman build --no-cache -f app/Dockerfile.leyden \
         -t quarkus-leyden:leyden ./app; then
     echo -e "${RED}✗ Leyden build failed${RESET}"; exit 1

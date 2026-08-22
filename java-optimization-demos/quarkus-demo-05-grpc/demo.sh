@@ -147,7 +147,7 @@ if $HAS_GRPCURL; then
   timeout 60 grpcurl -plaintext \
     -d "{\"host\":\"localhost\",\"count\":${STREAM_MESSAGES}}" \
     localhost:9000 MetricsService/StreamMetrics 2>/dev/null \
-    | grep -c '"heapUsedMb"' > /tmp/grpc_msg_count.txt 2>/dev/null || true
+    | grep -ciE '"?heap_?used_?mb' > /tmp/grpc_msg_count.txt 2>/dev/null || true
 
   GRPC_END=$(python3 -c "import time; print(time.time())")
   GRPC_MSG=$(cat /tmp/grpc_msg_count.txt 2>/dev/null || echo "?")
@@ -201,7 +201,7 @@ if $HAS_HEY && $HAS_GHZ; then
   REST_LO=$(hey -n $UNARY_REQUESTS -c $LOW_CONCURRENCY \
     http://localhost:8080/metrics 2>&1)
   REST_LO_RPS=$(echo "$REST_LO" | grep "Requests/sec:" | awk '{print $2}')
-  REST_LO_P99=$(echo "$REST_LO" | grep "99% in"        | awk '{print $3}')
+  REST_LO_P99=$(echo "$REST_LO" | grep -E "99%+ in"    | awk '{print $3}')
 
   GRPC_LO=$(ghz --insecure \
     --proto app/src/main/proto/metrics.proto \
@@ -210,9 +210,9 @@ if $HAS_HEY && $HAS_GHZ; then
     -n $UNARY_REQUESTS -c $LOW_CONCURRENCY \
     localhost:9000 2>&1)
   GRPC_LO_RPS=$(echo "$GRPC_LO" | grep "Requests/sec:" | awk '{print $2}')
-  GRPC_LO_P99=$(echo "$GRPC_LO" | grep "p99:"          | awk '{print $2}')
+  GRPC_LO_P99=$(echo "$GRPC_LO" | grep -E "99 *% in"   | awk '{print $4, $5}')
 
-  echo -e "  ${RED}REST  c=${LOW_CONCURRENCY}:  ${REST_LO_RPS} rps  p99=${REST_LO_P99}${RESET}"
+  echo -e "  ${RED}REST  c=${LOW_CONCURRENCY}:  ${REST_LO_RPS} rps  p99=${REST_LO_P99}s${RESET}"
   echo -e "  ${CYAN}gRPC  c=${LOW_CONCURRENCY}:  ${GRPC_LO_RPS} rps  p99=${GRPC_LO_P99}${RESET}"
   echo -e "  ${YELLOW}⚠  REST wins — expected on localhost with small payload${RESET}"
   echo
@@ -226,7 +226,7 @@ if $HAS_HEY && $HAS_GHZ; then
   REST_HI=$(hey -n $UNARY_REQUESTS -c $HIGH_CONCURRENCY \
     http://localhost:8080/metrics 2>&1)
   REST_HI_RPS=$(echo "$REST_HI" | grep "Requests/sec:" | awk '{print $2}')
-  REST_HI_P99=$(echo "$REST_HI" | grep "99% in"        | awk '{print $3}')
+  REST_HI_P99=$(echo "$REST_HI" | grep -E "99%+ in"    | awk '{print $3}')
 
   GRPC_HI=$(ghz --insecure \
     --proto app/src/main/proto/metrics.proto \
@@ -235,9 +235,9 @@ if $HAS_HEY && $HAS_GHZ; then
     -n $UNARY_REQUESTS -c $HIGH_CONCURRENCY \
     localhost:9000 2>&1)
   GRPC_HI_RPS=$(echo "$GRPC_HI" | grep "Requests/sec:" | awk '{print $2}')
-  GRPC_HI_P99=$(echo "$GRPC_HI" | grep "p99:"          | awk '{print $2}')
+  GRPC_HI_P99=$(echo "$GRPC_HI" | grep -E "99 *% in"   | awk '{print $4, $5}')
 
-  echo -e "  ${RED}REST  c=${HIGH_CONCURRENCY}:  ${REST_HI_RPS} rps  p99=${REST_HI_P99}${RESET}"
+  echo -e "  ${RED}REST  c=${HIGH_CONCURRENCY}:  ${REST_HI_RPS} rps  p99=${REST_HI_P99}s${RESET}"
   echo -e "  ${CYAN}gRPC  c=${HIGH_CONCURRENCY}:  ${GRPC_HI_RPS} rps  p99=${GRPC_HI_P99}${RESET}"
   echo "  The gap closes or flips as HTTP/2 multiplexing absorbs connection overhead."
   echo

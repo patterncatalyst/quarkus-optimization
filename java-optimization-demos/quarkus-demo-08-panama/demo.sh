@@ -140,7 +140,7 @@ cat << 'COMPARE'
   SymbolLookup.libraryLookup("jvmstats", Arena.global())
   Linker.nativeLinker().downcallHandle(symbol, FunctionDescriptor.of(...))
   try (Arena arena = Arena.ofConfined()) {
-      MemorySegment seg = arena.allocateArray(JAVA_DOUBLE, data);
+      MemorySegment seg = arena.allocateFrom(JAVA_DOUBLE, data);
       int result = (int) methodHandle.invoke(seg, data.length, ...);
   }
   // That's it.

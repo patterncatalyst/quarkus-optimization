@@ -9,11 +9,16 @@ RUN javac HeapInfo.java
 
 FROM eclipse-temurin:25-jre
 WORKDIR /app
-COPY --from=builder /build/HeapInfo.class .
+# Copy ALL compiled classes, including nested/record classes
+# (HeapInfo$MemoryRegion.class) — copying only HeapInfo.class causes
+# NoClassDefFoundError at runtime.
+COPY --from=builder /build/*.class .
 
-# ❌ NO UseContainerSupport flags
-# ❌ NO MaxRAMPercentage
-# JVM will read /proc/meminfo and see the HOST's full RAM
-# On a 16GB machine, it will claim ~4GB heap even inside a 512m container!
+# ❌ Container support explicitly DISABLED to reproduce the classic failure.
+#    On JDK 10+ UseContainerSupport is ON by default, so without this flag a
+#    modern JVM would already respect the cgroup limit. Disabling it makes the
+#    JVM read /proc/meminfo and see the HOST's full RAM — claiming ~25% of host
+#    RAM as max heap even inside a 512m container (this is the pre-JDK-10 default
+#    behavior that still bites teams running old images or overriding the flag).
 
-ENTRYPOINT ["java", "HeapInfo"]
+ENTRYPOINT ["java", "-XX:-UseContainerSupport", "HeapInfo"]

@@ -204,7 +204,7 @@
             "type": "prometheus",
             "uid": "ext-prometheus"
           },
-          "expr": "jvm_memory_max_bytes{area=\"heap\",job=\"quarkus-g1gc\"} / 1048576",
+          "expr": "(jvm_memory_max_bytes{area=\"heap\",job=\"quarkus-g1gc\"} > 0) / 1048576",
           "legendFormat": "Max",
           "refId": "B",
           "instant": false
@@ -271,7 +271,7 @@
             "type": "prometheus",
             "uid": "ext-prometheus"
           },
-          "expr": "jvm_memory_max_bytes{area=\"heap\",job=\"quarkus-zgc\"} / 1048576",
+          "expr": "(jvm_memory_max_bytes{area=\"heap\",job=\"quarkus-zgc\"} > 0) / 1048576",
           "legendFormat": "Max",
           "refId": "B",
           "instant": false

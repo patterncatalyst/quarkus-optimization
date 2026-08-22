@@ -124,9 +124,16 @@ hr
 echo -e "${BOLD}Step 3: Results${RESET}"
 echo
 
-python3 - << 'PYEOF'
-b = [488, 481, 460, 455, 458]  # real baseline measurements
-c = [473, 459, 472, 489, 482]  # real AppCDS measurements
+BASE_CSV=$(IFS=,; echo "${baseline_times[*]}")
+APPCDS_CSV=$(IFS=,; echo "${appcds_times[*]}")
+python3 - "$BASE_CSV" "$APPCDS_CSV" << 'PYEOF'
+import sys
+# Use the ACTUAL measured runs from this session (0 = failed parse, dropped)
+b = [int(x) for x in sys.argv[1].split(',') if x.strip() and int(x) > 0]
+c = [int(x) for x in sys.argv[2].split(',') if x.strip() and int(x) > 0]
+if not b or not c:
+    print("  ⚠ Not enough timing data parsed from the runs above — skipping table.")
+    sys.exit(0)
 avg = lambda t: round(sum(t)/len(t))
 b_avg, c_avg = avg(b), avg(c)
 diff = b_avg - c_avg
@@ -134,7 +141,12 @@ print(f"  {'Metric':<28} {'Baseline':>12} {'AppCDS':>12} {'Delta':>10}")
 print(f"  {'─'*64}")
 print(f"  {'Average startup':<28} {b_avg:>10}ms {c_avg:>10}ms {diff:>+8}ms")
 print()
-print(f"  AppCDS delta: {diff:+}ms — within measurement noise")
+if abs(diff) <= 25:
+    print(f"  AppCDS delta: {diff:+}ms — within measurement noise (no meaningful gain on Quarkus)")
+elif diff > 0:
+    print(f"  AppCDS delta: {diff:+}ms faster with AppCDS")
+else:
+    print(f"  AppCDS delta: {diff:+}ms — AppCDS slower this run (noise; Quarkus has little I/O to save)")
 print()
 print("  WHY THE SMALL GAIN? This is the key insight of the demo:")
 print("  Quarkus startup is NOT dominated by class loading.")
