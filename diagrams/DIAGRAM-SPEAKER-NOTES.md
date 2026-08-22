@@ -17,7 +17,7 @@ Companion notes for all diagrams in the `diagrams/` directory. Use these as:
 |------|-------|--------------|---------|
 | `01-gc-hpa-thrash-cycle.excalidraw` | GC → CPU spike → HPA false scale-out | After slide 10 | Core §03 |
 | `02-jvm-memory-regions.excalidraw` | Six JVM memory regions + sizing formula | After slide 6 | Core §01 |
-| `03-aot-cache-progression.excalidraw` | CDS → AppCDS → Leyden JDK 21→25→26 | After slide 16 | Core §04 |
+| `03-aot-cache-progression.excalidraw` | CDS → AppCDS → Leyden JDK 21→24→25→26 | After slide 16 | Core §04 |
 | `04-container-aware-jvm.excalidraw` | Before/after UseContainerSupport | After slide 5 | Core §01 |
 | `05-how-project-leyden-works.excalidraw` | Training run → cache → production | After slide 32 | Bonus Leyden |
 | `06-antipatterns-vs-fixes.excalidraw` | 16 anti-patterns with exact fixes | After slide 53 | Bonus |

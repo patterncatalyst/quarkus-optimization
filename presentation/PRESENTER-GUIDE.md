@@ -2,7 +2,7 @@
 ## Taming the JVM: Optimizing Java Workloads on OpenShift & Kubernetes
 
 **Talk length:** 60 minutes core + bonus slides for extended sessions  
-**Slide count:** 54 slides (30 core + 24 bonus)  
+**Slide count:** 54 slides in the source deck / `.pptx` (30 core + 24 bonus). The reveal.js web deck (`presentation/index.html`) condenses these into 27 slides; the slide numbers referenced throughout this guide follow the 54-slide source deck.  
 **Demo count:** 9 demos (3 core + 6 bonus/extended)  
 **Repo:** github.com/patterncatalyst/quarkus-optimization
 
@@ -12,11 +12,11 @@
 
 ### Day-before checklist
 
-- [ ] Pull latest demo images: `podman pull docker.io/grafana/otel-lgtm:0.8.1` and `docker.io/prom/prometheus:v3.2.1`
+- [ ] Pull latest demo images: `podman pull docker.io/grafana/otel-lgtm:0.29.0` and `docker.io/prom/prometheus:v3.13.2`
 - [ ] Run `./demo.sh` for Demo 01, 02, 03 end-to-end — verify outputs
 - [ ] Confirm `podman-compose` version: `podman-compose --version`
 - [ ] Verify Grafana loads at `http://localhost:3000` during Demo 02 dry run
-- [ ] Check `quarkus.micrometer.distribution.percentiles-histogram.jvm.gc.pause=true` is set in Demo 02 `application.properties` — without this, Grafana panels show no data
+- [ ] Confirm Demo 02 GC-pause histograms are enabled via the `MetricsConfig` MeterFilter CDI bean (the `percentiles-histogram` *property* is not honored in Quarkus 3.33.1) — without the bean, Grafana GC panels show no data
 - [ ] For bonus Demo 04: confirm JDK 25 image pulls correctly
 - [ ] Close all non-essential browser tabs and apps; disable Slack/email notifications
 - [ ] Set screen resolution to 1920×1080 minimum; bump terminal font to 18pt
@@ -33,8 +33,8 @@ Browser tab 3: github.com/patterncatalyst/quarkus-optimization (for QR code refe
 
 ### Known audience reactions to prepare for
 
-- "Why not just use native image?" → Leyden is the answer: JVM dynamics preserved, no closed-world constraint, 60-75% startup gain. Native is the extreme case.
-- "Isn't this Spring Boot content too?" → Demo 03 side-by-side shows the honest comparison. Quarkus + AppCDS is 14× faster than Spring Boot baseline.
+- "Why not just use native image?" → Leyden is the answer: JVM dynamics preserved, no closed-world constraint, ~75% startup gain (measured 609ms→148ms). Native is the extreme case.
+- "Isn't this Spring Boot content too?" → Demo 03 side-by-side shows the honest comparison. Quarkus is ~9× faster than Spring Boot baseline (AppCDS barely moves Quarkus — that's the point).
 - "Our Kubernetes admin won't let us change CPU Manager" → Start with items 1-3 on the tuning ladder — ZGC + thread counts + heap sizing need zero cluster config changes.
 - "ZGC was slower in your benchmark" → Demo 06 caveat: the load barrier cost is real, the GC pause delta is the number that matters for SLAs.
 
@@ -251,18 +251,17 @@ This diagram is the emotional centre of the talk for platform engineers. Let it 
 
 **What to narrate:**
 
-- Stack: Quarkus 3.33.1 LTS + `quarkus-micrometer-opentelemetry` + Grafana LGTM (Tempo + Prometheus)
+- Stack: Quarkus 3.33.1 LTS + `quarkus-micrometer-registry-prometheus` (scraped at `/q/metrics`) + `quarkus-opentelemetry` (OTLP traces) + Grafana LGTM (Tempo + Prometheus)
 - Show live GC pause histograms at `/q/metrics` — `jvm_gc_pause_seconds`
 - Generate GC pressure: `curl "http://localhost:8080/allocate?mb=100&iterations=10"`
 - Point to Grafana — both metrics dashboard and Grafana Tempo traces simultaneously
 - Side-by-side G1GC (port 8080) vs Generational ZGC (port 8081) pause comparison
 - Virtual threads: `curl "http://localhost:8080/virtual-threads?tasks=500&workMs=5"`
 
-**Critical setup note:** The histogram configuration in `application.properties` is essential:
-```properties
-quarkus.micrometer.distribution.percentiles-histogram.jvm.gc.pause=true
-```
-Without this, the Grafana GC pause panels show no data.
+**Critical setup note:** GC-pause histograms are enabled by the `MetricsConfig` MeterFilter CDI bean
+(`app/src/main/java/demo/gc/MetricsConfig.java`), NOT by a property — the
+`quarkus.micrometer.distribution.percentiles-histogram.*` property is not honored in Quarkus 3.33.1.
+Without the MeterFilter bean, the Grafana GC pause panels show no data.
 
 **Known issue (Fedora/RHEL):** All bind mounts need `:Z` for SELinux. Prometheus uses `tmpfs` + `user: root` to avoid rootless Podman volume permission issues.
 
@@ -281,7 +280,7 @@ Without this, the Grafana GC pause panels show no data.
 
 > "Tip from SRE with Java Microservices: if your P99 GC pause is over 500ms, that's your signal to switch from G1GC to ZGC or Shenandoah. Don't tune G1GC parameters hoping to get there — switch the algorithm."
 
-**UBI9 note:** If you're on OpenShift using `ubi9/openjdk-21-runtime`, Shenandoah is your default — you're already getting 1-20ms pauses without any configuration. The demos override it explicitly for clean comparison.
+**UBI10 note:** If you're on OpenShift using `ubi10/openjdk-25-runtime`, Shenandoah is your default — you're already getting 1-20ms pauses without any configuration. The demos override it explicitly for clean comparison.
 
 ---
 
@@ -335,9 +334,9 @@ Three tiers:
 3. **Leyden full AOT (JDK 25)** — extends AppCDS to cache fully linked classes AND JIT method profiles. Quarkus 3.33.1 LTS supports this with the same property.
 
 **Key benchmark:**
-- Quarkus 0.6s JVM baseline → 0.3s with AppCDS (50% faster)
-- Spring Boot 4.2s → 2.4s with AppCDS
-- Quarkus + AppCDS is **14× faster** than Spring Boot baseline
+- Quarkus ~0.5s JVM baseline → ~0.5s with AppCDS (**~flat — that's the point**: Quarkus already moved class-loading work to build time)
+- Spring Boot 4.2s → 2.4s with AppCDS (−43% — class loading IS Spring Boot's bottleneck)
+- Quarkus baseline is **~9× faster** than Spring Boot baseline (with or without AppCDS). Real Quarkus startup gains come from Leyden AOT on JDK 25 (Demo 04, −75%).
 
 **Slide 17 — Virtual Threads (@RunOnVirtualThread)**
 
@@ -373,7 +372,7 @@ public AllocResponse allocate(@QueryParam("mb") int mb) { ... }
 - Quarkus JVM baseline: ~0.3-0.8s (vs Spring Boot ~4-8s — already 10× faster)
 - One property: `quarkus.package.jar.aot.enabled=true`
 - Maven plugin handles training on `@QuarkusIntegrationTest` — no manual `-Xshare:dump`
-- Quarkus + AOT Cache: ~0.15-0.4s (30-50% additional gain)
+- Quarkus + AppCDS: ~flat on Quarkus (little class-loading I/O left to save — that's the honest result). The big win is Leyden AOT on JDK 25 (Demo 04, −75%).
 - Progression: AppCDS (JDK 21) → Leyden `-XX:AOTCache` (JDK 25)
 
 **Honest result to flag:** AppCDS gives ~5% improvement on Quarkus vs ~40% on Spring Boot — because Quarkus already moved class-loading work to build time. The small improvement *proves the point*.
@@ -392,11 +391,11 @@ Four components:
 
 2. **Cryostat** — OpenShift-native JFR management. Discovers pods via annotation, manages recordings via UI, stores in PVC, integrates with Grafana.
 
-3. **OTel → Grafana LGTM** — `quarkus-micrometer-opentelemetry` single extension (preview since 3.19). One extension replaces separate Prometheus registry + OTel extension. All telemetry flows through OTel SDK.
+3. **Metrics + traces → Grafana LGTM** — Demo 02 uses the **separate** extensions: `quarkus-micrometer-registry-prometheus` exposes `/q/metrics` (scraped by standalone Prometheus) and `quarkus-opentelemetry` ships traces via OTLP to Tempo.
 
-4. **Micrometer → OTel (unified)** — `jvm.gc.pause`, `jvm.memory.used`, `jvm.threads.live` via `quarkus.micrometer.binder.jvm=true`
+4. **Micrometer JVM binders** — `jvm.gc.pause`, `jvm.memory.used`, `jvm.threads.live` via `quarkus.micrometer.binder.jvm=true`
 
-**Key point on quarkus-micrometer-opentelemetry:** This new unified extension means all Micrometer metrics, OTel traces, and logs flow through a single OTLP pipeline. If you're on Quarkus 3.19+, use this instead of the separate extensions.
+**Note:** A unified `quarkus-micrometer-opentelemetry` extension exists (sends metrics over OTLP too), but this demo deliberately uses the Prometheus-scrape path so you can point at both `/q/metrics` and Tempo traces. Don't conflate the two.
 
 **Slide 19 — Cryostat: Production JFR on OpenShift**
 
@@ -482,7 +481,7 @@ Five steps: Instrument → Baseline → Diagnose → Tune → Validate & Repeat.
 The four headline numbers:
 - 40-60% memory reduction after right-sizing
 - 2-3× pod density increase per node
-- 55% startup time reduction with AppCDS
+- 75% startup time reduction with Leyden AOT on JDK 25 (AppCDS alone is ~flat on Quarkus)
 - $$$ node cost savings from bin-packing
 
 **ROI measurement tools:**
@@ -528,7 +527,7 @@ Reference the four key links:
 
 The AOT cache progression:
 - JDK 24 (JEP 483): AOT class loading & linking — ~40% startup gain
-- JDK 25 LTS (JEP 514+515): Ergonomics + JIT method profiles — 60-75% startup gain
+- JDK 25 LTS (JEP 514+515): Ergonomics + JIT method profiles — ~75% startup gain (measured 609ms→148ms)
 - JDK 26 (JEP 516): ZGC support added (previously G1GC only)
 - Future: Pre-compiled native code in cache → instant peak performance
 
@@ -539,7 +538,7 @@ What the cache stores:
 
 Leyden vs GraalVM Native:
 - Native: 95-99% faster startup, closed-world AOT, no JIT after start
-- Leyden: 40-55% startup + 15-25% warmup gain, no code changes, full JVM dynamics preserved
+- Leyden: ~75% startup + 15-25% warmup gain, no code changes, full JVM dynamics preserved
 - Different tools for different tradeoffs: Leyden for JVM workloads, Native for footprint-critical
 
 **Slide 33 — DEMO 04**
@@ -555,13 +554,13 @@ What to narrate:
 - One property: `quarkus.package.jar.aot.enabled=true`
 - Build trains on `@QuarkusIntegrationTest` — Maven plugin handles everything
 - Output: `app.aot` alongside `quarkus-run.jar` — Quarkus sets `-XX:AOTCache` automatically
-- Compare baseline startup vs AOT cache: expect 30-50% improvement on JDK 25
+- Compare baseline startup vs AOT cache: expect ~75% improvement on JDK 25 (measured 609ms→148ms)
 - Progression context: AppCDS (JDK 21) → Leyden AOT (JDK 25) → JDK 26 + ZGC
 
 **Verified result:** 609ms → 148ms (−75%) on JDK 25 with Quarkus 3.33.1 LTS.
 
 **Known requirements:**
-- Three-stage Dockerfile: `temurin-25` compiler → `ubi9/openjdk-25` trainer → `ubi9/openjdk-25-runtime`
+- Three-stage Dockerfile: `temurin-25` compiler → `ubi10/openjdk-25` trainer → `ubi10/openjdk-25` runtime
 - JVM fingerprint must match between trainer and runtime (same vendor + version)
 - `aot-jar` packaging (not `fast-jar`) — Quarkus sets this automatically
 
