@@ -17,6 +17,8 @@ buildNumber.properties
 .classpath
 /.idea/
 /.profileconfig.json
-.claude
+# Local Claude state stays out of the repo, but the committed skills travel with it
+.claude/*
+!.claude/skills/
 eval-2026-08-19/
 .quarkus/

@@ -486,6 +486,67 @@ brew install python3
 
 ---
 
+## AI-Assisted Development (Optional)
+
+**Required for:** None of the demos at runtime — this is developer tooling for
+working on the project with Claude Code. Skip it if you only want to run the demos.
+
+The repo ships a Quarkus authoring skill and wires up the Quarkus Agent MCP
+server so Claude Code can scaffold, run, and inspect Quarkus apps in this project.
+
+### `lgtm-quarkus` skill
+
+Committed at `.claude/skills/lgtm-quarkus/`, this skill encodes the project's
+Quarkus conventions — SDKMAN toolchain (JDK 25, Maven 3.9, JBang, Quarkus CLI),
+Micrometer observability, structured logging, Citrus + Newman testing, and UBI 10
+Containerfiles. Claude Code picks it up automatically when working in this repo;
+no install step is needed.
+
+### Quarkus Agent MCP server
+
+Declared in the repo's `.mcp.json` and runs on demand via JBang — a standalone
+MCP server providing Quarkus project lifecycle management, extension coding
+skills, a dev-mode MCP proxy, and documentation search.
+
+**Prerequisites:**
+
+- JBang (resolves the MCP server jar from Maven Central)
+- Java 21+ (JDK 25 recommended — already covered by [SDKMAN](#sdkman-jdk-version-manager) above)
+- Podman or Docker (only for the MCP's documentation search, which runs a pgvector container)
+
+**Install JBang (via SDKMAN, already installed above):**
+```bash
+sdk install jbang
+jbang --version
+```
+
+The `.mcp.json` in the repo root registers the server for this project:
+```json
+{
+  "mcpServers": {
+    "quarkus-agent": {
+      "type": "stdio",
+      "command": "jbang",
+      "args": ["quarkus-agent-mcp@quarkusio"],
+      "env": {}
+    }
+  }
+}
+```
+
+To make it available in **every** project (not just this one), add it at user scope:
+```bash
+claude mcp add -s user quarkus-agent -- jbang quarkus-agent-mcp@quarkusio
+```
+
+**Verify:**
+```bash
+# Inside this repo, Claude Code loads .mcp.json automatically. Check status with:
+claude mcp get quarkus-agent      # should show: Status: ✔ Connected
+```
+
+---
+
 ## Podman Image Pre-Pull (Optional but Recommended)
 
 Pre-pulling large images before the demo avoids network delays on stage:
@@ -725,3 +786,5 @@ sdk install java 25.0.1-tem
 | grpcurl | https://github.com/fullstorydev/grpcurl |
 | ghz | https://ghz.sh |
 | Homebrew | https://brew.sh |
+| JBang | https://www.jbang.dev |
+| Quarkus Agent MCP | https://github.com/quarkusio/quarkus-agent-mcp |

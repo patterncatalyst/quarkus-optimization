@@ -89,6 +89,8 @@ sdk install java 25.0.1-tem</code></pre>
        target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">Uninstall / Cleanup</a>
     <a href="{{ site.repo }}/blob/main/java-optimization-demos/DEMO-PREREQUISITES.md#minimum-vs-full-install"
        target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">Minimum vs Full Install</a>
+    <a href="{{ site.repo }}/blob/main/java-optimization-demos/DEMO-PREREQUISITES.md#ai-assisted-development-optional"
+       target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">AI-Assisted Dev (Optional)</a>
     <a href="{{ site.repo }}/blob/main/java-optimization-demos/DEMO-PREREQUISITES.md#reference-links"
        target="_blank" class="tag tag-teal" style="display:block;padding:.55rem .85rem;font-size:.82rem;text-align:center;">Reference Links</a>
 

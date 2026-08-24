@@ -1,0 +1,51 @@
+<!-- Test dependencies — add to module pom.xml -->
+<dependencies>
+    <!-- Quarkus test framework -->
+    <dependency>
+        <groupId>io.quarkus</groupId>
+        <artifactId>quarkus-junit5</artifactId>
+        <scope>test</scope>
+    </dependency>
+
+    <!-- REST endpoint testing -->
+    <dependency>
+        <groupId>io.rest-assured</groupId>
+        <artifactId>rest-assured</artifactId>
+        <scope>test</scope>
+    </dependency>
+
+    <!-- Citrus integration tests -->
+    <dependency>
+        <groupId>org.citrusframework</groupId>
+        <artifactId>citrus-quarkus</artifactId>
+        <scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.citrusframework</groupId>
+        <artifactId>citrus-http</artifactId>
+        <scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.citrusframework</groupId>
+        <artifactId>citrus-validation-json</artifactId>
+        <scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.citrusframework</groupId>
+        <artifactId>citrus-testcontainers</artifactId>
+        <scope>test</scope>
+    </dependency>
+</dependencies>
+
+<!-- Add to parent pom.xml dependencyManagement -->
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>org.citrusframework</groupId>
+            <artifactId>citrus-bom</artifactId>
+            <version>4.10.3</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
+</dependencyManagement>

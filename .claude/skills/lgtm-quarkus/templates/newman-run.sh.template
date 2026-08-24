@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+COLLECTION_DIR="${1:-test-data/postman}"
+ENV_FILE="${COLLECTION_DIR}/local.postman_environment.json"
+REPORT_DIR="test-data/postman/reports"
+
+mkdir -p "$REPORT_DIR"
+
+echo "Running Newman API tests..."
+
+for collection in "$COLLECTION_DIR"/*.postman_collection.json; do
+    name=$(basename "$collection" .postman_collection.json)
+    echo "  ► $name"
+
+    args=("$collection")
+    [[ -f "$ENV_FILE" ]] && args+=(-e "$ENV_FILE")
+
+    newman run "${args[@]}" \
+        -r cli,htmlextra \
+        --reporter-htmlextra-export "$REPORT_DIR/${name}-report.html" \
+        --reporter-htmlextra-title "$name API Tests"
+done
+
+echo ""
+echo "Reports: $REPORT_DIR/"

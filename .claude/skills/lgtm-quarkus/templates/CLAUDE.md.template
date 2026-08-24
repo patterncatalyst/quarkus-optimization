@@ -1,0 +1,55 @@
+# {{PROJECT_NAME}} — Claude Context
+
+## What this project does
+
+{{ONE_LINE_DESCRIPTION}}
+
+## Tech stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Quarkus {{QUARKUS_VERSION}} |
+| Language | Java 25 |
+| Build | Maven 3.9 |
+| Observability | Micrometer + OpenTelemetry |
+| Container | UBI 10 (`openjdk-25-runtime`) |
+
+## How to run
+
+```bash
+source scripts/load-secrets.sh    # if API keys needed
+quarkus dev                       # live coding mode
+```
+
+## How to test
+
+```bash
+mvn test                          # unit tests
+mvn verify                        # unit + integration tests
+newman run test-data/postman/*.postman_collection.json  # API tests
+```
+
+## Key file locations
+
+```
+src/main/java/                    ← application code
+src/main/resources/
+  application.properties          ← configuration
+src/main/docker/
+  Containerfile                   ← UBI 10 multi-stage build
+src/test/java/                    ← tests (*Test.java = unit, *IT.java = integration)
+logs/                             ← file logging output (gitignored)
+test-data/postman/                ← Postman collections
+```
+
+## Logging
+
+File logging writes to `logs/{{PROJECT_NAME}}.log` with rotation.
+Read with `quarkus_app_log` MCP tool or `Read logs/{{PROJECT_NAME}}.log`.
+
+## MCP tools available
+
+- `quarkus_start` / `quarkus_stop` — lifecycle management
+- `quarkus_logs` — read recent log output
+- `quarkus_skills` — get extension-specific coding patterns
+- `quarkus_searchDocs` — search Quarkus documentation
