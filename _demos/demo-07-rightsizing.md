@@ -27,16 +27,16 @@ python3 analyze.py --cost-per-node-hour 0.768  # custom node cost
 
 | Service | CPU before → after | Memory before → after |
 |---------|-------------------|-----------------------|
-| payment-service (SB) | 2000m → 560m (−72%) | 4096 → 2304Mi (−44%) |
-| fraud-detection (QK) | 1500m → 280m (−81%) | 2048 → 880Mi (−57%) |
-| report-generator (SB) | 4000m → 3640m (−9%) | 8192 → 7744Mi (−5%) |
+| payment-service (SB) | 2000m → 550m (−72%) | 4096 → 2304Mi (−44%) |
+| fraud-detection (QK) | 1500m → 500m (−67%) | 2048 → 896Mi (−56%) |
+| report-generator (SB) | 4000m → 900m (−78%) | 8192 → 7808Mi (−5%) |
 
 > The `report-generator` is the honest exception — batch workload with real CPU and memory near limit. Not everything gets cut.
 
 ## Business case output
 
 ```
-4 nodes → 2 nodes  ·  +67% pod density  ·  $560/month saving  ·  17× ROI
+6 nodes → 2 nodes  ·  +225% pod density  ·  $1,121/month saving  ·  $13,455/year (~50× ROI)
 ```
 
 ## OpenShift Cost Management
