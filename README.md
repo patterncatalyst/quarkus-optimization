@@ -18,13 +18,8 @@ quarkus-optimization/
 ├── diagrams/                    ← Architecture and flow diagrams (Excalidraw)
 │   └── 07-grpc-vs-rest.excalidraw
 │
-├── presentation/                ← Conference slide decks (PowerPoint)
-│   ├── java-openshift-optimization.pptx       Main 32-slide deck
-│   ├── grpc-slides.pptx                        Standalone gRPC slides (3)
-│   ├── low-latency-slides.pptx                 Low-latency + GC vendor slides (5)
-│   ├── rightsizing-slides.pptx                 Right-sizing + cost analysis slides (5)
-│   ├── panama-slides.pptx                      Project Panama slides (3)
-│   └── valhalla-slides.pptx                    Project Valhalla slides (2)
+├── presentation/                ← Conference slide deck (PowerPoint)
+│   └── optimizing-quarkus-on-kubernetes.pptx  Full 56-slide deck
 │
 └── java-optimization-demos/     ← All runnable demos
     ├── README.md                ← Full demo documentation (start here)
@@ -47,7 +42,7 @@ quarkus-optimization/
 | Section | Contents | Start here |
 |---------|----------|------------|
 | **[Demos](./java-optimization-demos/README.md)** | 9 runnable demos, all with `./demo.sh` | `java-optimization-demos/README.md` |
-| **[Slides](./presentation/)** | 6 PowerPoint decks covering the full talk | `presentation/` |
+| **[Slides](./presentation/)** | 56-slide deck covering the full talk | `presentation/` |
 | **[Diagrams](./diagrams/)** | Excalidraw architecture diagrams | `diagrams/` |
 
 ---
@@ -92,54 +87,27 @@ All demos run on **Podman** with **Red Hat UBI 10** runtime containers — the s
 
 ## The Slides
 
-Six PowerPoint decks in the `presentation/` directory, all using a consistent dark navy / teal theme with extensive speaker notes on every slide.
-
-### [Main Deck](./presentation/java-openshift-optimization.pptx) — 32 slides
-
-The complete talk from container heap sizing through Project Leyden. Structured for a 60-minute session with optional bonus slides for extended Q&A.
+One 56-slide deck in the `presentation/` directory — [`optimizing-quarkus-on-kubernetes.pptx`](./presentation/optimizing-quarkus-on-kubernetes.pptx) — using a consistent dark navy / teal theme with extensive speaker notes on every slide. It carries the full talk end to end: agenda and methodology, seven core sections of content, nine demo dividers, a takeaways/resources close, and five topic deep-dives (Leyden, gRPC, low-latency, right-sizing, Panama, Valhalla, anti-patterns) that expand on their respective demos.
 
 | Slides | Topic |
 |--------|-------|
-| 1–5 | Container-aware JVM heap — the `UseContainerSupport` story |
-| 6–12 | GC monitoring — Micrometer, Prometheus, Grafana, HPA interaction |
-| 13–16 | AppCDS — what it caches, Spring Boot vs Quarkus, measured results |
-| 17–22 | Project Leyden — AOT cache, training workload, 3-stage Dockerfile |
-| 23–26 | REST vs gRPC — wire format, streaming, localhost results (with caveats) |
-| 27–32 | Bonus: JVM anti-patterns + remediation, gRPC protocol deep dive |
-
-### [gRPC Slides](./presentation/grpc-slides.pptx) — 3 slides
-
-Standalone deep-dive on gRPC vs REST: intro, protocol comparison (HTTP/2 vs HTTP/1.1, Protobuf vs JSON, header compression), and benchmark results table with localhost caveat.
-
-### [Low-Latency Slides](./presentation/low-latency-slides.pptx) — 5 slides
-
-Covers Demo 06's territory in depth:
-1. Demo 06 intro (G1GC vs ZGC)
-2. The latency problem — stop-the-world vs concurrent GC
-3. Low-latency tuning ladder — 6 levels from easy to advanced
-4. Kubernetes + OpenShift configuration (CPU Manager, Topology Manager, PerformanceProfile)
-5. **Which GC ships by default** — Shenandoah (UBI 10), G1GC (Temurin/Corretto/Azure/Microsoft), OpenJ9 (IBM Semeru) — vendor comparison with barrier type and pause characteristics
-
-### [Right-Sizing Slides](./presentation/rightsizing-slides.pptx) — 5 slides
-
-Covers Demo 07's territory:
-1. Demo 07 intro
-2. The over-provisioning problem — how teams set requests (and why they're wrong)
-3. Right-sizing analysis results — 7-workload table with GC spike detection
-4. Bin-packing improvement — before/after node density
-5. Cost impact & business case — $80,640/year enterprise headline, ROI calculation, OpenShift Cost Management
-
-### [Panama Slides](./presentation/panama-slides.pptx) — 3 slides
-
-Covers Demos 08 and 09:
-1. Project Panama intro — JNI pain points vs FFM/Vector API/jextract solution
-2. Demo 08 — C++20 → FFM architecture, Arena memory model, code comparison
-3. Demo 09 — LangChain4j ONNX stack diagram, four "no Python sidecar" benefits
-
-### [Valhalla Slides](./presentation/valhalla-slides.pptx) — 2 slides
-
-1. The 30-year gap — primitives vs objects, boxing cost, Valhalla value classes
-2. Why it matters for Kubernetes — memory footprint, GC pressure, cache performance (three-column impact analysis)
+| 1–4 | Title, agenda, the Java-on-Kubernetes problem, measurement methodology & caveats |
+| 5–7 | Section 01 — Container-native JVM fundamentals (heap sizing, memory regions) |
+| 8–10 | Section 02 — Right-sizing Java workloads & pod bin-packing |
+| 11–15 | Section 03 — Garbage collection optimization (GC/HPA thrash, GC selection, tuning parameters) |
+| 16–19 | Section 04 — Startup: CDS → AppCDS → Leyden AOT cache, virtual threads & execution models |
+| 20–22 | Section 05 — Observability & instrumentation (JFR, Cryostat, Prometheus/Micrometer) |
+| 23–25 | Section 06 — Autoscaling integration (HPA, VPA, GC-induced thrash prevention) |
+| 26–27 | Section 07 — Systematic tuning workflow & cost optimization |
+| 28–30 | Demo dividers 01–03 (heap sizing, GC monitoring, AppCDS) |
+| 31–32 | Key takeaways & resources / Q&A |
+| 33–35 | Project Leyden deep dive + Demo 04 divider |
+| 36–39 | REST vs gRPC deep dive + Demo 05 divider |
+| 40–44 | Low-latency JVM tuning deep dive + Demo 06 divider |
+| 45–49 | Right-sizing analysis & cost impact deep dive + Demo 07 divider |
+| 50–52 | Project Panama deep dive + Demos 08/09 |
+| 53–54 | Project Valhalla deep dive |
+| 55–56 | Common JVM anti-patterns & remediation |
 
 ---
 
