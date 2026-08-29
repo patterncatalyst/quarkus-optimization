@@ -19,8 +19,8 @@ profiles — see Demo 04 (~75% faster).
 
 | Mode | Typical Startup | Notes |
 |------|----------------|-------|
-| Spring Boot 4.0.5 (baseline) | ~4000-8000 ms | Framework scanning at runtime |
-| Spring Boot 4.0.5 + AppCDS | ~40% faster | AppCDS caches the runtime scanning work |
+| Spring Boot 4.1.0 (baseline) | ~4000-8000 ms | Framework scanning at runtime |
+| Spring Boot 4.1.0 + AppCDS | ~40% faster | AppCDS caches the runtime scanning work |
 | Quarkus 3.33.1 (JVM, no AppCDS) | ~485 ms | Build-time processing |
 | Quarkus 3.33.1 + AppCDS (JDK 25) | ~493 ms | **~flat — within measurement noise** |
 | Quarkus 3.33.1 + Leyden AOT (JDK 25) | ~75% faster | JEP 483 + 515 — Demo 04 |

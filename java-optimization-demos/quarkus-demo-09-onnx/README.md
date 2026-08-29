@@ -199,12 +199,12 @@ itself is what gets stored in a vector database for semantic search.
 ### Semantic similarity — related vs unrelated
 
 ```bash
-# Related sentences → HIGH similarity (~0.80-0.90)
+# Related sentences → moderate similarity (~0.48)
 curl -s "http://localhost:8080/similarity\
 ?a=OutOfMemoryError+heap+space\
 &b=JVM+ran+out+of+memory+GC+overhead+limit+exceeded"
 
-# Unrelated sentences → LOW similarity (~0.10-0.25)
+# Unrelated sentences → LOW similarity (~0.27)
 curl -s "http://localhost:8080/similarity\
 ?a=OutOfMemoryError+heap+space\
 &b=database+connection+pool+exhausted"
@@ -253,11 +253,15 @@ similar first.
 
 | Score | Meaning |
 |-------|---------|
-| 0.90 – 1.00 | Very high — nearly identical meaning |
-| 0.75 – 0.90 | High — strongly related |
-| 0.50 – 0.75 | Moderate — somewhat related |
-| 0.25 – 0.50 | Low — loosely related |
-| 0.00 – 0.25 | Very low — unrelated |
+| > 0.65 | Very high — nearly identical meaning |
+| > 0.50 | High — strongly related |
+| > 0.40 | Moderate — related |
+| > 0.30 | Low — loosely related |
+| ≤ 0.30 | Very low — unrelated |
+
+Thresholds calibrated for `all-MiniLM-L6-v2` cosine ranges on short texts —
+related pairs land ~0.4-0.6, unrelated ~0.1-0.3 (not 0.8+). See
+`interpret()` in `OnnxResource.java`.
 
 ---
 

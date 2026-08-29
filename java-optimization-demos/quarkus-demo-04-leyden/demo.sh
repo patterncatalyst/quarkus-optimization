@@ -23,8 +23,8 @@ cat << 'EOF'
 
   application.properties:  quarkus.package.jar.aot.enabled=true
 
-    JDK 21  → AppCDS: parsed class bytes          (~15-30%)
-    JDK 25  → Leyden: + linked state + JIT profiles (~40-55%)
+    JDK 21  → AppCDS: parsed class bytes          (~15-30%, projected)
+    JDK 25  → Leyden: + linked state + JIT profiles (~75%)
     JDK 26  → + ZGC support (JEP 516)
 
 EOF
@@ -106,21 +106,20 @@ sep  = args.index('---')
 b = [int(x) for x in args[:sep]   if x.isdigit() and int(x) > 0]
 l = [int(x) for x in args[sep+1:] if x.isdigit() and int(x) > 0]
 
-b_avg = round(sum(b)/len(b)) if b else 599
-l_avg = round(sum(l)/len(l)) if l else 140
+b_avg = round(sum(b)/len(b)) if b else 834
+l_avg = round(sum(l)/len(l)) if l else 215
 diff  = b_avg - l_avg
-pct   = diff / b_avg * 100 if b_avg > 0 else 77
+pct   = diff / b_avg * 100 if b_avg > 0 else 75
 
 print(f"  {'Metric':<30} {'Baseline':>14} {'Leyden AOT':>12} {'Delta':>10}")
 print(f"  {'─'*68}")
 print(f"  {'Average startup':<30} {b_avg:>12}ms {l_avg:>10}ms {diff:>+8}ms")
-print(f"  {'Min startup':<30} {min(b) if b else 569:>12}ms {min(l) if l else 134:>10}ms")
+print(f"  {'Min startup':<30} {min(b) if b else 794:>12}ms {min(l) if l else 205:>10}ms")
 print()
 print(f"  🚀 Leyden AOT: {pct:.0f}% faster — {diff}ms saved every startup")
 print()
 print(f"  Full startup ladder (JVM-only, no native):")
 print(f"  {'─'*68}")
-print(f"  {'Spring Boot 4.0.5 baseline':<40} {'~2700 ms':>10}")
 print(f"  {'Quarkus 3.33.1 JVM baseline (fast-jar)':<40} {b_avg:>8}ms")
 print(f"  {'Quarkus 3.33.1 + Leyden AOT (aot-jar)':<40} {l_avg:>8}ms   🏆")
 print()
@@ -135,9 +134,9 @@ echo
 printf "  %-14s %-34s %s\n" "JDK"      "Cache content"                 "Improvement"
 printf "  %-14s %-34s %s\n" "────────" "──────────────────────────────" "──────────────"
 printf "  %-14s %-34s %s\n" "JDK 21"   "Parsed class bytes (AppCDS)"   "~15-30%"
-printf "  %-14s %-34s %s\n" "JDK 24"   "+ linked class state (JEP 483)" "~30-40%"
-printf "  %-14s %-34s %s\n" "JDK 25 ✓" "+ JIT profiles (JEP 515)"      "~40-55%"
-printf "  %-14s %-34s %s\n" "JDK 26"   "+ ZGC support (JEP 516)"       "~40-55% + GC"
+printf "  %-14s %-34s %s\n" "JDK 24"   "+ linked class state (JEP 483)" "~30-40% (projected)"
+printf "  %-14s %-34s %s\n" "JDK 25 ✓" "+ JIT profiles (JEP 515)"      "~75%"
+printf "  %-14s %-34s %s\n" "JDK 26"   "+ ZGC support (JEP 516)"       "~75% + GC (projected)"
 echo
 echo -e "  ${CYAN}Same property. Better JDK = better cache. Zero code changes.${RESET}"
 echo

@@ -15,7 +15,7 @@
   <groupId>demo</groupId>
   <artifactId>spring-startup-demo</artifactId>
   <version>1.0.0</version>
-  <description>Demo 03: AppCDS Startup - Spring Boot 4.0.5 / Java 21</description>
+  <description>Demo 03: AppCDS Startup - Spring Boot 4.1.0 / Java 25</description>
 
   <properties>
     <java.version>25</java.version>

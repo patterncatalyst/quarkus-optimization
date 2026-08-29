@@ -172,7 +172,7 @@ jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"}
 
 **Quarkus:**
 ```properties
-quarkus.package.jar.appcds.enabled=true
+quarkus.package.jar.aot.enabled=true
 ```
 
 **Spring Boot:**

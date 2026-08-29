@@ -11,7 +11,7 @@ to know for real-world adoption.
 
 ## Key Quarkus Differences from Spring Boot
 
-| Aspect | Spring Boot 4.0.5 | Quarkus 3.33.1 LTS |
+| Aspect | Spring Boot 4.1.0 | Quarkus 3.33.1 LTS |
 |--------|-------------------|--------------------|
 | Prometheus endpoint | `/actuator/prometheus` | `/q/metrics` |
 | Health endpoint | `/actuator/health` | `/q/health/live` |

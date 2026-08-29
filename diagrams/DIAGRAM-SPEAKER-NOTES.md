@@ -132,7 +132,7 @@ Walk box by box:
 > "JDK 24 was the first Leyden feature to land in mainline OpenJDK. Now the cache stores the fully loaded and linked class state — not just the bytes, but the resolved references, the verified types, the initialisation state. Spring PetClinic dropped from 2 seconds to 1 second. Quarkus starts at a lower baseline, so the absolute improvement is smaller, but the percentage gain is similar."
 
 **Column 3 — JDK 25 LTS (JEP 514+515) — highlight as current**
-> "This is where we are now. JDK 25 is the current LTS. JEP 515 adds JIT method profiling to the cache. Your hot methods are compiled immediately from the first request. That's the warmup improvement — 15 to 25 percent on top of the startup gain. For a Quarkus app on JDK 25, you're looking at around 148ms with the cache active — verified in Demo 04."
+> "This is where we are now. JDK 25 is the current LTS. JEP 515 adds JIT method profiling to the cache. Your hot methods are compiled immediately from the first request. That's the warmup improvement — 15 to 25 percent on top of the startup gain. For a Quarkus app on JDK 25, you're looking at around 215ms with the cache active — verified in Demo 04."
 
 **Column 4 — JDK 26**
 > "JDK 26 adds ZGC support. Previously the AOT cache was incompatible with ZGC — you had to choose between low-latency garbage collection and fast startup. JEP 516 removes that constraint."
@@ -233,8 +233,8 @@ Walk box by box:
 >
 > "The JVM loads the pre-linked class state directly from the cache. Method profiles are pre-loaded so the JIT starts compiling hot methods immediately — at first request, not after 30 seconds of warmup."
 
-**First request at ~148ms (Demo 04 verified result):**
-> "For a Quarkus app, this brings startup from around 609ms on JDK 25 cold to 148ms with the cache — a 75% reduction. But the number I find more compelling is the warmup story: with the JIT profiles pre-loaded, your P99 latency is good from the very first request."
+**First request at ~215ms (Demo 04 verified result):**
+> "For a Quarkus app, this brings startup from around 834ms on JDK 25 cold to 215ms with the cache — a ~75% reduction. But the number I find more compelling is the warmup story: with the JIT profiles pre-loaded, your P99 latency is good from the very first request."
 
 #### Closing
 

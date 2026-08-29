@@ -1,6 +1,6 @@
 # Demo 07 — Right-Sizing & Cost Impact Analysis
 
-**Quarkus 3.33.1 LTS / Java 21**
+**Quarkus 3.33.1 LTS / Java 25**
 
 A complete right-sizing exercise: observe actual resource usage, generate
 recommendations, model bin-packing improvements, and build a business case.
@@ -105,7 +105,7 @@ Annual savings = (current_nodes − right_sized_nodes) × node_cost_hr × 8,760
 Payback period = implementation_cost / annual_savings × 365
 ```
 
-Typical results: $150K–$500K/year infra savings, payback < 10 days.
+Typical results: $13,455/year on this 7-service demo dataset (payback < 10 days); ~$38K/yr at 20 services (labeled extrapolation).
 
 ---
 

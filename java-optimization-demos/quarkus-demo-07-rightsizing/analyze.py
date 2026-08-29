@@ -299,7 +299,7 @@ def print_gc_recommendations(workloads_with_recs):
         elif gc_p99 < 100:
             rec = f"{YELLOW}Consider ZGC if SLA < 50ms{RESET}"
         elif gc_p99 < 500:
-            rec = f"{RED}Switch to ZGC  -XX:+UseZGC -XX:+ZGenerational{RESET}"
+            rec = f"{RED}Switch to ZGC  -XX:+UseZGC{RESET}"
         else:
             rec = f"{RED}Switch to ZGC + investigate full GC root cause{RESET}"
 
@@ -335,7 +335,7 @@ def print_implementation_plan(workloads_with_recs):
         gc_p99 = w["observed"].get("gc_pause_p99_ms", 0)
         if gc_p99 >= 100:
             print(f"    • {w['namespace']}/{w['deployment']:30} "
-                  f"p99 pause {gc_p99}ms → add -XX:+UseZGC -XX:+ZGenerational")
+                  f"p99 pause {gc_p99}ms → add -XX:+UseZGC")
 
     print()
     print("  All changes applied via rolling update — zero downtime:")
@@ -461,7 +461,7 @@ def main():
     print(f"{CYAN}{BOLD}")
     print("╔══════════════════════════════════════════════════════════════╗")
     print("║  Demo 07: JVM Right-Sizing & Cost Impact Analysis           ║")
-    print("║  Quarkus 3.33.1 LTS + Spring Boot 4.0.5 / Java 21          ║")
+    print("║  Quarkus 3.33.1 LTS + Spring Boot 4.1.0 / Java 25          ║")
     print("╚══════════════════════════════════════════════════════════════╝")
     print(f"{RESET}")
 

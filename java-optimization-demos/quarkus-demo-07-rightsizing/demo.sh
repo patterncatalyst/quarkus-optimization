@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================
 # Demo 07: JVM Right-Sizing & Cost Impact Analysis
-# Quarkus 3.33.1 LTS + Spring Boot 4.0.5 / Java 21
+# Quarkus 3.33.1 LTS + Spring Boot 4.1.0 / Java 25
 #
 # Pure analysis tool — no containers, no network access needed.
 # Uses bundled sample data (14-day Prometheus export, 7 workloads)
@@ -33,7 +33,7 @@ echo
 echo -e "${CYAN}${BOLD}"
 echo "╔══════════════════════════════════════════════════════════════╗"
 echo "║  DEMO 07: Right-Sizing & Cost Impact Analysis               ║"
-echo "║  Quarkus 3.33.1 LTS + Spring Boot 4.0.5 / Java 21          ║"
+echo "║  Quarkus 3.33.1 LTS + Spring Boot 4.1.0 / Java 25          ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo -e "${RESET}"
 

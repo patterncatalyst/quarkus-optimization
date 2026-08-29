@@ -203,7 +203,7 @@ Caches parsed and verified class bytecode. ~5% improvement on Quarkus
 
 ```properties
 # application.properties
-quarkus.package.jar.appcds.enabled=true
+quarkus.package.jar.aot.enabled=true
 ```
 
 ```dockerfile

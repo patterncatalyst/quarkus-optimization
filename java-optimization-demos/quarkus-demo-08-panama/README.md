@@ -41,7 +41,7 @@ Stage 1: ubi9 base + gcc-c++ + cmake
 Stage 2: maven:3.9-eclipse-temurin-25
          → builds Quarkus fast-jar
 
-Stage 3: ubi9/openjdk-25-runtime
+Stage 3: ubi10/openjdk-25-runtime
          → copies .so + Quarkus app
          → ldconfig registers the native library
          → JVM loads it via SymbolLookup at startup

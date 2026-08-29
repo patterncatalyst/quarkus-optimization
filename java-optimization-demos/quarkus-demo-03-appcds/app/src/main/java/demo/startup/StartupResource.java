@@ -10,7 +10,7 @@ import java.util.Map;
 
 /**
  * Demo 03 — AppCDS Startup Acceleration
- * Quarkus 3.33.1 LTS / Java 21
+ * Quarkus 3.33.1 LTS / Java 25
  *
  * Key Quarkus startup facts:
  *   JVM mode baseline:  ~0.3 – 0.8s  (already 5-10x faster than Spring Boot!)
@@ -19,7 +19,7 @@ import java.util.Map;
  *
  * Quarkus AppCDS advantage over Spring Boot:
  *   ONE property in application.properties:
- *     quarkus.package.jar.appcds.enabled=true
+ *     quarkus.package.jar.aot.enabled=true
  *   The Quarkus Maven plugin runs the training pass and bundles the
  *   archive automatically during 'mvn package'. No manual steps needed.
  *

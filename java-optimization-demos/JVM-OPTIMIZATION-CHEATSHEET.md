@@ -1,5 +1,5 @@
 # JVM Optimization Cheat Sheet
-## Quarkus 3.33.1 LTS / Java 21 & 25 / OpenShift & Kubernetes
+## Quarkus 3.33.1 LTS / Java 25 / OpenShift & Kubernetes
 
 Quick-reference card for JVM tuning on container platforms. All flags
 verified on Red Hat UBI10 with Podman and OpenShift.
@@ -117,7 +117,7 @@ Quarkus: ~5% improvement. Spring Boot: ~40% improvement.
 
 ```properties
 # application.properties (Quarkus)
-quarkus.package.jar.appcds.enabled=true
+quarkus.package.jar.aot.enabled=true
 ```
 
 ```bash
@@ -522,7 +522,7 @@ kubectl set resources deployment/<n> \
 | Spring Boot improvement | ~40% | TBD | ~97% |
 | Training required | Yes (startup) | Yes (`@QuarkusIntegrationTest`) | Yes (build-time analysis) |
 | JIT at runtime | Yes | Yes (pre-warmed) | No |
-| Config | `appcds.enabled=true` | `aot.enabled=true` | `-Pnative` profile |
+| Config | `aot.enabled=true` | `aot.enabled=true` | `-Pnative` profile |
 | Packaging | `fast-jar` | **`aot-jar`** (auto) | native binary |
 
 ---

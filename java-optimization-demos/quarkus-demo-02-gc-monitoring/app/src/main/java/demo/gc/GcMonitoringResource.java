@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Demo 02 — GC Monitoring with Prometheus + OpenTelemetry
- * Quarkus 3.33.1 LTS / Java 21
+ * Quarkus 3.33.1 LTS / Java 25
  *
  * NOTE: java.nio.file.Path is intentionally NOT imported here.
  * It conflicts with @jakarta.ws.rs.Path — the explicit import wins
