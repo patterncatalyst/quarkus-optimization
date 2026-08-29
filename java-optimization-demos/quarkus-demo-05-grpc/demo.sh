@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================
 # Demo 05: REST vs gRPC — Same Service, Two Protocols
-# Quarkus 3.33.1 LTS / Java 21
+# Quarkus 3.33.1 LTS / Java 25
 #
 # KEY INSIGHT: gRPC unary is NOT faster than REST on localhost.
 # The gRPC advantage appears in two scenarios this demo shows:
@@ -43,7 +43,7 @@ echo
 echo -e "${CYAN}${BOLD}"
 echo "╔══════════════════════════════════════════════════════════════╗"
 echo "║  DEMO 05: REST vs gRPC — Same Quarkus Service               ║"
-echo "║  Quarkus 3.33.1 LTS / Java 21                               ║"
+echo "║  Quarkus 3.33.1 LTS / Java 25                               ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo -e "${RESET}"
 

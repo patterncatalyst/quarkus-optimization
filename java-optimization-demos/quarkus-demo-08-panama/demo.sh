@@ -45,7 +45,7 @@ echo -e "${YELLOW}Step 1: Building C++20 library + Quarkus app${RESET}"
 hr
 echo "  Stage 1: g++ compiles jvmstats.cpp → libjvmstats.so"
 echo "  Stage 2: maven builds Quarkus fast-jar"
-echo "  Stage 3: UBI9 openjdk-25-runtime + ldconfig for library path"
+echo "  Stage 3: UBI10 openjdk-25-runtime + ldconfig for library path"
 echo
 if ! podman build -t quarkus-panama-demo:latest .; then
   echo -e "${RED}✗ Build failed${RESET}"; exit 1

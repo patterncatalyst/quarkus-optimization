@@ -11,7 +11,7 @@
       "namespace": "payments",
       "deployment": "payment-service",
       "replicas": 4,
-      "framework": "Spring Boot 4.0.5",
+      "framework": "Spring Boot 4.1.0",
       "requests": { "cpu_millicores": 2000, "memory_mb": 4096 },
       "limits":   { "cpu_millicores": 2000, "memory_mb": 4096 },
       "observed": {
@@ -53,7 +53,7 @@
       "namespace": "orders",
       "deployment": "order-processor",
       "replicas": 6,
-      "framework": "Spring Boot 4.0.5",
+      "framework": "Spring Boot 4.1.0",
       "requests": { "cpu_millicores": 1000, "memory_mb": 3072 },
       "limits":   { "cpu_millicores": 2000, "memory_mb": 3072 },
       "observed": {
@@ -95,7 +95,7 @@
       "namespace": "notifications",
       "deployment": "email-service",
       "replicas": 2,
-      "framework": "Spring Boot 4.0.5",
+      "framework": "Spring Boot 4.1.0",
       "requests": { "cpu_millicores": 500, "memory_mb": 2048 },
       "limits":   { "cpu_millicores": 500, "memory_mb": 2048 },
       "observed": {
@@ -116,7 +116,7 @@
       "namespace": "analytics",
       "deployment": "report-generator",
       "replicas": 2,
-      "framework": "Spring Boot 4.0.5",
+      "framework": "Spring Boot 4.1.0",
       "requests": { "cpu_millicores": 4000, "memory_mb": 8192 },
       "limits":   { "cpu_millicores": 4000, "memory_mb": 8192 },
       "observed": {

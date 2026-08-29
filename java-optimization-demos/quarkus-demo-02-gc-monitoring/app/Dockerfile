@@ -1,5 +1,5 @@
 # ============================================================
-# Demo 02 — Quarkus 3.33.1 LTS / Java 21 — JVM mode
+# Demo 02 — Quarkus 3.33.1 LTS / Java 25 — JVM mode
 #
 # Quarkus produces a layered JAR structure in target/quarkus-app/
 #   quarkus-app/quarkus-run.jar   ← entrypoint

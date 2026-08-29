@@ -1,4 +1,4 @@
-# Demo 03 — AppCDS Startup: Spring Boot 4.0.5 / Java 21
+# Demo 03 — AppCDS Startup: Spring Boot 4.1.0 / Java 25
 
 Demonstrates the 3-step manual AppCDS process for Spring Boot, contrasted
 with Quarkus's single-property approach in `../quarkus-demo-03-appcds/`.
@@ -22,7 +22,7 @@ java -Xshare:on -XX:SharedArchiveFile=app.jsa -jar app.jar
 ## Quarkus AppCDS: 1 Property
 
 ```properties
-quarkus.package.jar.appcds.enabled=true
+quarkus.package.jar.aot.enabled=true
 ```
 
 Maven plugin handles all three steps automatically.
@@ -31,7 +31,7 @@ Maven plugin handles all three steps automatically.
 
 | | Baseline | AppCDS | Saving |
 |--|---------|--------|--------|
-| Spring Boot 4.0.5 | ~4000-6000 ms | ~2400-3600 ms | ~35-43% |
+| Spring Boot 4.1.0 | ~4000-6000 ms | ~2400-3600 ms | ~35-43% |
 
 ## Running
 

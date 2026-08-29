@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================
 # Demo 06: Low-Latency JVM — G1GC vs ZGC
-# Quarkus 3.33.1 LTS / Java 21
+# Quarkus 3.33.1 LTS / Java 25
 #
 # Two identical Quarkus apps, same heap, same load:
 #   G1GC app  → http://localhost:8080  (stop-the-world pauses)
@@ -61,13 +61,13 @@ echo
 echo -e "${CYAN}${BOLD}"
 echo "╔══════════════════════════════════════════════════════════════╗"
 echo "║  DEMO 06: Low-Latency JVM — G1GC vs ZGC                     ║"
-echo "║  Quarkus 3.33.1 LTS / Java 21                               ║"
+echo "║  Quarkus 3.33.1 LTS / Java 25                               ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo -e "${RESET}"
 
 echo -e "${YELLOW}Setup:${RESET}"
 echo "  G1GC  → http://localhost:8080  (-XX:+UseG1GC)"
-echo "  ZGC   → http://localhost:8081  (-XX:+UseZGC -XX:+ZGenerational)"
+echo "  ZGC   → http://localhost:8081  (-XX:+UseZGC)"
 echo "  Same code. Same heap (75% of 512MB). Different GC algorithm."
 echo
 
@@ -288,7 +288,7 @@ hr
 echo
 cat << 'FLAGS'
   # 1. Switch GC (biggest single impact, zero infrastructure change):
-  -XX:+UseZGC -XX:+ZGenerational
+  -XX:+UseZGC
 
   # 2. Match thread counts to CPU request (prevents oversubscription):
   -XX:ActiveProcessorCount=<N>

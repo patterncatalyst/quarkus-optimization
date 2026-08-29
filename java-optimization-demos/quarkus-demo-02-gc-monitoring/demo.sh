@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Demo 02 (Quarkus): GC Monitoring — Grafana LGTM Stack
-# Quarkus 3.33.1 LTS / Java 21
+# Quarkus 3.33.1 LTS / Java 25
 # Observability: Prometheus + Grafana Tempo (OTLP traces) + Grafana dashboards
 
 set -e
@@ -13,7 +13,7 @@ echo
 echo -e "${CYAN}${BOLD}"
 echo "╔══════════════════════════════════════════════════════════════╗"
 echo "║  DEMO 02 (Quarkus): GC Monitoring — Grafana LGTM Stack      ║"
-echo "║  Quarkus 3.33.1 LTS / Java 21                               ║"
+echo "║  Quarkus 3.33.1 LTS / Java 25                               ║"
 echo "║  Traces → Grafana Tempo (OTLP)  |  Metrics → Prometheus     ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo -e "${RESET}"

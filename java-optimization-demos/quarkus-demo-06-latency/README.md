@@ -1,6 +1,6 @@
 # Demo 06 — Low-Latency JVM: G1GC vs ZGC
 
-**Quarkus 3.33.1 LTS / Java 21**
+**Quarkus 3.33.1 LTS / Java 25**
 
 Two identical Quarkus applications run simultaneously under identical GC
 pressure. The only difference is the garbage collector. This demo shows

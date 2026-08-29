@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================
 # Demo 03 (Quarkus): AppCDS Startup Time Acceleration
-# Quarkus 3.33.1 LTS / Java 21
+# Quarkus 3.33.1 LTS / Java 25
 #
 # KEY STORY: Quarkus is already 5-10x faster than Spring Boot.
 # AppCDS adds another 30-50% on top of that.
@@ -32,7 +32,7 @@ echo
 echo -e "${CYAN}${BOLD}"
 echo "╔══════════════════════════════════════════════════════════════╗"
 echo "║  DEMO 03 (Quarkus): AppCDS Startup Acceleration             ║"
-echo "║  Quarkus 3.33.1 LTS / Java 21                               ║"
+echo "║  Quarkus 3.33.1 LTS / Java 25                               ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo -e "${RESET}"
 
@@ -156,13 +156,12 @@ print("  extension pre-computation, metadata generation).")
 print("  There is little I/O left for AppCDS to save.")
 print()
 print("  Contrast with Spring Boot where class loading IS the bottleneck:")
-print(f"    Spring Boot 4.0.5 baseline: ~4200 ms")
-print(f"    Spring Boot + AppCDS:        ~2400 ms   (-43%)")
-print(f"    Quarkus baseline:            ~{b_avg} ms   ({round(4200/b_avg,1)}x faster than Spring Boot)")
-print(f"    Quarkus + AppCDS:            ~{c_avg} ms   ({round(4200/c_avg,1)}x faster than Spring Boot baseline)")
+print(f"    Spring Boot baseline:        ~6.6s   (cited Quarkus benchmark, not measured here)")
+print(f"    Quarkus baseline:            ~{b_avg} ms   ({round(6600/b_avg,1)}x faster than Spring Boot)")
+print(f"    Quarkus + AppCDS:            ~{c_avg} ms   ({round(6600/c_avg,1)}x faster than Spring Boot baseline)")
 print()
 print("  For real Quarkus startup gains: Demo 04 — JDK 25 Leyden AOT cache")
-print("  JIT profiles + linked class state = 40-55% improvement")
+print("  JIT profiles + linked class state = ~75% improvement")
 PYEOF
 
 # ── Quarkus-specific notes ─────────────────────────────────────────

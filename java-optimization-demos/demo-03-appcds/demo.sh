@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Demo 03: Startup Comparison — Spring Boot 4.0.5 vs Quarkus 3.33.1
+# Demo 03: Startup Comparison — Spring Boot 4.1.0 vs Quarkus 3.33.1
 # Shows WHY Quarkus doesn't need AppCDS: it already eliminated the work.
 set -e
 set -o pipefail
@@ -13,7 +13,7 @@ echo
 echo -e "${CYAN}${BOLD}"
 echo "╔══════════════════════════════════════════════════════════════╗"
 echo "║  DEMO 03: Why Quarkus Doesn't Need AppCDS                   ║"
-echo "║  Spring Boot 4.0.5 vs Quarkus 3.33.1 / Java 21             ║"
+echo "║  Spring Boot 4.1.0 vs Quarkus 3.33.1 / Java 25             ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo -e "${RESET}"
 
@@ -25,7 +25,7 @@ cat << 'EOF'
     3. java -Xshare:on -XX:SharedArchiveFile=app.jsa -jar app.jar
 
   Quarkus AppCDS: ONE property, plugin handles everything.
-    quarkus.package.jar.appcds.enabled=true
+    quarkus.package.jar.aot.enabled=true
 
   But here's the twist we're about to demonstrate...
 
@@ -100,16 +100,21 @@ sep = args.index("---")
 b = [int(x) for x in args[:sep]  if x.isdigit() and int(x) > 0]
 c = [int(x) for x in args[sep+1:] if x.isdigit() and int(x) > 0]
 
-b_avg = round(sum(b)/len(b)) if b else 2700
-c_avg = round(sum(c)/len(c)) if c else 2400
-quarkus_ms = 470   # from Demo 03 Quarkus run
+b_avg_is_estimate = not bool(b)
+c_avg_is_estimate = not bool(c)
+b_avg = round(sum(b)/len(b)) if b else 2700   # fallback estimate, not measured
+c_avg = round(sum(c)/len(c)) if c else 2400   # fallback estimate, not measured
+quarkus_ms = 485   # measured, from quarkus-demo-03-appcds run
 
 diff = b_avg - c_avg
 pct  = diff / b_avg * 100 if b_avg > 0 else 0
 
+b_label = f"{b_avg}ms{' (estimate)' if b_avg_is_estimate else ''}"
+c_label = f"{c_avg}ms{' (estimate)' if c_avg_is_estimate else ''}"
+
 print(f"  {'':28} {'Spring Boot':>14} {'+ AppCDS':>14}")
 print(f"  {'─'*58}")
-print(f"  {'Average startup':<28} {b_avg:>12}ms {c_avg:>12}ms")
+print(f"  {'Average startup':<28} {b_label:>12} {c_label:>12}")
 print()
 
 if abs(diff) < 100:
@@ -121,10 +126,10 @@ else:
 print()
 print(f"  Now compare to Quarkus (from quarkus-demo-03-appcds):")
 print(f"  {'─'*58}")
-print(f"  {'Spring Boot baseline':<28} {b_avg:>12}ms")
-print(f"  {'Spring Boot + AppCDS':<28} {c_avg:>12}ms  ← 3 manual steps required")
+print(f"  {'Spring Boot baseline':<28} {b_label:>12}")
+print(f"  {'Spring Boot + AppCDS':<28} {c_label:>12}  ← 3 manual steps required")
 print(f"  {'Quarkus baseline':<28} {quarkus_ms:>12}ms  ← zero AppCDS flags")
-print(f"  {'Quarkus + AppCDS':<28} {'~460ms':>12}   ← 1 property (negligible gain)")
+print(f"  {'Quarkus + AppCDS':<28} {'~493ms':>12}   ← 1 property (negligible gain)")
 print()
 print(f"  Quarkus is {b_avg // quarkus_ms}x faster than Spring Boot WITH NO OPTIMIZATION FLAGS.")
 print()
@@ -138,5 +143,5 @@ hr
 echo -e "${GREEN}${BOLD}Demo 03 complete!${RESET}"
 echo
 echo -e "  → Next: ${CYAN}quarkus-demo-04-leyden${RESET} — Project Leyden AOT cache on JDK 25"
-echo -e "          Same 1-property story, 40-55% Quarkus startup improvement"
+echo -e "          Same 1-property story, ~75% Quarkus startup improvement"
 echo

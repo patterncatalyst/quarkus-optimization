@@ -22,3 +22,4 @@ buildNumber.properties
 !.claude/skills/
 eval-2026-08-19/
 .quarkus/
+__pycache__/

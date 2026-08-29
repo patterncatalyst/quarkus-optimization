@@ -28,7 +28,7 @@ public class StartupDemoApp {
     public Map<String, Object> home() {
         return Map.of(
             "app",       "spring-startup-demo",
-            "framework", "Spring Boot 4.0.5",
+            "framework", "Spring Boot 4.1.0",
             "java",      System.getProperty("java.version"),
             "startupMs", APP_READY_MS - JVM_START_MS
         );
