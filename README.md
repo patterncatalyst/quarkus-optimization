@@ -12,7 +12,7 @@
 quarkus-optimization/
 │
 ├── README.md                    ← You are here
-├── .sdkmanrc                    ← Pins Java 21.0.10-tem (Eclipse Temurin) via SDKMAN
+├── .sdkmanrc                    ← Pins Java 25.0.1-tem (Eclipse Temurin) via SDKMAN
 ├── .gitignore
 │
 ├── diagrams/                    ← Architecture and flow diagrams (Excalidraw)
@@ -54,7 +54,7 @@ quarkus-optimization/
 
 ## The Demos
 
-All demos run on **Podman** with **Red Hat UBI9** runtime containers — the same toolchain used in production OpenShift environments. Java 21 LTS for most demos; Java 25 LTS for Demos 04, 08, and 09.
+All demos run on **Podman** with **Red Hat UBI 10** runtime containers — the same toolchain used in production OpenShift environments. Java 25 LTS.
 
 > **Running on Fedora/RHEL?** See the [Podman gotchas section](./java-optimization-demos/README.md#podman-on-fedoraenterprise-linux--known-issues) in the demos README — SELinux bind mount labels and rootless Podman volume permissions require specific configuration covered there.
 
@@ -62,18 +62,18 @@ All demos run on **Podman** with **Red Hat UBI9** runtime containers — the sam
 
 | Demo | Topic | Runtime | Time |
 |------|-------|---------|------|
-| [Demo 01](./java-optimization-demos/demo-01-heap-sizing/) | Container-aware heap sizing — `UseContainerSupport` + `MaxRAMPercentage` | Java 21 | ~5 min |
-| [Demo 02](./java-optimization-demos/quarkus-demo-02-gc-monitoring/) | GC monitoring with Prometheus + Grafana LGTM | Quarkus 3.33.1 / Java 21 | ~10 min |
-| [Demo 03 (Quarkus)](./java-optimization-demos/quarkus-demo-03-appcds/) | AppCDS startup acceleration — ~5% improvement | Quarkus 3.33.1 / Java 21 | ~8 min |
-| [Demo 03 (Spring Boot)](./java-optimization-demos/demo-03-appcds/) | AppCDS startup acceleration — ~40% improvement | Spring Boot 4.0.5 / Java 21 | ~8 min |
+| [Demo 01](./java-optimization-demos/demo-01-heap-sizing/) | Container-aware heap sizing — `UseContainerSupport` + `MaxRAMPercentage` | Java 25 | ~5 min |
+| [Demo 02](./java-optimization-demos/quarkus-demo-02-gc-monitoring/) | GC monitoring with Prometheus + Grafana LGTM | Quarkus 3.33.1 / Java 25 | ~10 min |
+| [Demo 03 (Quarkus)](./java-optimization-demos/quarkus-demo-03-appcds/) | AppCDS startup acceleration — ~5% improvement | Quarkus 3.33.1 / Java 25 | ~8 min |
+| [Demo 03 (Spring Boot)](./java-optimization-demos/demo-03-appcds/) | AppCDS startup acceleration — ~40% improvement | Spring Boot 4.0.5 / Java 25 | ~8 min |
 | [Demo 04](./java-optimization-demos/quarkus-demo-04-leyden/) | Project Leyden AOT cache — 609ms → 148ms (−75%) | Quarkus 3.33.1 / **Java 25** | ~12 min |
 
 ### Protocol & Latency
 
 | Demo | Topic | Runtime | Time |
 |------|-------|---------|------|
-| [Demo 05](./java-optimization-demos/quarkus-demo-05-grpc/) | REST vs gRPC — same service, two protocols | Quarkus 3.33.1 / Java 21 | ~10 min |
-| [Demo 06](./java-optimization-demos/quarkus-demo-06-latency/) | Low-latency JVM: G1GC vs ZGC GC pause delta | Quarkus 3.33.1 / Java 21 | ~10 min |
+| [Demo 05](./java-optimization-demos/quarkus-demo-05-grpc/) | REST vs gRPC — same service, two protocols | Quarkus 3.33.1 / Java 25 | ~10 min |
+| [Demo 06](./java-optimization-demos/quarkus-demo-06-latency/) | Low-latency JVM: G1GC vs ZGC GC pause delta | Quarkus 3.33.1 / Java 25 | ~10 min |
 
 ### Operations & Economics
 
@@ -118,7 +118,7 @@ Covers Demo 06's territory in depth:
 2. The latency problem — stop-the-world vs concurrent GC
 3. Low-latency tuning ladder — 6 levels from easy to advanced
 4. Kubernetes + OpenShift configuration (CPU Manager, Topology Manager, PerformanceProfile)
-5. **Which GC ships by default** — Shenandoah (UBI9), G1GC (Temurin/Corretto/Azure/Microsoft), OpenJ9 (IBM Semeru) — vendor comparison with barrier type and pause characteristics
+5. **Which GC ships by default** — Shenandoah (UBI 10), G1GC (Temurin/Corretto/Azure/Microsoft), OpenJ9 (IBM Semeru) — vendor comparison with barrier type and pause characteristics
 
 ### [Right-Sizing Slides](./presentation/rightsizing-slides.pptx) — 5 slides
 
@@ -156,11 +156,11 @@ Architecture and flow diagrams in `diagrams/` — all in Excalidraw format, edit
 ## Tool Versions & Setup
 
 ```bash
-# SDKMAN (recommended) — activates Java 21.0.10-tem automatically
+# SDKMAN (recommended) — activates Java 25.0.1-tem automatically
 sdk env
 
 # Verify
-java -version    # should show Eclipse Temurin 21.0.10
+java -version    # should show Eclipse Temurin 25.0.1
 podman --version # 4.x+
 
 # For gRPC demos (Demo 05)
@@ -187,14 +187,14 @@ Containers for all demos bring their own JDK via the UBI base images — local J
 
 | Image | Default GC | Notes |
 |-------|-----------|-------|
-| `registry.access.redhat.com/ubi9/openjdk-21-runtime` | **Shenandoah** | Red Hat's concurrent GC, 1–20ms pauses |
+| `registry.access.redhat.com/ubi10/openjdk-25-runtime` | **Shenandoah** | Red Hat's concurrent GC, 1–20ms pauses |
 | `eclipse-temurin:21` | G1GC | OpenJDK upstream default |
 | `amazoncorretto:21` | G1GC | Shenandoah available as option |
 | `mcr.microsoft.com/openjdk/jdk:21` | G1GC | Upstream default |
 | `azul/zulu-openjdk:21` | G1GC | Upstream default |
 | `ibm-semeru-runtime-open-21` | OpenJ9 GC | Different JVM entirely |
 
-Demos 02 and 06 explicitly override the UBI9 Shenandoah default with `-XX:+UseG1GC` and `-XX:+UseZGC` for clean comparison. In production on OpenShift, Shenandoah (the default) gives 1–20ms pauses without any configuration.
+Demos 02 and 06 explicitly override the UBI 10 Shenandoah default with `-XX:+UseG1GC` and `-XX:+UseZGC` for clean comparison. In production on OpenShift, Shenandoah (the default) gives 1–20ms pauses without any configuration.
 
 **The two problems these demos solve:**
 
