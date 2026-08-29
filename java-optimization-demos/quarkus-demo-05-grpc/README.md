@@ -74,8 +74,8 @@ grpcurl -plaintext -d '{"host":"localhost"}' \
 
 | Scenario | REST (JSON/HTTP1.1) | gRPC (Protobuf/HTTP2) | Winner |
 |----------|---------------------|------------------------|--------|
-| Unary, low concurrency (c=50, localhost) | ~31,000 rps | ~12,500 rps | **REST** |
-| Unary, high concurrency (c=500, localhost) | ~parity | ~parity | tie |
+| Unary, low concurrency (c=50, localhost) | ~26,700 rps | ~10,200 rps | **REST** |
+| Unary, high concurrency (c=500, localhost) | gap narrows | ~parity to gRPC-ahead (varies run-to-run) | ~tie |
 | Server streaming (1 conn, 1000 msgs) | no equivalent | decisive | **gRPC** |
 | Wire payload | ~220 bytes | ~40 bytes | **gRPC** (−82%) |
 
@@ -83,7 +83,7 @@ grpcurl -plaintext -d '{"host":"localhost"}' \
 
 - **REST is faster for localhost unary calls.** Over loopback there is no
   network latency to amortize, so REST's lighter per-call machinery wins
-  outright (~31k vs ~12.5k rps at c=50).
+  outright (~26.7k vs ~10.2k rps at c=50).
 - **gRPC is decisively faster for streaming.** One persistent HTTP/2
   connection pushes a continuous stream of snapshots; REST has no equivalent
   (you would need SSE/WebSocket plus hand-rolled framing).

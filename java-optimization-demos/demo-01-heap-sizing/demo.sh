@@ -91,9 +91,10 @@ EOF
 
 echo
 echo -e "${YELLOW}Simulating — the container will exit with OOMKilled (exit 137):${RESET}"
-docker run --rm --memory=64m jvm-demo:bad 2>&1 | head -5 || {
-    echo -e "${RED}  Container killed (exit code 137 = OOMKill) — exactly what Kubernetes does!${RESET}"
-}
+docker run --rm --memory=64m jvm-demo:bad 2>&1 | head -5
+if [ "${PIPESTATUS[0]}" -ne 0 ]; then
+    echo -e "${RED}  Container killed (exit code ${PIPESTATUS[0]} = OOMKill) — exactly what Kubernetes does!${RESET}"
+fi
 
 echo
 hr
