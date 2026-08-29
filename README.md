@@ -2,7 +2,7 @@
 
 > Conference talk companion repository — demos, slides, and diagrams for a 60-minute session on JVM performance engineering for cloud-native Java teams.
 
-**Talk abstract:** Most Java teams deploy to Kubernetes with misconfigured heaps, oversized resource requests, wrong GC algorithms, and no visibility into what the JVM is actually doing. This session walks through nine live demos covering container-aware JVM tuning, startup acceleration, GC monitoring, protocol selection, latency engineering, right-sizing, native interop via Project Panama, and AI inference — all on Quarkus 3.33.1 LTS with real metrics and honest benchmark results.
+**Talk abstract:** Most Java teams deploy to Kubernetes with misconfigured heaps, oversized resource requests, wrong GC algorithms, and no visibility into what the JVM is actually doing. This session walks through nine live demos covering container-aware JVM tuning, startup acceleration, GC monitoring, protocol selection, latency engineering, right-sizing, native interop via Project Panama, and AI inference — all on Quarkus 3.33.1 LTS with real metrics and reproducible benchmark results.
 
 ---
 
@@ -102,9 +102,9 @@ The complete talk from container heap sizing through Project Leyden. Structured 
 |--------|-------|
 | 1–5 | Container-aware JVM heap — the `UseContainerSupport` story |
 | 6–12 | GC monitoring — Micrometer, Prometheus, Grafana, HPA interaction |
-| 13–16 | AppCDS — what it caches, Spring Boot vs Quarkus, honest results |
+| 13–16 | AppCDS — what it caches, Spring Boot vs Quarkus, measured results |
 | 17–22 | Project Leyden — AOT cache, training workload, 3-stage Dockerfile |
-| 23–26 | REST vs gRPC — wire format, streaming, honest localhost results |
+| 23–26 | REST vs gRPC — wire format, streaming, localhost results (with caveats) |
 | 27–32 | Bonus: JVM anti-patterns + remediation, gRPC protocol deep dive |
 
 ### [gRPC Slides](./presentation/grpc-slides.pptx) — 3 slides
