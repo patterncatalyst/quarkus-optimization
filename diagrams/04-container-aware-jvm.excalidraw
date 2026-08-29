@@ -9,11 +9,11 @@
       "roughness": 0, "opacity": 100, "angle": 0},
 
     {"type": "text", "id": "before-title", "x": 60, "y": 75, "width": 400, "height": 30,
-      "text": "❌  Default JVM (no container flags)", "fontSize": 17, "fontFamily": 2,
+      "text": "❌  No memory limit / container support off", "fontSize": 17, "fontFamily": 2,
       "textAlign": "center", "strokeColor": "#c92a2a", "backgroundColor": "transparent",
       "roughness": 0, "opacity": 100, "angle": 0},
     {"type": "text", "id": "after-title", "x": 600, "y": 75, "width": 400, "height": 30,
-      "text": "✅  Java 21 + Container Flags", "fontSize": 17, "fontFamily": 2,
+      "text": "✅  Java 21 + MaxRAMPercentage", "fontSize": 17, "fontFamily": 2,
       "textAlign": "center", "strokeColor": "#2f9e44", "backgroundColor": "transparent",
       "roughness": 0, "opacity": 100, "angle": 0},
 

@@ -2,7 +2,7 @@
 
 > Conference talk companion repository — demos, slides, and diagrams for a 60-minute session on JVM performance engineering for cloud-native Java teams.
 
-**Talk abstract:** Most Java teams deploy to Kubernetes with misconfigured heaps, oversized resource requests, wrong GC algorithms, and no visibility into what the JVM is actually doing. This session walks through nine live demos covering container-aware JVM tuning, startup acceleration, GC monitoring, protocol selection, latency engineering, right-sizing, native interop via Project Panama, and AI inference — all on Quarkus 3.33.1 LTS with real metrics and honest benchmark results.
+**Talk abstract:** Most Java teams deploy to Kubernetes with misconfigured heaps, oversized resource requests, wrong GC algorithms, and no visibility into what the JVM is actually doing. This session walks through nine live demos covering container-aware JVM tuning, startup acceleration, GC monitoring, protocol selection, latency engineering, right-sizing, native interop via Project Panama, and AI inference — all on Quarkus 3.33.1 LTS with real metrics and reproducible benchmark results.
 
 ---
 
@@ -102,9 +102,9 @@ The complete talk from container heap sizing through Project Leyden. Structured 
 |--------|-------|
 | 1–5 | Container-aware JVM heap — the `UseContainerSupport` story |
 | 6–12 | GC monitoring — Micrometer, Prometheus, Grafana, HPA interaction |
-| 13–16 | AppCDS — what it caches, Spring Boot vs Quarkus, honest results |
+| 13–16 | AppCDS — what it caches, Spring Boot vs Quarkus, measured results |
 | 17–22 | Project Leyden — AOT cache, training workload, 3-stage Dockerfile |
-| 23–26 | REST vs gRPC — wire format, streaming, honest localhost results |
+| 23–26 | REST vs gRPC — wire format, streaming, localhost results (with caveats) |
 | 27–32 | Bonus: JVM anti-patterns + remediation, gRPC protocol deep dive |
 
 ### [gRPC Slides](./presentation/grpc-slides.pptx) — 3 slides
@@ -209,8 +209,9 @@ These demos address both: right defaults first, then visibility, then optimisati
 
 ## Companion Reading
 
-- *Optimizing Cloud Native Java* (O'Reilly) — the book this talk is based on
-- *SRE with Java Microservices* (O'Reilly, Jonathan Schneider) — SLI/SLO framing
+- Evans, B. J., & Gough, J. *Optimizing Cloud Native Java*, 2nd ed., O'Reilly, 2024 (ISBN 9781098149345) — the book this talk is based on
+- Schneider, J., *SRE with Java Microservices*, O'Reilly, 2020 (ISBN 9781492073925) — SLI/SLO framing
+- Shirazi, J., *javaperformancetuning.com* — living performance newsletters: #308 (measurement methodology, 2026-07-27), #306 (low-latency / allocation reduction), #307 (LLM-assisted tuning). Scope: current newsletters, not the legacy J2EE-era tips index.
 - [Quarkus guides](https://quarkus.io/guides/) — authoritative Quarkus configuration reference
 - [Red Hat build of OpenJDK docs](https://docs.redhat.com/en/documentation/red_hat_build_of_openjdk) — UBI image details, Shenandoah tuning
 - [OpenJDK Project Leyden](https://openjdk.org/projects/leyden/) — AOT cache design docs
