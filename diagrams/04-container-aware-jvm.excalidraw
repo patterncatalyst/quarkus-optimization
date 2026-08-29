@@ -9,11 +9,11 @@
       "roughness": 0, "opacity": 100, "angle": 0},
 
     {"type": "text", "id": "before-title", "x": 60, "y": 75, "width": 400, "height": 30,
-      "text": "❌  No memory limit / container support off", "fontSize": 17, "fontFamily": 2,
+      "text": "❌  No memory limit set", "fontSize": 17, "fontFamily": 2,
       "textAlign": "center", "strokeColor": "#c92a2a", "backgroundColor": "transparent",
       "roughness": 0, "opacity": 100, "angle": 0},
     {"type": "text", "id": "after-title", "x": 600, "y": 75, "width": 400, "height": 30,
-      "text": "✅  Java 21 + MaxRAMPercentage", "fontSize": 17, "fontFamily": 2,
+      "text": "✅  Java 25 + MaxRAMPercentage", "fontSize": 17, "fontFamily": 2,
       "textAlign": "center", "strokeColor": "#2f9e44", "backgroundColor": "transparent",
       "roughness": 0, "opacity": 100, "angle": 0},
 
@@ -110,7 +110,7 @@
       "opacity": 100, "angle": 0},
 
     {"type": "text", "id": "flags-after", "x": 580, "y": 462, "width": 400, "height": 30,
-      "text": "# Java 21: UseContainerSupport is ON by default\njava -XX:MaxRAMPercentage=75.0 -jar quarkus-run.jar",
+      "text": "# Java 25: UseContainerSupport is ON by default\njava -XX:MaxRAMPercentage=75.0 -jar quarkus-run.jar",
       "fontSize": 11, "fontFamily": 3, "textAlign": "left",
       "strokeColor": "#2f9e44", "backgroundColor": "transparent", "roughness": 0,
       "opacity": 100, "angle": 0},
