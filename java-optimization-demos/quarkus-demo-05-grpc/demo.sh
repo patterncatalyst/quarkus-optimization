@@ -253,7 +253,7 @@ rows = [
     ("Scenario",                    "REST",              "gRPC",              "Winner"),
     ("─"*30,                        "─"*18,              "─"*18,              "─"*8),
     ("Localhost unary (this demo)", "✅ faster",         "slower",            "REST"),
-    ("Production pod-to-pod",       "baseline",          "✅ ~3-4× faster",   "gRPC"),
+    ("Production pod-to-pod (proj.)","baseline",          "✅ ~3-4× (projection)","gRPC"),
     ("Streaming (this demo)",       "❌ 1000 requests",  "✅ 1 connection",    "gRPC"),
     ("High concurrency (500+)",     "500 TCP conns",     "✅ multiplexed",     "gRPC"),
     ("Large payloads (>5KB)",       "verbose JSON",      "✅ 10× smaller",     "gRPC"),

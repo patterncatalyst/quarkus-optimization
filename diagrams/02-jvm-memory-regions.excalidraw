@@ -17,7 +17,7 @@
       "strokeColor": "#1971c2", "backgroundColor": "#e7f5ff", "fillStyle": "solid",
       "roughness": 1, "opacity": 100, "angle": 0, "strokeWidth": 3},
     {"type": "text", "id": "container-lbl", "x": 40, "y": 107, "width": 180, "height": 25,
-      "text": "Container limit: 2 GB", "fontSize": 12, "fontFamily": 2,
+      "text": "Container limit: 2.5 GB", "fontSize": 12, "fontFamily": 2,
       "textAlign": "center", "strokeColor": "#1971c2", "backgroundColor": "transparent",
       "roughness": 0, "opacity": 100, "angle": 0},
 
@@ -25,7 +25,7 @@
       "strokeColor": "#2f9e44", "backgroundColor": "#d3f9d8", "fillStyle": "solid",
       "roughness": 1, "opacity": 100, "angle": 0, "strokeWidth": 2},
     {"type": "text", "id": "heap-bar-lbl", "x": 65, "y": 218, "width": 130, "height": 30,
-      "text": "Heap\n~1.5 GB (75%)", "fontSize": 12, "fontFamily": 2,
+      "text": "Heap\n~1.9 GB (75%)", "fontSize": 12, "fontFamily": 2,
       "textAlign": "center", "strokeColor": "#2f9e44", "backgroundColor": "transparent",
       "roughness": 0, "opacity": 100, "angle": 0},
 
@@ -132,11 +132,11 @@
       "strokeColor": "#364fc7", "backgroundColor": "transparent", "roughness": 0,
       "opacity": 100, "angle": 0},
 
-    {"type": "rectangle", "id": "formula-box", "x": 240, "y": 560, "width": 700, "height": 55,
+    {"type": "rectangle", "id": "formula-box", "x": 240, "y": 560, "width": 770, "height": 55,
       "strokeColor": "#1971c2", "backgroundColor": "#e7f5ff", "fillStyle": "solid",
       "roughness": 1, "opacity": 100, "angle": 0, "strokeWidth": 2},
-    {"type": "text", "id": "formula-txt", "x": 255, "y": 568, "width": 680, "height": 40,
-      "text": "SIZING FORMULA: container_limit = (Heap/0.75) + MaxMetaspaceSize + (threads × 1MB) + DirectBuffers + GC_overhead\nMeasure with: jcmd <pid> VM.native_memory summary   |   kubectl top pod --containers",
+    {"type": "text", "id": "formula-txt", "x": 255, "y": 568, "width": 750, "height": 40,
+      "text": "SIZING FORMULA: container_limit = Heap + MaxMetaspaceSize + JITCodeCache + (threads × 1MB) + DirectBuffers + GC_overhead\nMeasure with: jcmd <pid> VM.native_memory summary   |   kubectl top pod --containers",
       "fontSize": 12, "fontFamily": 2, "textAlign": "left",
       "strokeColor": "#1971c2", "backgroundColor": "transparent", "roughness": 0,
       "opacity": 100, "angle": 0}

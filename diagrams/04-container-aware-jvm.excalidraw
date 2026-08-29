@@ -17,7 +17,7 @@
       "textAlign": "center", "strokeColor": "#2f9e44", "backgroundColor": "transparent",
       "roughness": 0, "opacity": 100, "angle": 0},
 
-    {"type": "rectangle", "id": "node-before", "x": 60, "y": 120, "width": 400, "height": 380,
+    {"type": "rectangle", "id": "node-before", "x": 60, "y": 120, "width": 400, "height": 420,
       "strokeColor": "#adb5bd", "backgroundColor": "#f8f9fa", "fillStyle": "solid",
       "roughness": 1, "opacity": 100, "angle": 0, "strokeWidth": 2},
     {"type": "text", "id": "node-before-lbl", "x": 70, "y": 128, "width": 380, "height": 22,
@@ -62,7 +62,7 @@
       "strokeColor": "#c92a2a", "backgroundColor": "transparent", "roughness": 0,
       "opacity": 100, "angle": 0},
 
-    {"type": "rectangle", "id": "node-after", "x": 580, "y": 120, "width": 400, "height": 380,
+    {"type": "rectangle", "id": "node-after", "x": 580, "y": 120, "width": 400, "height": 420,
       "strokeColor": "#adb5bd", "backgroundColor": "#f8f9fa", "fillStyle": "solid",
       "roughness": 1, "opacity": 100, "angle": 0, "strokeWidth": 2},
     {"type": "text", "id": "node-after-lbl", "x": 590, "y": 128, "width": 380, "height": 22,
@@ -103,13 +103,13 @@
       "textAlign": "center", "strokeColor": "#e8590c", "backgroundColor": "transparent",
       "roughness": 0, "opacity": 100, "angle": 0},
 
-    {"type": "text", "id": "reads-cgroup", "x": 580, "y": 400, "width": 400, "height": 60,
+    {"type": "text", "id": "reads-cgroup", "x": 620, "y": 452, "width": 320, "height": 60,
       "text": "JVM reads /sys/fs/cgroup/memory.max → sees 512 MB\nHeap = 75% of 512 MB = 384 MB\nResult: correct sizing, no OOMKill",
       "fontSize": 12, "fontFamily": 1, "textAlign": "center",
       "strokeColor": "#2f9e44", "backgroundColor": "transparent", "roughness": 0,
       "opacity": 100, "angle": 0},
 
-    {"type": "text", "id": "flags-after", "x": 580, "y": 462, "width": 400, "height": 30,
+    {"type": "text", "id": "flags-after", "x": 620, "y": 508, "width": 320, "height": 30,
       "text": "# Java 25: UseContainerSupport is ON by default\njava -XX:MaxRAMPercentage=75.0 -jar quarkus-run.jar",
       "fontSize": 11, "fontFamily": 3, "textAlign": "left",
       "strokeColor": "#2f9e44", "backgroundColor": "transparent", "roughness": 0,
@@ -120,7 +120,7 @@
       "strokeColor": "#868e96", "backgroundColor": "transparent", "roughness": 0,
       "opacity": 100, "angle": 0},
 
-    {"type": "text", "id": "cgroup-note", "x": 100, "y": 510, "width": 880, "height": 35,
+    {"type": "text", "id": "cgroup-note", "x": 100, "y": 548, "width": 880, "height": 35,
       "text": "cgroup v1: /sys/fs/cgroup/memory/memory.limit_in_bytes   |   cgroup v2 (RHEL 9 / OCP 4.14+): /sys/fs/cgroup/memory.max   |   Both handled automatically by Java 15+",
       "fontSize": 11, "fontFamily": 1, "textAlign": "center",
       "strokeColor": "#868e96", "backgroundColor": "transparent", "roughness": 0,
