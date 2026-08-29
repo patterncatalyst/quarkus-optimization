@@ -209,8 +209,9 @@ These demos address both: right defaults first, then visibility, then optimisati
 
 ## Companion Reading
 
-- *Optimizing Cloud Native Java* (O'Reilly) — the book this talk is based on
-- *SRE with Java Microservices* (O'Reilly, Jonathan Schneider) — SLI/SLO framing
+- Evans, B. J., & Gough, J. *Optimizing Cloud Native Java*, 2nd ed., O'Reilly, 2024 (ISBN 9781098149345) — the book this talk is based on
+- Schneider, J., *SRE with Java Microservices*, O'Reilly, 2020 (ISBN 9781492073925) — SLI/SLO framing
+- Shirazi, J., *javaperformancetuning.com* — living performance newsletters: #308 (measurement methodology, 2026-07-27), #306 (low-latency / allocation reduction), #307 (LLM-assisted tuning). Scope: current newsletters, not the legacy J2EE-era tips index.
 - [Quarkus guides](https://quarkus.io/guides/) — authoritative Quarkus configuration reference
 - [Red Hat build of OpenJDK docs](https://docs.redhat.com/en/documentation/red_hat_build_of_openjdk) — UBI image details, Shenandoah tuning
 - [OpenJDK Project Leyden](https://openjdk.org/projects/leyden/) — AOT cache design docs
