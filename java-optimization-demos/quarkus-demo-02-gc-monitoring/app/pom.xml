@@ -16,6 +16,7 @@
     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
     <quarkus.platform.version>3.33.1</quarkus.platform.version>
     <maven.compiler.release>25</maven.compiler.release>
+    <compiler-plugin.version>3.13.0</compiler-plugin.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
@@ -92,6 +93,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
+        <version>${compiler-plugin.version}</version>
         <configuration>
           <release>25</release>
         </configuration>
