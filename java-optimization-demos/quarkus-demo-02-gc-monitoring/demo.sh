@@ -89,7 +89,7 @@ fi
 echo
 echo -e "  ${GREEN}Grafana:     http://localhost:3000${RESET}  (admin/admin)"
 echo -e "  ${GREEN}Prometheus:  http://localhost:9090${RESET}"
-echo -e "  ${GREEN}Tempo API:   http://localhost:3200${RESET}  (traces via Grafana Explore → Tempo)"
+echo -e "  ${GREEN}Tempo:${RESET}       via Grafana → Explore → Tempo datasource (bundled in otel-lgtm)"
 echo -e "  ${GREEN}G1GC App:    http://localhost:8080${RESET}  → metrics: /q/metrics"
 echo -e "  ${GREEN}ZGC App:     http://localhost:8081${RESET}  → health:  /q/health/live"
 echo

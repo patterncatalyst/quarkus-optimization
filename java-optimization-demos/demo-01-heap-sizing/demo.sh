@@ -90,10 +90,16 @@ cat <<'EOF'
 EOF
 
 echo
-echo -e "${YELLOW}Simulating — the container will exit with OOMKilled (exit 137):${RESET}"
-docker run --rm --memory=64m jvm-demo:bad 2>&1 | head -5
-if [ "${PIPESTATUS[0]}" -ne 0 ]; then
-    echo -e "${RED}  Container killed (exit code ${PIPESTATUS[0]} = OOMKill) — exactly what Kubernetes does!${RESET}"
+echo -e "${YELLOW}Simulating — on a cgroup-enforcing host the container OOMKills (exit 137):${RESET}"
+oom_out="$(docker run --rm --memory=64m jvm-demo:bad 2>&1)"; oom_rc=$?
+echo "$oom_out" | head -5
+if [ "$oom_rc" -eq 137 ]; then
+    echo -e "${RED}  Container killed (exit code 137 = OOMKill) — exactly what Kubernetes does!${RESET}"
+elif [ "$oom_rc" -ne 0 ]; then
+    echo -e "${RED}  Container exited non-zero (exit code ${oom_rc}) — memory pressure hit the limit.${RESET}"
+else
+    echo -e "${YELLOW}  Container exited 0 here — rootless memory limits aren't always enforced on the host.${RESET}"
+    echo -e "${YELLOW}  On a cgroup-enforcing cluster this same run OOMKills with exit 137.${RESET}"
 fi
 
 echo
