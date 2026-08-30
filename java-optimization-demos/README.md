@@ -10,6 +10,18 @@ Based on:
 
 All demos use **Podman** and **UBI (Universal Base Image)** runtime containers — the same toolchain and base images used in production OpenShift environments.
 
+### ▶ Run everything
+
+```bash
+./run-all-demos.sh            # all demos in order, with callouts + Enter-to-continue waits
+./run-all-demos.sh --list     # list the demos
+./run-all-demos.sh --from 5   # resume from demo 5
+./run-all-demos.sh --only 6   # run just one demo
+./run-all-demos.sh --no-spring  # skip the Spring Boot AppCDS comparison
+```
+
+The master runner sequences all nine demos in a single terminal — section banners, per-demo callouts, **Grafana pointers** (`http://localhost:3000` for demos 02 & 06), and Enter prompts between steps. Each demo's `demo.sh` is self-contained (builds, runs, and tears down its own stack); you can also run any one directly from its folder.
+
 > **Note on GC defaults:** The UBI10 OpenJDK 25 runtime image ships **Shenandoah** as the default GC — Red Hat's concurrent low-latency collector, supported since JDK 8. This is different from Eclipse Temurin, Amazon Corretto, and Microsoft OpenJDK which all default to G1GC. Demos that compare GC algorithms explicitly override the default with `-XX:+UseG1GC` or `-XX:+UseZGC` to ensure a clean comparison.
 
 ---
