@@ -10,8 +10,13 @@ This demo proves the problem and fixes it live.
 
 ## Prerequisites
 
-- Docker Desktop (or any Docker runtime)
+- Podman (rootless) — the project standard container runtime
 - ~2 minutes
+
+> **Note on OOMKill (Scenario D):** exit 137 requires the runtime to *enforce*
+> the `--memory` cgroup limit. Rootful runtimes always do; rootless Podman may
+> not on every host, so the demo detects this and explains that the same run
+> OOMKills on a cgroup-enforcing cluster (which is what Kubernetes provides).
 
 ## Running the Demo
 
@@ -42,7 +47,7 @@ chmod +x demo.sh
 
 ```bash
 # Run the good container interactively and explore JVM internals:
-docker run -it --rm --memory=512m \
+podman run -it --rm --memory=512m \
   --entrypoint sh jvm-demo:good
 
 # Inside the container:
