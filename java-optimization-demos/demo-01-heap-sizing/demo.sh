@@ -4,7 +4,7 @@
 # Demonstrates the difference between untuned and container-
 # aware JVM configuration on Kubernetes/OpenShift.
 #
-# Prerequisites: Docker Desktop (or any Docker-compatible runtime)
+# Prerequisites: Podman (rootless) — the project standard container runtime
 # Run: ./demo.sh
 # ============================================================
 
@@ -27,9 +27,9 @@ echo "║  Taming the JVM: Optimizing Java on OpenShift               ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo -e "${RESET}"
 
-echo -e "${YELLOW}Step 1: Building Docker images...${RESET}"
-docker build -f Dockerfile.bad  -t jvm-demo:bad  . --quiet
-docker build -f Dockerfile.good -t jvm-demo:good . --quiet
+echo -e "${YELLOW}Step 1: Building container images (podman)...${RESET}"
+podman build -f Dockerfile.bad  -t jvm-demo:bad  . --quiet
+podman build -f Dockerfile.good -t jvm-demo:good . --quiet
 echo -e "${GREEN}✅ Images built${RESET}"
 echo
 
@@ -41,7 +41,7 @@ hr
 echo
 
 # Run without container support — limit to 512m but JVM won't respect it
-docker run --rm --memory=512m jvm-demo:bad 2>/dev/null || true
+podman run --rm --memory=512m jvm-demo:bad 2>/dev/null || true
 
 echo
 echo -e "${YELLOW}(Notice the heap is >> 512m — the JVM read HOST RAM instead of the container limit!)${RESET}"
@@ -56,7 +56,7 @@ echo -e "Expected: JVM correctly sizes heap to 75% of the 512m container limit"
 hr
 echo
 
-docker run --rm --memory=512m jvm-demo:good 2>/dev/null | grep -v "^\[" || true
+podman run --rm --memory=512m jvm-demo:good 2>/dev/null | grep -v "^\[" || true
 
 echo
 echo -e "${GREEN}✅ Heap is now ~384m — respects the 512m container limit!${RESET}"
@@ -69,7 +69,7 @@ echo
 
 for mem in 256m 512m 1g; do
     echo -e "${CYAN}  -- Container limit: ${mem} --${RESET}"
-    docker run --rm --memory=$mem jvm-demo:good 2>/dev/null \
+    podman run --rm --memory=$mem jvm-demo:good 2>/dev/null \
         | grep -E "Max \(Xmx\)|Heap / container|Verdict" | sed 's/^/  /' || true
     echo
 done
@@ -91,7 +91,12 @@ EOF
 
 echo
 echo -e "${YELLOW}Simulating — on a cgroup-enforcing host the container OOMKills (exit 137):${RESET}"
-oom_out="$(docker run --rm --memory=64m jvm-demo:bad 2>&1)"; oom_rc=$?
+# Disable errexit around the capture: this run is EXPECTED to fail (that's the point),
+# and under `set -e` a non-zero command substitution would abort the script before we
+# read $? — skipping SCENARIO D's verdict and the KEY TAKEAWAY below.
+set +e
+oom_out="$(podman run --rm --memory=64m jvm-demo:bad 2>&1)"; oom_rc=$?
+set -e
 echo "$oom_out" | head -5
 if [ "$oom_rc" -eq 137 ]; then
     echo -e "${RED}  Container killed (exit code 137 = OOMKill) — exactly what Kubernetes does!${RESET}"

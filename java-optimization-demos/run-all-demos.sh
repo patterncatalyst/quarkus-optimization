@@ -95,7 +95,7 @@ prebuild() {
         local label="$1"; shift
         if ( "$@" ) >/dev/null 2>&1; then info "  ✓ ${label}"; else warn "  ✗ ${label} (build failed — check by running its demo.sh)"; rc=1; fi
     }
-    _b "demo-01 heap-sizing"      bash -c "cd '$DEMOS_DIR/demo-01-heap-sizing' && docker build -q -f Dockerfile.bad -t jvm-demo:bad . && docker build -q -f Dockerfile.good -t jvm-demo:good ."
+    _b "demo-01 heap-sizing"      bash -c "cd '$DEMOS_DIR/demo-01-heap-sizing' && podman build -q -f Dockerfile.bad -t jvm-demo:bad . && podman build -q -f Dockerfile.good -t jvm-demo:good ."
     _b "demo-02 gc-monitoring"    bash -c "cd '$DEMOS_DIR/quarkus-demo-02-gc-monitoring' && podman-compose build"
     _b "demo-03 appcds (Quarkus)" bash -c "cd '$DEMOS_DIR/quarkus-demo-03-appcds' && podman build -f app/Dockerfile.baseline -t quarkus-startup:baseline ./app && podman build -f app/Dockerfile.appcds -t quarkus-startup:appcds ./app"
     [ "$RUN_SPRING" -eq 1 ] && _b "demo-03b appcds (Spring)" bash -c "cd '$DEMOS_DIR/demo-03-appcds' && podman build -f app/Dockerfile.baseline -t startup-demo:baseline ./app && podman build -f app/Dockerfile.appcds -t startup-demo:appcds ./app"
