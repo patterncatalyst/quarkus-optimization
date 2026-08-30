@@ -13,6 +13,8 @@
 #   ./run-all-demos.sh --only 6     # run just demo 6
 #   ./run-all-demos.sh --list       # list demos and exit
 #   ./run-all-demos.sh --no-spring  # skip the Spring Boot AppCDS comparison (3b)
+#   ./run-all-demos.sh --prebuild   # pull bases + build all images up front, then exit
+#                                   # (run this BEFORE the talk so the live run skips builds)
 # ──────────────────────────────────────────────────────────────────────────────
 set -uo pipefail
 
@@ -30,12 +32,13 @@ grafana() { echo -e "  ${BLUE}📊 $*${RESET}"; }
 pause()   { read -rp "$(echo -e "  ${YELLOW}▶ $*${RESET}")"; }
 
 # ── Args ──────────────────────────────────────────────────────────────────────
-FROM=1; ONLY=""; RUN_SPRING=1
+FROM=1; ONLY=""; RUN_SPRING=1; PREBUILD=0
 while [ $# -gt 0 ]; do
     case "$1" in
         --from)  FROM="${2:-1}"; shift 2 ;;
         --only)  ONLY="${2:-}"; shift 2 ;;
         --no-spring) RUN_SPRING=0; shift ;;
+        --prebuild) PREBUILD=1; shift ;;
         --list)  LIST=1; shift ;;
         -h|--help) grep -E '^#( |$)' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
         *) echo "unknown arg: $1"; exit 1 ;;
@@ -61,6 +64,53 @@ if [ -n "${LIST:-}" ]; then
     for d in "${DEMOS[@]}"; do IFS='|' read -r n dir title _ <<< "$d"; printf "  %-3s %s\n" "$n" "$title"; done
     exit 0
 fi
+
+# ── Pre-build / warm mode ─────────────────────────────────────────────────────
+# Front-loads the slow work (base-image pulls + all demo image builds) so the
+# live run hits cache and skips builds. Run it before the talk.
+prebuild() {
+    banner "Pre-build / warm — pull base images + build all demo images"
+    warn "Run this BEFORE the talk; the live run then skips builds."
+    warn "Demo 04 (Leyden) rebuilds at runtime by design (--no-cache); demo 07 needs no build."
+    echo ""
+    info "Pulling shared base images (parallel)..."
+    local bases=(
+        docker.io/library/maven:3.9-eclipse-temurin-25
+        docker.io/library/eclipse-temurin:25-jdk
+        docker.io/library/eclipse-temurin:25-jre
+        registry.access.redhat.com/ubi10/openjdk-25-runtime
+        registry.access.redhat.com/ubi10/openjdk-25
+        registry.access.redhat.com/ubi9
+        docker.io/grafana/otel-lgtm:0.29.0
+        docker.io/prom/prometheus:v3.13.2
+    )
+    for img in "${bases[@]}"; do
+        ( podman pull -q "$img" >/dev/null 2>&1 && info "  ✓ $img" || warn "  ✗ pull $img" ) &
+    done
+    wait
+    echo ""
+    info "Building demo images (each demo.sh will then hit cache)..."
+    local rc=0
+    _b() { # $1=label  then a subshell command via remaining args
+        local label="$1"; shift
+        if ( "$@" ) >/dev/null 2>&1; then info "  ✓ ${label}"; else warn "  ✗ ${label} (build failed — check by running its demo.sh)"; rc=1; fi
+    }
+    _b "demo-01 heap-sizing"      bash -c "cd '$DEMOS_DIR/demo-01-heap-sizing' && docker build -q -f Dockerfile.bad -t jvm-demo:bad . && docker build -q -f Dockerfile.good -t jvm-demo:good ."
+    _b "demo-02 gc-monitoring"    bash -c "cd '$DEMOS_DIR/quarkus-demo-02-gc-monitoring' && podman-compose build"
+    _b "demo-03 appcds (Quarkus)" bash -c "cd '$DEMOS_DIR/quarkus-demo-03-appcds' && podman build -f app/Dockerfile.baseline -t quarkus-startup:baseline ./app && podman build -f app/Dockerfile.appcds -t quarkus-startup:appcds ./app"
+    [ "$RUN_SPRING" -eq 1 ] && _b "demo-03b appcds (Spring)" bash -c "cd '$DEMOS_DIR/demo-03-appcds' && podman build -f app/Dockerfile.baseline -t startup-demo:baseline ./app && podman build -f app/Dockerfile.appcds -t startup-demo:appcds ./app"
+    warn "demo-04 leyden: skipped (builds with --no-cache at runtime); base images pre-pulled above."
+    _b "demo-05 grpc"             bash -c "cd '$DEMOS_DIR/quarkus-demo-05-grpc' && podman build -t quarkus-grpc-demo:latest ./app"
+    _b "demo-06 latency"          bash -c "cd '$DEMOS_DIR/quarkus-demo-06-latency' && podman-compose build"
+    info "demo-07 rightsizing: no build (pure Python)."
+    _b "demo-08 panama"           bash -c "cd '$DEMOS_DIR/quarkus-demo-08-panama' && podman build -t quarkus-panama-demo:latest ."
+    _b "demo-09 onnx"             bash -c "cd '$DEMOS_DIR/quarkus-demo-09-onnx' && podman build -t quarkus-onnx-demo:latest ."
+    echo ""
+    banner "Pre-build complete"
+    info "Now run:  ./run-all-demos.sh   — builds are cached, so demos start fast (demo 04 still rebuilds)."
+    return $rc
+}
+if [ "$PREBUILD" -eq 1 ]; then prebuild; exit $?; fi
 
 # ── Prerequisites (warn, don't hard-fail) ─────────────────────────────────────
 banner "Taming the JVM — Master Demo Runner"
