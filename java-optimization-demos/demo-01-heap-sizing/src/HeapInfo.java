@@ -62,28 +62,40 @@ public class HeapInfo {
         System.out.printf("  Max (Xmx):   %s%n", heap.maxMB());
 
         if (cgroupLimit > 0) {
-            double ratio = (double) heapUsage.getMax() / cgroupLimit * 100;
-            System.out.printf("  Heap / container limit:  %.1f%%%n", ratio);
+            double pct = (double) heapUsage.getMax() / cgroupLimit * 100;
 
-            // Java 21 switch expression with pattern-inspired ranges
-            String verdict = switch ((int)(ratio / 10)) {
-                case 0, 1, 2, 3, 4 ->
-                    "WARNING: Heap very small — JVM may be ignoring container limit!";
-                case 5, 6, 7 ->
-                    "OK: Good ratio — room for Metaspace, threads, and JIT code cache";
-                case 8 ->
-                    "WARNING: Heap >80% of container — risk of OOMKill during GC surge";
-                default ->
-                    "CRITICAL: Heap >90% — OOMKill imminent during garbage collection!";
-            };
-            System.out.println("  Verdict:     " + verdict);
+            if (heapUsage.getMax() <= cgroupLimit) {
+                // Heap fits inside the limit — a percentage is the meaningful unit.
+                System.out.printf("  Heap / container limit:  %.1f%%%n", pct);
+                String verdict = switch ((int) (pct / 10)) {
+                    case 0, 1, 2, 3, 4 ->
+                        "OK: Conservative heap — plenty of headroom for Metaspace, threads, JIT";
+                    case 5, 6, 7 ->
+                        "OK: Good ratio — room for Metaspace, threads, and JIT code cache";
+                    case 8 ->
+                        "WARNING: Heap >80% of limit — risk of OOMKill during a GC surge";
+                    default ->
+                        "CRITICAL: Heap >90% of limit — little headroom for non-heap memory";
+                };
+                System.out.println("  Verdict:     " + verdict);
+            } else {
+                // Max heap EXCEEDS the limit. A percentage here reads as nonsense
+                // (e.g. 3112%), so show the multiplier — this IS the failure the
+                // demo exists to show: the JVM sized the heap off HOST RAM, not
+                // the cgroup limit, so it will OOMKill on first real allocation.
+                double times = (double) heapUsage.getMax() / cgroupLimit;
+                System.out.printf("  Heap / container limit:  %.1f×  (%,d MB max heap vs %d MB limit)%n",
+                                  times, heapUsage.getMax() / MB, cgroupLimit / MB);
+                System.out.println("  Verdict:     CRITICAL: max heap EXCEEDS the container limit —");
+                System.out.println("               OOMKill on the first real allocation.");
+            }
 
             if (heapUsage.getMax() > cgroupLimit * 2) {
                 System.out.println();
                 System.out.println("  *** JVM max heap EXCEEDS container limit by >2x ***");
                 System.out.println("      JVM is reading HOST memory, not the cgroup limit!");
                 System.out.println("      Fix: java -XX:MaxRAMPercentage=75.0 (UseContainerSupport");
-                System.out.println("           is on by default in Java 21)");
+                System.out.println("           is on by default since JDK 10)");
             }
         }
 
@@ -135,9 +147,9 @@ public class HeapInfo {
 
         if (args.length > 0 && args[0].equals("--keep-alive")) {
             System.out.println("  [Keeping alive — use jcmd to explore:]");
-            System.out.println("  docker exec -it <container> jcmd 1 VM.native_memory summary");
-            System.out.println("  docker exec -it <container> jcmd 1 GC.heap_info");
-            System.out.println("  docker exec -it <container> jcmd 1 Thread.print");
+            System.out.println("  podman exec -it <container> jcmd 1 VM.native_memory summary");
+            System.out.println("  podman exec -it <container> jcmd 1 GC.heap_info");
+            System.out.println("  podman exec -it <container> jcmd 1 Thread.print");
             Thread.sleep(Long.MAX_VALUE);
         }
     }
