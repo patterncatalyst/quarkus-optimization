@@ -1,0 +1,11 @@
+# GitHub Linguist overrides — make the repo language reflect the real source,
+# not the Jekyll site chrome, generated output, or slide-deck build tooling.
+_site/**        linguist-generated
+_layouts/**     linguist-documentation
+_includes/**    linguist-documentation
+assets/**       linguist-documentation
+*.html          linguist-documentation
+presentation/**  linguist-vendored
+presentations/** linguist-vendored
+# Scaffolding / helper scripts are not the project's point.
+*.sh linguist-vendored
